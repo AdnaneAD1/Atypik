@@ -1,0 +1,221 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --card-muted: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 5 87% 57%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 5 87% 57%;
+    --radius: 0.75rem;
+  }
+ 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --card-muted: 217.2 32.6% 12%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 5 87% 57%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 5 87% 57%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  /* La police est définie via Tailwind */
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: -0.01em;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* Desktop Layout */
+  .dashboard-layout {
+    @apply flex min-h-screen;
+  }
+
+  .dashboard-sidebar {
+    @apply hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 bg-card border-r;
+  }
+
+  .dashboard-main {
+    @apply lg:pl-72 flex-1;
+  }
+
+  .dashboard-header {
+    @apply sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b;
+  }
+
+  .dashboard-content {
+    @apply p-6;
+  }
+
+  /* Cards */
+  .stats-card {
+    @apply rounded-xl border bg-card p-6 shadow-sm transition-all hover:shadow-md;
+  }
+
+  .stats-card-header {
+    @apply flex items-center justify-between space-y-0 pb-4;
+  }
+
+  .stats-card-title {
+    @apply text-sm font-medium tracking-tight;
+  }
+
+  .stats-card-value {
+    @apply text-2xl font-bold;
+  }
+
+  .stats-card-description {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .stats-card-footer {
+    @apply flex items-center pt-4 text-sm text-muted-foreground;
+  }
+
+  /* Data Cards */
+  .data-card {
+    @apply rounded-xl border bg-card shadow-sm;
+  }
+
+  .data-card-header {
+    @apply flex items-center justify-between p-6 pb-4;
+  }
+
+  .data-card-title {
+    @apply text-lg font-medium;
+  }
+
+  .data-card-content {
+    @apply p-6 pt-0;
+  }
+
+  /* Navigation */
+  .nav-item {
+    @apply flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .nav-item.active {
+    @apply bg-primary/10 text-primary;
+  }
+
+  /* Tables */
+  .data-table {
+    @apply w-full text-sm;
+  }
+
+  .data-table th {
+    @apply h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0;
+  }
+
+  .data-table td {
+    @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
+  }
+
+  .data-table tr {
+    @apply border-b transition-colors hover:bg-muted/50;
+  }
+
+  /* Charts */
+  .chart-container {
+    @apply h-[350px] w-full p-6;
+  }
+
+  /* Mobile Optimizations */
+  @media (max-width: 1024px) {
+    .dashboard-layout {
+      @apply block;
+    }
+
+    .dashboard-main {
+      @apply pl-0;
+    }
+
+    .dashboard-content {
+      @apply p-4;
+    }
+
+    .stats-card {
+      @apply p-4;
+    }
+
+    .data-card-header {
+      @apply p-4;
+    }
+
+    .data-card-content {
+      @apply p-4;
+    }
+  }
+}
+
+@layer utilities {
+  /* 
+    Les directives @tailwind et @apply sont des syntaxes spécifiques à Tailwind CSS
+    et sont correctement interprétées lors de la compilation, mais peuvent générer
+    des avertissements dans l'éditeur qui ne reconnaît pas cette syntaxe.
+  */
+
+  .scrollbar-hide {
+    /* Utilisation de préfixes pour une meilleure compatibilité */
+    -ms-overflow-style: none; /* IE and Edge */
+    &::-webkit-scrollbar {
+      display: none; /* Chrome, Safari and Opera */
+    }
+    /* Firefox - commenté pour éviter l'avertissement de compatibilité */
+    /* scrollbar-width: none; */
+  }
+
+  .glass-effect {
+    @apply bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60;
+  }
+
+  .shadow-card {
+    @apply shadow-[0_2px_8px_0_rgba(0,0,0,0.08)];
+  }
+
+  .shadow-card-hover {
+    @apply hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.12)];
+  }
+}
