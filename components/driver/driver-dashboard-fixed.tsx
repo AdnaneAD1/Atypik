@@ -66,7 +66,7 @@ export function DriverDashboard() {
       address: '15 rue des Lilas, 75011 Paris'
     },
     to: {
-      name: 'École Montessori Étoile',
+      name: 'Hopital Montessori Étoile',
       address: '42 avenue Victor Hugo, 75016 Paris'
     },
     departureTime: '07:45',

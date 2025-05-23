@@ -163,7 +163,7 @@ export function DriverDashboard() {
                   <h3 className="text-lg sm:text-xl font-bold text-black dark:text-white truncate">Lucas Dubois</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
                     <MapPin className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-primary flex-shrink-0" />
-                    <span className="truncate">École Montessori Étoile</span>
+                    <span className="truncate">Hopital Montessori Étoile</span>
                   </p>
                 </div>
               </CardTitle>

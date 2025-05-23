@@ -51,7 +51,7 @@ export function DriverDashboardNew() {
     progress: 68,
     startPoint: 'Domicile de Lucas',
     startAddress: '15 rue des Lilas, 75011 Paris',
-    endPoint: 'École Montessori Étoile',
+    endPoint: 'Hopital Montessori Étoile',
     endAddress: '42 avenue Victor Hugo, 75016 Paris',
     startTime: '07:45',
     endTime: '08:30',
@@ -153,7 +153,7 @@ export function DriverDashboardNew() {
     id: 'C5678',
     name: 'Lucas Dubois',
     initials: 'LD',
-    school: 'École Montessori Étoile',
+    school: 'Hopital Montessori Étoile',
     rating: 4.9,
     about: 'Lucas est sociable mais a du mal à rester concentré pendant les longs trajets. Passionné de jeux vidéo et de dessins animés. Préfère s\'asseoir côté fenêtre.',
     specialNeeds: [
