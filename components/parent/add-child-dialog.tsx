@@ -146,9 +146,9 @@ export function AddChildDialog({ open, onOpenChange, onAddChild }: AddChildDialo
                 name="school"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>École</FormLabel>
+                    <FormLabel>Nom du centre hospitalier</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nom de l'école" {...field} />
+                      <Input placeholder="Nom du centre hospitalier" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

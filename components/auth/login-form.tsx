@@ -52,7 +52,7 @@ export function LoginForm() {
       await login(data.email, data.password);
       toast({
         title: 'Connexion réussie',
-        description: 'Bienvenue sur Atypik Transport',
+        description: 'Bienvenue sur Atypik Driver',
         variant: 'default',
       });
     } catch (error) {
@@ -74,7 +74,7 @@ export function LoginForm() {
       await loginWithGoogle('parent');
       toast({
         title: 'Connexion réussie',
-        description: 'Bienvenue sur Atypik Transport',
+        description: 'Bienvenue sur Atypik Driver',
         variant: 'default',
       });
     } catch (error) {
