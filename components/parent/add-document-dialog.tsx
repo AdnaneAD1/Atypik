@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFileUpload } from '@/hooks/use-file-upload';
+import { uploadToCloudinary } from '@/hooks/use-cloudinary';
 import { Loader2, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,6 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
   const [isUploading, setIsUploading] = useState(false);
   
   const { toast } = useToast();
-  const { uploadFile, isUploading: uploading, progress } = useFileUpload();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -66,38 +65,45 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
     setIsUploading(true);
 
     try {
-      // Upload du fichier avec notre nouvelle API
-      const uploadResponse = await uploadFile(file);
-      
-      if (uploadResponse && uploadResponse.success) {
-        const fileData = uploadResponse.file;
-        
-        // Créer le document avec les données du fichier
-        const documentData = {
-          name: documentName,
-          type: documentType,
-          size: `${Math.round(file.size / 1024)} KB`,
-          status: status,
-          tags: tags.length > 0 ? tags : ['Document'],
-          url: fileData.url,
-          path: fileData.url,
-        };
-        
-        onDocumentAdded(documentData);
-        
+      // Vérifier la taille du fichier (100MB max)
+      const maxSize = 100 * 1024 * 1024; // 100MB
+      if (file.size > maxSize) {
         toast({
-          title: 'Document ajouté',
-          description: 'Le document a été ajouté avec succès',
+          title: 'Fichier trop volumineux',
+          description: 'La taille maximale autorisée est de 100MB',
+          variant: 'destructive',
         });
-        
-        // Réinitialiser le formulaire
-        setFile(null);
-        setDocumentName('');
-        setDocumentType('PDF');
-        setTags([]);
-        setStatus('validated');
-        onOpenChange(false);
+        return;
       }
+      
+      // Upload du fichier vers Cloudinary
+      const fileUrl = await uploadToCloudinary(file);
+      
+      // Créer le document avec les données du fichier
+      const documentData = {
+        name: documentName,
+        type: documentType,
+        size: `${Math.round(file.size / 1024)} KB`,
+        status: status,
+        tags: tags.length > 0 ? tags : ['Document'],
+        url: fileUrl,
+        path: fileUrl,
+      };
+      
+      onDocumentAdded(documentData);
+      
+      toast({
+        title: 'Document ajouté',
+        description: 'Le document a été ajouté avec succès',
+      });
+      
+      // Réinitialiser le formulaire
+      setFile(null);
+      setDocumentName('');
+      setDocumentType('PDF');
+      setTags([]);
+      setStatus('validated');
+      onOpenChange(false);
     } catch (error) {
       console.error('Erreur lors de l\'upload:', error);
       toast({

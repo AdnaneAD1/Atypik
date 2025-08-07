@@ -48,53 +48,55 @@ export function MessageList({
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 bg-gray-50 dark:bg-gray-900">
+        <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
-        <div className="text-center text-muted-foreground">
-          <p>Aucun message dans cette conversation</p>
-          <p className="text-sm">Envoyez un message pour démarrer la conversation</p>
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 bg-gray-50 dark:bg-gray-900">
+        <div className="text-center text-muted-foreground max-w-sm mx-auto">
+          <p className="text-sm sm:text-base">Aucun message dans cette conversation</p>
+          <p className="text-xs sm:text-sm mt-1">Envoyez un message pour démarrer la conversation</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-1 py-2 md:p-4 bg-gray-50 dark:bg-gray-900 relative">
-      {sortedDates.map(date => (
-        <div key={date}>
-          <div className="flex justify-center my-4">
-            <span className="px-3 py-1 rounded-full text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-              {date}
-            </span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {grouped[date].map((message) => (
-              <div
-                key={message.id}
-                className={`flex w-full ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className="max-w-[80%]">
-                  <MessageItem
-                    message={message}
-                    isCurrentUser={message.senderId === currentUserId}
-                    onReply={onReplyToMessage}
-                    onDelete={onDeleteMessage}
-                    onDownloadAttachment={onDownloadAttachment}
-                  />
+    <div className="flex-1 overflow-y-auto px-2 py-2 sm:px-3 md:px-4 md:py-4 bg-gray-50 dark:bg-gray-900 relative">
+      <div className="max-w-4xl mx-auto">
+        {sortedDates.map(date => (
+          <div key={date} className="mb-4 sm:mb-6">
+            <div className="flex justify-center my-3 sm:my-4">
+              <span className="px-3 py-1 rounded-full text-xs sm:text-sm bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 shadow-sm">
+                {date}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1 sm:gap-2">
+              {grouped[date].map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex w-full ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className="w-full max-w-[90%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[70%]">
+                    <MessageItem
+                      message={message}
+                      isCurrentUser={message.senderId === currentUserId}
+                      onReply={onReplyToMessage}
+                      onDelete={onDeleteMessage}
+                      onDownloadAttachment={onDownloadAttachment}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
-      <div ref={messagesEndRef} />
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
     </div>
   );
 }

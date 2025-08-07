@@ -6,14 +6,45 @@ import {
   BarChart as BarChartIcon, 
   TrendingUp, 
   Users, 
-  Clock,
   Star,
   MapPin,
   Car,
-  Banknote
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useDriverStats } from '@/hooks/use-driver-stats';
 
 export function DriverStats() {
+  const { stats, loading, error, refreshStats } = useDriverStats();
+
+  // Affichage de chargement
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Chargement des statistiques...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Affichage d'erreur
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertTriangle className="h-8 w-8 text-red-500" />
+          <p className="text-muted-foreground">Erreur lors du chargement des statistiques</p>
+          <Button onClick={refreshStats} variant="outline">
+            Réessayer
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -32,11 +63,11 @@ export function DriverStats() {
             <Star className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4.9/5</div>
+            <div className="text-2xl font-bold">{stats.averageRating.toFixed(1)}/5</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Basé sur 128 évaluations
+              Basé sur {stats.totalReviews} évaluation{stats.totalReviews > 1 ? 's' : ''}
             </p>
-            <Progress value={98} className="h-2 mt-2" />
+            <Progress value={(stats.averageRating / 5) * 100} className="h-2 mt-2" />
           </CardContent>
         </Card>
 
@@ -48,11 +79,11 @@ export function DriverStats() {
             <Car className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">86</div>
+            <div className="text-2xl font-bold">{stats.thisMonthMissions}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              +12% par rapport au mois dernier
+              {stats.trends.missionsGrowth >= 0 ? '+' : ''}{stats.trends.missionsGrowth.toFixed(1)}% par rapport au mois dernier
             </p>
-            <Progress value={75} className="h-2 mt-2" />
+            <Progress value={Math.min((stats.thisMonthMissions / Math.max(stats.totalMissions, 1)) * 100, 100)} className="h-2 mt-2" />
           </CardContent>
         </Card>
 
@@ -64,27 +95,11 @@ export function DriverStats() {
             <MapPin className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1 250 km</div>
+            <div className="text-2xl font-bold">{stats.thisMonthKmTraveled.toFixed(1)} km</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Ce mois-ci
+              {stats.trends.kmGrowth >= 0 ? '+' : ''}{stats.trends.kmGrowth.toFixed(1)}% vs mois dernier
             </p>
-            <Progress value={82} className="h-2 mt-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Gains du mois
-            </CardTitle>
-            <Banknote className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1 850€</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              +8% par rapport au mois dernier
-            </p>
-            <Progress value={68} className="h-2 mt-2" />
+            <Progress value={Math.min((stats.thisMonthKmTraveled / Math.max(stats.totalKmTraveled, 1)) * 100, 100)} className="h-2 mt-2" />
           </CardContent>
         </Card>
       </div>
@@ -99,18 +114,50 @@ export function DriverStats() {
           </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-end justify-between gap-2">
-              {[65, 45, 85, 75, 55, 40, 30].map((value, i) => (
-                <div key={i} className="flex-1">
-                  <div 
-                    className="bg-primary/10 rounded-t-lg"
-                    style={{ height: `${value}%` }}
-                  />
-                  <div className="text-xs text-center mt-2 text-muted-foreground">
-                    {['L', 'M', 'M', 'J', 'V', 'S', 'D'][i]}
+              {stats.weeklyActivity.map((value, i) => {
+                const maxValue = Math.max(...stats.weeklyActivity, 1);
+                const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
+                // Hauteur minimale de 10px pour la visibilité, même si value = 0
+                const minHeight = value > 0 ? Math.max(percentage, 10) : 5;
+                
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center">
+                    <div className="w-full flex flex-col items-center justify-end" style={{ height: '260px' }}>
+                      <div 
+                        className={`w-full rounded-t-lg transition-all duration-300 ${
+                          value > 0 
+                            ? 'bg-primary/20 hover:bg-primary/30 border border-primary/30' 
+                            : 'bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+                        }`}
+                        style={{ 
+                          height: `${minHeight}px`,
+                          minHeight: '5px'
+                        }}
+                        title={`${value} mission${value !== 1 ? 's' : ''} - ${['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][i]}`}
+                      />
+                    </div>
+                    <div className="text-xs text-center mt-2 text-muted-foreground font-medium">
+                      {['L', 'M', 'M', 'J', 'V', 'S', 'D'][i]}
+                    </div>
+                    <div className={`text-xs text-center font-bold ${
+                      value > 0 ? 'text-primary' : 'text-muted-foreground'
+                    }`}>
+                      {value}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+            
+            {/* Message si aucune activité */}
+            {stats.weeklyActivity.every(v => v === 0) && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <p className="text-sm font-medium">Aucune activité cette semaine</p>
+                  <p className="text-xs mt-1">Les missions apparaîtront ici une fois effectuées</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -129,20 +176,9 @@ export function DriverStats() {
                     <Users className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">Enfants transportés</span>
                   </div>
-                  <span className="text-sm font-bold">45</span>
+                  <span className="text-sm font-bold">{stats.totalChildrenTransported}</span>
                 </div>
-                <Progress value={85} className="h-2" />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">Ponctualité</span>
-                  </div>
-                  <span className="text-sm font-bold">98%</span>
-                </div>
-                <Progress value={98} className="h-2" />
+                <Progress value={Math.min((stats.totalChildrenTransported / Math.max(stats.totalChildrenTransported, 10)) * 100, 100)} className="h-2" />
               </div>
 
               <div>
@@ -151,9 +187,9 @@ export function DriverStats() {
                     <Star className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">Satisfaction</span>
                   </div>
-                  <span className="text-sm font-bold">4.9/5</span>
+                  <span className="text-sm font-bold">{stats.averageRating.toFixed(1)}/5</span>
                 </div>
-                <Progress value={98} className="h-2" />
+                <Progress value={(stats.averageRating / 5) * 100} className="h-2" />
               </div>
             </div>
           </CardContent>

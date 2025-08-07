@@ -14,8 +14,19 @@ export type DriverTransportEvent = {
   transportType: 'aller' | 'retour' | 'aller-retour';
   userId: string; // parent
   driverId: string; // chauffeur
-  from?: string;
-  to?: string;
+  from: {
+    address: string;
+    lat: number;
+    lng: number;
+    placeId?: string;
+  };
+  to: {
+    address: string;
+    lat: number;
+    lng: number;
+    placeId?: string;
+  };
+  distance: number; // en mètres (obligatoire, 0 par défaut)
 };
 
 export function useDriversTransport(driverId: string | undefined) {
@@ -47,6 +58,7 @@ export function useDriversTransport(driverId: string | undefined) {
           driverId: data.driverId,
           from: data.from,
           to: data.to,
+          distance: data.distance || 0,
         });
       });
       setTransports(results);

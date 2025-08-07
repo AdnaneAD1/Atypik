@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Message } from '@/hooks/use-messages';
 import { Send, Paperclip, X, Image as ImageIcon, File, Reply } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { uploadToCloudinary } from '@/hooks/use-cloudinary';
+import { useToast } from '@/hooks/use-toast';
 
 interface MessageInputProps {
   onSendMessage: (content: string, files: File[]) => void;
@@ -24,13 +26,70 @@ export function MessageInput({
 }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (message.trim() || files.length > 0) {
-      onSendMessage(message, files);
-      setMessage('');
-      setFiles([]);
+      try {
+        let uploadedFiles: File[] = [];
+        
+        if (files.length > 0) {
+          setUploadingFiles(true);
+          
+          // Upload chaque fichier vers Cloudinary
+          const uploadPromises = files.map(async (file) => {
+            // Vérifier la taille du fichier (100MB max)
+            const maxSize = 100 * 1024 * 1024; // 100MB
+            if (file.size > maxSize) {
+              toast({
+                title: 'Fichier trop volumineux',
+                description: `${file.name} dépasse la taille maximale de 100MB`,
+                variant: 'destructive',
+              });
+              return null;
+            }
+            
+            try {
+              const fileUrl = await uploadToCloudinary(file);
+              // Retourner le fichier original avec l'URL Cloudinary ajoutée
+              const uploadedFile = file;
+              Object.defineProperty(uploadedFile, 'cloudinaryUrl', {
+                value: fileUrl,
+                writable: false,
+                enumerable: true
+              });
+              return uploadedFile;
+            } catch (error) {
+              console.error(`Erreur upload ${file.name}:`, error);
+              toast({
+                title: 'Erreur d\'upload',
+                description: `Impossible d\'uploader ${file.name}`,
+                variant: 'destructive',
+              });
+              return null;
+            }
+          });
+          
+          const results = await Promise.all(uploadPromises);
+          uploadedFiles = results.filter(file => file !== null) as File[];
+          
+          setUploadingFiles(false);
+        }
+        
+        onSendMessage(message, uploadedFiles);
+        setMessage('');
+        setFiles([]);
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi:', error);
+        setUploadingFiles(false);
+        toast({
+          title: 'Erreur',
+          description: 'Erreur lors de l\'envoi du message',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -44,7 +103,26 @@ export function MessageInput({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
-      setFiles([...files, ...newFiles]);
+      
+      // Vérifier la taille de chaque fichier avant de l'ajouter
+      const maxSize = 100 * 1024 * 1024; // 100MB
+      const validFiles: File[] = [];
+      
+      newFiles.forEach(file => {
+        if (file.size > maxSize) {
+          toast({
+            title: 'Fichier trop volumineux',
+            description: `${file.name} dépasse la taille maximale de 100MB`,
+            variant: 'destructive',
+          });
+        } else {
+          validFiles.push(file);
+        }
+      });
+      
+      if (validFiles.length > 0) {
+        setFiles([...files, ...validFiles]);
+      }
       
       // Réinitialiser l'input file pour permettre de sélectionner à nouveau le même fichier
       if (fileInputRef.current) {

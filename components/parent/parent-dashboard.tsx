@@ -29,11 +29,28 @@ import { ParentUpcomingTrip } from '@/components/parent/parent-upcoming-trip';
 import { FeaturedChildProfile } from '@/components/parent/featured-child-profile';
 
 import { useRegion } from '@/hooks/use-region';
+import { useDashboard } from '@/hooks/use-dashboard';
 
 export function ParentDashboard() {
   const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Hook pour les données du dashboard
+  const {
+    stats,
+    upcomingTrips,
+    weeklySchedule,
+    children,
+    reviews,
+    notifications,
+    loading,
+    error,
+    markNotificationAsRead,
+    getNextTrip,
+    getFeaturedChild,
+    getUnreadNotifications,
+  } = useDashboard();
   
   // États pour les dialogues
   const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
@@ -162,7 +179,55 @@ export function ParentDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="pb-6">
-              <ParentUpcomingTrip />
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : getNextTrip() ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">{getNextTrip()?.childName}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {getNextTrip()?.scheduledTime.toLocaleDateString('fr-FR')} à {getNextTrip()?.scheduledTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{getNextTrip()?.driverName}</p>
+                      <p className="text-xs text-muted-foreground">Chauffeur</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-muted-foreground">Départ:</span>
+                      <span>{getNextTrip()?.from.address}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <span className="text-muted-foreground">Arrivée:</span>
+                      <span>{getNextTrip()?.to.address}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-xs text-muted-foreground">
+                      Distance: {((getNextTrip()?.distance || 0) / 1000).toFixed(1)} km
+                    </span>
+                    <Button 
+                      size="sm" 
+                      onClick={() => router.push('/parent/tracking')}
+                      className="h-7 text-xs"
+                    >
+                      Suivre en temps réel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Aucun trajet prévu aujourd'hui</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -188,17 +253,26 @@ export function ParentDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ParentCalendarView />
+                <ParentCalendarView 
+            weeklySchedule={weeklySchedule} 
+            loading={loading} 
+          />
               </CardContent>
             </Card>
           </motion.div>
 
           <motion.div variants={itemVariants} className="order-3 lg:order-2">
-            <FeaturedChildProfile onViewDetails={handleViewChildProfile} />
+            <FeaturedChildProfile 
+              child={getFeaturedChild()} 
+              loading={loading} 
+            />
           </motion.div>
 
           <motion.div variants={itemVariants} className="md:col-span-2 lg:col-span-2 order-2 lg:order-3">
-            <ParentChildListCard />
+            <ParentChildListCard 
+              childrenData={children} 
+              loading={loading} 
+            />
           </motion.div>
         </div>
 
@@ -225,183 +299,170 @@ export function ParentDashboard() {
                 </TabsList>
                 <TabsContent value="received" className="space-y-4">
                   <div className="space-y-4">
-                    {/* Première évaluation reçue */}
-                    <div className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
-                      <div className="relative p-4 sm:p-5">
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0">
-                            <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center">
-                              <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">TD</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                              <div>
-                                <h4 className="text-sm font-semibold">Thomas Durand</h4>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  <p className="text-xs text-muted-foreground">10 juin · Chauffeur</p>
-                                  <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-300">
-                                    Retour
-                                  </span>
+                    {loading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                      </div>
+                    ) : reviews.filter(r => r.type === 'received').length > 0 ? (
+                      reviews.filter(r => r.type === 'received').map((review) => (
+                        <div key={review.id} className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
+                          <div className="relative p-4 sm:p-5">
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0">
+                                <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center">
+                                  {review.reviewerAvatar ? (
+                                    <img src={review.reviewerAvatar} alt={review.reviewerName} className="h-10 w-10 rounded-full" />
+                                  ) : (
+                                    <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
+                                      {review.reviewerName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                               
-                              <div className="flex items-center gap-0.5">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star 
-                                    key={star} 
-                                    className={`h-3.5 w-3.5 ${star <= 5 ? "text-amber-400 fill-amber-400" : "text-muted"}`} 
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            
-                            <div className="mt-2 text-sm">
-                              <p className="relative pl-3 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:rounded-full before:bg-primary/30">
-                                &quot;Lucas a été très calme pendant le trajet. Il a beaucoup discuté de son nouveau jeu vidéo.&quot;
-                              </p>
-                            </div>
-                            
-                            <div className="flex items-center justify-end gap-2 mt-3">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-7 text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 hover:text-amber-800 dark:bg-amber-900/10 dark:border-amber-800/30 dark:text-amber-300 dark:hover:bg-amber-900/20"
-                                onClick={() => handleThank('1', 'Thomas Durand')}
-                              >
-                                <Star className="h-3 w-3 mr-1 fill-amber-400 text-amber-400" />
-                                Remercier
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-7 text-[10px]"
-                                onClick={() => handleReply('1', 'Thomas Durand')}
-                              >
-                                <MessageSquare className="h-3 w-3 mr-1" />
-                                Répondre
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Deuxième évaluation reçue */}
-                    <div className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
-                      <div className="relative p-4 sm:p-5">
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0">
-                            <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                              <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">ML</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                              <div>
-                                <h4 className="text-sm font-semibold">Marie Leroy</h4>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  <p className="text-xs text-muted-foreground">9 juin · Chauffeur</p>
-                                  <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-900/30 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-300">
-                                    Aller
-                                  </span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                                  <div>
+                                    <h4 className="text-sm font-semibold">{review.reviewerName}</h4>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <p className="text-xs text-muted-foreground">
+                                        {review.date.toLocaleDateString('fr-FR')} · {review.reviewerRole === 'driver' ? 'Chauffeur' : 'Parent'}
+                                      </p>
+                                      <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-300">
+                                        {review.tripType === 'aller' ? 'Aller' : 'Retour'}
+                                      </span>
+                                      {review.childName && (
+                                        <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-900/30 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-300">
+                                          {review.childName}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-0.5">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <Star 
+                                        key={star} 
+                                        className={`h-3.5 w-3.5 ${star <= review.rating ? "text-amber-400 fill-amber-400" : "text-muted"}`} 
+                                      />
+                                    ))}
+                                  </div>
                                 </div>
+                                
+                                {review.comment && (
+                                  <div className="mt-2 text-sm">
+                                    <p className="relative pl-3 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:rounded-full before:bg-primary/30">
+                                      &quot;{review.comment}&quot;
+                                    </p>
+                                  </div>
+                                )}
+                                
+                                {review.canReply && (
+                                  <div className="flex items-center justify-end gap-2 mt-3">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-7 text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 hover:text-amber-800 dark:bg-amber-900/10 dark:border-amber-800/30 dark:text-amber-300 dark:hover:bg-amber-900/20"
+                                      onClick={() => handleThank(review.id, review.reviewerName)}
+                                    >
+                                      <Star className="h-3 w-3 mr-1 fill-amber-400 text-amber-400" />
+                                      Remercier
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-7 text-[10px]"
+                                      onClick={() => handleReply(review.id, review.reviewerName)}
+                                    >
+                                      <MessageSquare className="h-3 w-3 mr-1" />
+                                      Répondre
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
-                              
-                              <div className="flex items-center gap-0.5">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star 
-                                    key={star} 
-                                    className={`h-3.5 w-3.5 ${star <= 4 ? "text-amber-400 fill-amber-400" : "text-muted"}`} 
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            
-                            <div className="mt-2 text-sm">
-                              <p className="relative pl-3 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:rounded-full before:bg-purple-300 dark:before:bg-purple-700">
-                                &quot;Léa était un peu anxieuse ce matin mais s&apos;est détendue après quelques minutes.&quot;
-                              </p>
-                            </div>
-                            
-                            <div className="flex items-center justify-end gap-2 mt-3">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-7 text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 hover:text-amber-800 dark:bg-amber-900/10 dark:border-amber-800/30 dark:text-amber-300 dark:hover:bg-amber-900/20"
-                                onClick={() => handleThank('2', 'Marie Leroy')}
-                              >
-                                <Star className="h-3 w-3 mr-1 fill-amber-400 text-amber-400" />
-                                Remercier
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-7 text-[10px]"
-                                onClick={() => handleReply('2', 'Marie Leroy')}
-                              >
-                                <MessageSquare className="h-3 w-3 mr-1" />
-                                Répondre
-                              </Button>
                             </div>
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <Star className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Aucune évaluation reçue</p>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </TabsContent>
                 
                 <TabsContent value="given" className="space-y-4">
                   <div className="space-y-4">
-                    {/* Évaluations données */}
-                    <div className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
-                      <div className="relative p-4 sm:p-5">
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0">
-                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <span className="text-sm font-semibold text-primary">TB</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                              <div>
-                                <h4 className="text-sm font-semibold">Thomas Bernard</h4>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  <p className="text-xs text-muted-foreground">12 juin · Votre évaluation</p>
-                                  <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-300">
-                                    Aller-retour
-                                  </span>
+                    {loading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                      </div>
+                    ) : reviews.filter(r => r.type === 'given').length > 0 ? (
+                      reviews.filter(r => r.type === 'given').map((review) => (
+                        <div key={review.id} className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
+                          <div className="relative p-4 sm:p-5">
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0">
+                                <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                                  {user?.avatar ? (
+                                    <img src={user.avatar} alt={user.name || 'Vous'} className="h-10 w-10 rounded-full" />
+                                  ) : (
+                                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                      {(user?.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase()}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                               
-                              <div className="flex items-center gap-0.5">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star 
-                                    key={star} 
-                                    className={`h-3.5 w-3.5 ${star <= 5 ? "text-amber-400 fill-amber-400" : "text-muted"}`} 
-                                  />
-                                ))}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                                  <div>
+                                    <h4 className="text-sm font-semibold">Vous</h4>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <p className="text-xs text-muted-foreground">
+                                        {review.date.toLocaleDateString('fr-FR')} · Parent
+                                      </p>
+                                      <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-300">
+                                        {review.tripType === 'aller' ? 'Aller' : 'Retour'}
+                                      </span>
+                                      {review.childName && (
+                                        <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-900/30 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-300">
+                                          {review.childName}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-0.5">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <Star 
+                                        key={star} 
+                                        className={`h-3.5 w-3.5 ${star <= review.rating ? "text-amber-400 fill-amber-400" : "text-muted"}`} 
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                {review.comment && (
+                                  <div className="mt-2 text-sm">
+                                    <p className="relative pl-3 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:rounded-full before:bg-primary/30">
+                                      &quot;{review.comment}&quot;
+                                    </p>
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                            
-                            <div className="mt-2 text-sm">
-                              <p className="relative pl-3 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:rounded-full before:bg-primary/30">
-                                &quot;Trajet parfait, Thomas est toujours très professionnel et à l&apos;heure.&quot;
-                              </p>
-                            </div>
-                            
-                            <div className="flex items-center justify-end gap-2 mt-3">
-                              <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground hover:text-foreground">
-                                Modifier
-                              </Button>
                             </div>
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <Award className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Aucune évaluation donnée</p>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </TabsContent>
               </Tabs>

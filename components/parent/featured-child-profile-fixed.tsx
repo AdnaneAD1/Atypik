@@ -12,9 +12,10 @@ import { useToast } from '@/hooks/use-toast';
 interface FeaturedChildProfileProps {
   child?: any;
   loading?: boolean;
+  onViewDetails?: () => void;
 }
 
-export function FeaturedChildProfile({ child, loading = false }: FeaturedChildProfileProps) {
+export function FeaturedChildProfile({ child, loading = false, onViewDetails }: FeaturedChildProfileProps) {
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(false);
   
@@ -27,6 +28,17 @@ export function FeaturedChildProfile({ child, loading = false }: FeaturedChildPr
       title: isLiked ? 'Retiré des favoris' : 'Ajouté aux favoris',
       description: isLiked ? `${child.name} a été retiré de vos favoris` : `${child.name} a été ajouté à vos favoris`,
     });
+  };
+  
+  const handleViewDetails = () => {
+    if (onViewDetails) {
+      onViewDetails();
+    } else {
+      toast({
+        title: 'Détails du profil',
+        description: child ? `Affichage des détails du profil de ${child.name}` : 'Aucun enfant sélectionné',
+      });
+    }
   };
 
   if (loading) {
@@ -133,14 +145,21 @@ export function FeaturedChildProfile({ child, loading = false }: FeaturedChildPr
                 <p className="text-xs text-muted-foreground">Trajets</p>
               </div>
               <div className="p-2 bg-secondary/50 rounded-lg text-center">
-                <p className="text-lg font-semibold text-green-600">{child.stats.completedTrips || 0}</p>
-                <p className="text-xs text-muted-foreground">Terminés</p>
+                <p className="text-lg font-semibold text-green-600">{child.stats.onTimeRate || '100%'}</p>
+                <p className="text-xs text-muted-foreground">Ponctualité</p>
               </div>
             </div>
           </div>
         )}
         
-
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={handleViewDetails}
+        >
+          <ChevronRight className="h-4 w-4 mr-2" />
+          Voir le profil complet
+        </Button>
       </CardContent>
     </Card>
   );

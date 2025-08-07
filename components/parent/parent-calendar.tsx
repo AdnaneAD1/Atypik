@@ -10,7 +10,17 @@ import { useToast } from '@/hooks/use-toast';
 import { useTransport, TransportEvent } from '@/hooks/use-transport';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarPlus, Info, Bus } from 'lucide-react';
+import { CalendarPlus, Info, Bus, MapPin, Clock, User, MessageSquare, X } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 export function ParentCalendar() {
   // Fonction utilitaire pour vérifier si une date est passée sans modifier l'objet Date original
@@ -28,12 +38,21 @@ export function ParentCalendar() {
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [selectedTransportDate, setSelectedTransportDate] = useState<Date | undefined>(new Date());
   
+  // États pour le modal de détail des transports
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [selectedTransport, setSelectedTransport] = useState<TransportEvent | null>(null);
+  const [comment, setComment] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  
   // Utiliser le hook useTransport
   const { 
     transportEvents, 
     loading, 
     error, 
-    addTransport, 
+    addTransport,
+    updateTransport,
+    addTransportComment,
     getTransportsForDate, 
     hasTransportsOnDate 
   } = useTransport();
@@ -48,6 +67,8 @@ export function ParentCalendar() {
       transportType: data.transportType,
       from: data.from,
       to: data.to,
+      distance: data.distance,
+      status: 'programmed',
     });
 
     if (result) {
@@ -60,6 +81,91 @@ export function ParentCalendar() {
         success: false,
         message: `Le transport n'a pas pu être ajouté (aucun chauffeur disponible ou erreur).`,
       };
+    }
+  };
+
+  // Fonction pour ouvrir le modal de détail d'un transport
+  const handleOpenTransportDetail = (transport: TransportEvent) => {
+    setSelectedTransport(transport);
+    setComment('');
+    setIsDetailDialogOpen(true);
+  };
+
+  // Fonction pour fermer le modal de détail
+  const handleCloseTransportDetail = () => {
+    setIsDetailDialogOpen(false);
+    setSelectedTransport(null);
+    setComment('');
+    setIsSubmittingComment(false);
+    setIsCancelling(false);
+  };
+
+  // Fonction pour déterminer si un transport peut être annulé
+  const canCancelTransport = (transport: TransportEvent) => {
+    if (!transport.date) return false;
+    const transportDate = transport.date instanceof Date ? transport.date : (transport.date as any).toDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(transportDate);
+    compareDate.setHours(0, 0, 0, 0);
+    return compareDate >= today && transport.status !== 'completed' && transport.status !== 'cancelled';
+  };
+
+  // Fonction pour déterminer si un transport peut recevoir un commentaire
+  const canCommentTransport = (transport: TransportEvent) => {
+    if (!transport.date) return false;
+    const transportDate = transport.date instanceof Date ? transport.date : (transport.date as any).toDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(transportDate);
+    compareDate.setHours(0, 0, 0, 0);
+    return compareDate < today || transport.status === 'completed';
+  };
+
+  // Fonction pour annuler un transport
+  const handleCancelTransport = async () => {
+    if (!selectedTransport) return;
+    
+    setIsCancelling(true);
+    try {
+      const success = await updateTransport(selectedTransport.id, {
+        ...selectedTransport,
+        status: 'cancelled'
+      });
+      
+      if (success) {
+        handleCloseTransportDetail();
+      }
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'annuler le transport.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  // Fonction pour soumettre un commentaire
+  const handleSubmitComment = async () => {
+    if (!selectedTransport || !comment.trim()) return;
+    
+    setIsSubmittingComment(true);
+    try {
+      const success = await addTransportComment(selectedTransport.id, comment.trim());
+      
+      if (success) {
+        handleCloseTransportDetail();
+      }
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'ajouter le commentaire.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmittingComment(false);
     }
   };
 
@@ -134,7 +240,11 @@ export function ParentCalendar() {
             ) : date && getTransportsForDate(date).length > 0 ? (
               <div className="space-y-3">
                 {getTransportsForDate(date).map((event) => (
-                  <div key={event.id} className="p-3 rounded-lg border bg-background/50">
+                  <div 
+                    key={event.id} 
+                    className="p-3 rounded-lg border bg-background/50 cursor-pointer hover:bg-background/80 transition-colors"
+                    onClick={() => handleOpenTransportDetail(event)}
+                  >
                     <div className="flex items-start gap-3">
                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                         <Bus className="h-4 w-4" />
@@ -191,6 +301,136 @@ export function ParentCalendar() {
         onAddEvent={handleAddEvent}
         key={selectedTransportDate?.toISOString()} // Forcer la réinitialisation du composant quand la date change
       />
+      
+      {/* Modal de détail des transports */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={handleCloseTransportDetail}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bus className="h-5 w-5 text-primary" />
+              Détails du transport
+            </DialogTitle>
+            <DialogDescription>
+              {selectedTransport && (
+                <span>
+                  {format(selectedTransport.date instanceof Date ? selectedTransport.date : (selectedTransport.date as any).toDate(), 'EEEE d MMMM yyyy', { locale: fr })}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTransport && (
+            <div className="space-y-4">
+              {/* Informations générales */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">{selectedTransport.childName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedTransport.transportType === 'aller' ? 'Transport aller (matin)' : 'Transport retour (après-midi)'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Heure de prise en charge</p>
+                    <p className="text-sm text-muted-foreground">{selectedTransport.time}</p>
+                  </div>
+                </div>
+                
+                {selectedTransport.from && selectedTransport.to && (
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-4 w-4 text-green-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-sm">Départ</p>
+                        <p className="text-sm text-muted-foreground">{selectedTransport.from.address}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-4 w-4 text-red-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-sm">Arrivée</p>
+                        <p className="text-sm text-muted-foreground">{selectedTransport.to.address}</p>
+                      </div>
+                    </div>
+                    {selectedTransport.distance && (
+                      <div className="text-sm text-muted-foreground pl-7">
+                        Distance : {(selectedTransport.distance / 1000).toFixed(2)} km
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Statut */}
+                <div className="flex items-center gap-3">
+                  <div className={`h-3 w-3 rounded-full ${
+                    selectedTransport.status === 'completed' ? 'bg-green-500' :
+                    selectedTransport.status === 'cancelled' ? 'bg-red-500' :
+                    'bg-blue-500'
+                  }`} />
+                  <div>
+                    <p className="font-medium text-sm">Statut</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedTransport.status === 'completed' ? 'Terminé' :
+                       selectedTransport.status === 'cancelled' ? 'Annulé' : 'Programmé'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Section commentaire pour les transports passés/terminés */}
+              {canCommentTransport(selectedTransport) && (
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                    <Label htmlFor="comment" className="font-medium">Laisser un commentaire</Label>
+                  </div>
+                  <Textarea
+                    id="comment"
+                    placeholder="Partagez votre expérience avec ce transport..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCloseTransportDetail}
+              disabled={isSubmittingComment || isCancelling}
+            >
+              Fermer
+            </Button>
+            
+            {selectedTransport && canCancelTransport(selectedTransport) && (
+              <Button
+                variant="destructive"
+                onClick={handleCancelTransport}
+                disabled={isSubmittingComment || isCancelling}
+              >
+                {isCancelling ? 'Annulation...' : 'Annuler le transport'}
+              </Button>
+            )}
+            
+            {selectedTransport && canCommentTransport(selectedTransport) && comment.trim() && (
+              <Button
+                onClick={handleSubmitComment}
+                disabled={isSubmittingComment || isCancelling}
+              >
+                {isSubmittingComment ? 'Envoi...' : 'Envoyer le commentaire'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
 
   );

@@ -11,53 +11,63 @@ import { Badge } from '@/components/ui/badge';
 import { AnimatedRoute } from '@/components/ui/animated-route';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 
-function DriverMissionCard() {
+interface DriverMissionCardProps {
+  mission?: {
+    id: string;
+    status: 'active' | 'pending' | 'completed';
+    child: {
+      name: string;
+      age: number;
+      avatar?: string;
+      needs?: Array<{ type: string; description: string; severity: 'low' | 'medium' | 'high' }>;
+    };
+    parent: {
+      name: string;
+      avatar?: string;
+      phone?: string;
+    };
+    from: {
+      name: string;
+      address: string;
+      lat?: number;
+      lng?: number;
+    };
+    to: {
+      name: string;
+      address: string;
+      lat?: number;
+      lng?: number;
+    };
+    timeEstimate: string;
+    distance: number;
+    scheduledTime: string;
+    progress: number;
+    time: string;
+  };
+}
+
+function DriverMissionCard({ mission }: DriverMissionCardProps) {
   // États pour les popups
   const [showNeeds, setShowNeeds] = useState(false);
   const [showMap, setShowMap] = useState(false);
 
-  // Simulated active mission
-  const mission = {
-    id: '123',
-    status: 'active',
-    child: {
-      name: 'Lucas',
-      age: 8,
-      avatar: null,
-      needs: ['TDAH', 'Allergie gluten']
-    },
-    parent: {
-      name: 'Marie Dubois',
-      avatar: null,
-      phone: '06 12 34 56 78'
-    },
-    driver: {
-      name: 'Thomas Bernard',
-      avatar: null,
-      rating: 4.9,
-      vehicle: 'Renault Espace Gris',
-      licensePlate: 'AB-123-CD'
-    },
-    from: {
-      name: 'Domicile',
-      address: '123 rue des Lilas, Paris',
-    },
-    to: {
-      name: 'École Montessori Étoile',
-      address: '45 avenue Victor Hugo, Paris',
-    },
-    timeEstimate: '15 min',
-    distance: '5.2 km',
-    progress: 68,
-    departureTime: '08:15',
-    arrivalTime: '08:30',
-    type: 'Aller école'
-  };
-  
+  // Si aucune mission active, afficher un message
+  if (!mission) {
+    return (
+      <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-primary">
+        <CardContent className="p-6">
+          <div className="text-center py-8">
+            <Car className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-muted-foreground mb-2">Aucune mission active</h3>
+            <p className="text-sm text-muted-foreground">Vous n&apos;avez pas de mission en cours pour le moment.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Fonctions pour gérer les actions
   const handleCallParent = () => {
-    // Dans une application réelle, cela pourrait ouvrir l'application téléphone
-    alert(`Appel à ${mission.parent.name} au ${mission.parent.phone}`);
   };
 
   const handleViewMap = () => {
@@ -119,21 +129,21 @@ function DriverMissionCard() {
               </div>
               
               <div className="space-y-3">
-                {mission.child.needs.map((need, index) => (
+                {mission.child.needs?.map((need, index) => (
                   <div key={index} className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-lg p-3">
                     <div className="flex items-start gap-3">
                       <AlertTriangle className="h-5 w-5 text-amber-500 dark:text-amber-400 mt-0.5" />
                       <div>
-                        <h5 className="font-medium text-amber-700 dark:text-amber-400">{need}</h5>
+                        <h5 className="font-medium text-amber-700 dark:text-amber-400">{need.type || need.description}</h5>
                         <p className="text-sm text-amber-600/80 dark:text-amber-300/80 mt-1">
-                          {need === 'TDAH' ? 
+                          {need.description || (need.type === 'TDAH' ? 
                             'Peut avoir besoin d\'attention supplémentaire et de patience. Préfère un environnement calme.' : 
-                            'Ne doit pas consommer d\'aliments contenant du gluten. Apporte généralement son propre repas.'}
+                            'Besoin spécial à prendre en compte.')}
                         </p>
                       </div>
                     </div>
                   </div>
-                ))}
+                )) || []}
               </div>
               
               <div className="mt-5 flex justify-end">
@@ -223,7 +233,7 @@ function DriverMissionCard() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Départ {mission.departureTime} · Arrivée estimée {mission.arrivalTime}
+                      Départ {mission.time}
                     </p>
                   </div>
                 </div>
@@ -263,9 +273,6 @@ function DriverMissionCard() {
                   <div>
                     <h4 className="text-base font-semibold">{mission.child.name}</h4>
                     <div className="flex items-center gap-2">
-                      <div className="inline-flex items-center rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 text-[10px] font-medium px-2 py-0 h-5">
-                        {mission.type}
-                      </div>
                       <p className="text-xs text-muted-foreground">{mission.timeEstimate} restant</p>
                     </div>
                   </div>
@@ -289,7 +296,7 @@ function DriverMissionCard() {
                           <p className="text-sm font-medium">{mission.from.name}</p>
                           <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium">
                             <CheckCircle2 className="h-3.5 w-3.5" />
-                            <span>Départ à {mission.departureTime}</span>
+                            <span>Départ à {mission.time}</span>
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
@@ -297,7 +304,6 @@ function DriverMissionCard() {
                       <div>
                         <div className="flex items-center justify-between">
                           <p className="text-sm font-medium">{mission.to.name}</p>
-                          <p className="text-xs font-medium">{mission.arrivalTime}</p>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
                       </div>

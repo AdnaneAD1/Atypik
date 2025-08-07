@@ -49,15 +49,25 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
-  // Handle scroll for header styling and check for mobile
+  // Handle scroll for header styling and check for device types
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
     
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+      
+      // Auto-close sidebar on mobile when resizing to mobile
+      if (width < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -84,12 +94,24 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
 
   return (
     <AuthGuard allowedRoles={allowedRoles}>
-      <div className="dashboard-layout">
-        {/* Desktop Sidebar - Hidden on Mobile */}
+      <div className="min-h-screen bg-background">
+        {/* Desktop/Tablet Sidebar - Hidden on Mobile */}
         {!isMobile && (
-          <aside className="dashboard-sidebar">
-            <div className="p-6 border-b">
+          <aside className={`fixed left-0 top-0 z-30 h-full w-64 border-r bg-card transition-transform duration-300 ease-in-out ${
+            isTablet && !isSidebarOpen ? '-translate-x-full' : 'translate-x-0'
+          }`}>
+            <div className="flex h-16 items-center justify-between border-b px-6">
               <Logo />
+              {isTablet && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="h-8 w-8"
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+              )}
             </div>
             <div className="flex-1 overflow-y-auto scrollbar-hide">
               <SideNav />
@@ -98,55 +120,89 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
         )}
 
         {/* Main Content */}
-        <main className="dashboard-main">
+        <main className={`flex-1 transition-all duration-300 ease-in-out ${
+          !isMobile && (!isTablet || isSidebarOpen) ? 'ml-64' : 'ml-0'
+        }`}>
           {/* Header */}
-          <header className="dashboard-header">
-            <div className="h-16 px-6 flex items-center justify-between">
-              <div className="flex items-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className=""
-                  onClick={() => setIsSidebarOpen(true)}
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
+          <header className={`sticky top-0 z-20 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 ${
+            isScrolled ? 'shadow-sm' : ''
+          }`}>
+            <div className="flex h-16 items-center justify-between px-4 sm:px-6">
+              <div className="flex items-center gap-2">
+                {(isMobile || (isTablet && !isSidebarOpen)) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="h-9 w-9"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                )}
+                {isMobile && (
+                  <div className="flex items-center">
+                    <Logo />
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="hidden lg:flex text-muted-foreground hover:text-foreground">
-                  <HelpCircle className="h-5 w-5" />
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hidden lg:flex text-muted-foreground hover:text-foreground h-9 w-9"
+                >
+                  <HelpCircle className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="hidden lg:flex text-muted-foreground hover:text-foreground">
-                  <Settings className="h-5 w-5" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="hidden md:flex text-muted-foreground hover:text-foreground h-9 w-9"
+                >
+                  <Settings className="h-4 w-4" />
                 </Button>
                 <NotificationsPopover />
-                <ModeToggle />
+                <div className="hidden sm:block">
+                  <ModeToggle />
+                </div>
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <Avatar className="h-8 w-8 ring-2 ring-primary/10">
+                    <Button variant="ghost" size="icon" className="rounded-full h-9 w-9">
+                      <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-2 ring-primary/10">
                         <AvatarImage src={user?.avatar} alt={user?.name || 'User'} />
-                        <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                          {user?.name?.charAt(0) || <UserRound className="h-4 w-4" />}
+                        <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs sm:text-sm">
+                          {user?.name?.charAt(0) || <UserRound className="h-3 w-3 sm:h-4 sm:w-4" />}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
-                    <DropdownMenuItem className="flex items-center gap-2">
+                  <DropdownMenuContent align="end" className="w-48 sm:w-56">
+                    <DropdownMenuLabel className="text-sm">Mon compte</DropdownMenuLabel>
+                    <DropdownMenuItem className="flex items-center gap-2 text-sm">
                       <UserRound className="h-4 w-4" />
                       <span>Profil</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2">
+                    <DropdownMenuItem className="flex items-center gap-2 text-sm">
                       <Bell className="h-4 w-4" />
                       <span>Notifications</span>
                     </DropdownMenuItem>
+                    {isMobile && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="flex items-center gap-2 text-sm">
+                          <Settings className="h-4 w-4" />
+                          <span>Paramètres</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="flex items-center gap-2 text-sm">
+                          <HelpCircle className="h-4 w-4" />
+                          <span>Aide</span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
-                      className="flex items-center gap-2 text-destructive focus:text-destructive"
+                      className="flex items-center gap-2 text-sm text-destructive focus:text-destructive"
                       onClick={() => logout()}
                     >
                       <LogOut className="h-4 w-4" />
@@ -159,7 +215,9 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
           </header>
 
           {/* Page Content */}
-          <div className={`dashboard-content ${isMobile ? 'pb-20' : 'pb-4'}`}>
+          <div className={`min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8 ${
+            isMobile ? 'pb-24' : 'pb-6'
+          } transition-all duration-300`}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={pathname}
@@ -167,6 +225,7 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
+                className="w-full max-w-7xl mx-auto"
               >
                 {children}
               </motion.div>
@@ -174,23 +233,33 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
           </div>
         </main>
 
-        {/* Mobile Navigation - Side Sheet */}
-        {isMobile && (
+        {/* Mobile/Tablet Navigation - Side Sheet */}
+        {(isMobile || isTablet) && (
           <>
             <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-              <SheetContent side="left" className="p-0 w-72">
-                <SheetHeader className="p-6 border-b">
-                  <SheetTitle>
+              <SheetContent side="left" className="p-0 w-72 sm:w-80">
+                <SheetHeader className="flex h-16 items-center justify-between border-b px-6">
+                  <SheetTitle className="text-left">
                     <Logo />
                   </SheetTitle>
                 </SheetHeader>
-                <SideNav className="px-2" />
+                <div className="flex-1 overflow-y-auto scrollbar-hide">
+                  <SideNav className="px-2" />
+                </div>
               </SheetContent>
             </Sheet>
             
-            {/* Bottom Navigation for Mobile */}
-            <BottomNav />
+            {/* Bottom Navigation for Mobile only */}
+            {isMobile && <BottomNav />}
           </>
+        )}
+        
+        {/* Overlay for tablet when sidebar is open */}
+        {isTablet && isSidebarOpen && (
+          <div 
+            className="fixed inset-0 z-20 bg-black/20 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsSidebarOpen(false)}
+          />
         )}
       </div>
     </AuthGuard>

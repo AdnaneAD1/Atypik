@@ -13,7 +13,8 @@ import {
   HeartPulse,
   X,
   Phone,
-  Mail
+  Mail,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,12 +24,21 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { DriverMissionCard } from './driver-mission-card';
 import { DriverUpcomingMissions } from './driver-upcoming-missions';
 import { DriverStatsCard } from './driver-stats-card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
+import { useDriverDashboard } from '@/hooks/use-driver-dashboard';
 
 export function DriverDashboard() {
   const router = useRouter();
   const { user } = useAuth();
+  const {
+    stats,
+    activeMission,
+    upcomingMissions,
+    featuredChild,
+    loading,
+    error,
+    refreshData
+  } = useDriverDashboard();
 
   // Animation variants simplifiées
   const containerVariants = {
@@ -45,35 +55,58 @@ export function DriverDashboard() {
     }
   };
 
-  // Stats data
-  const stats = [
+  // Affichage de chargement
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Chargement du dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Affichage d'erreur
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertTriangle className="h-8 w-8 text-red-500" />
+          <p className="text-muted-foreground">Erreur lors du chargement des données</p>
+          <Button onClick={refreshData} variant="outline">
+            Réessayer
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Préparation des données de stats pour l'affichage
+  const statsData = [
     { 
       label: 'Missions aujourd\'hui', 
-      value: '3', 
+      value: stats?.todayMissions?.toString() || '0', 
       icon: <Clock className="h-5 w-5 text-primary" />,
-      progress: 75,
-      trend: 'up'
+      progress: Math.min((stats?.todayMissions || 0) * 25, 100),
     },
     { 
       label: 'Km parcourus', 
-      value: '27.5', 
+      value: stats?.kmTraveled?.toFixed(1) || '0.0', 
       icon: <MapPin className="h-5 w-5 text-primary" />,
-      progress: 60,
-      trend: 'up'
+      progress: Math.min((stats?.kmTraveled || 0) * 2, 100),
     },
     { 
       label: 'Note moyenne', 
-      value: '4.9/5', 
+      value: `${stats?.averageRating?.toFixed(1) || '0.0'}/5`, 
       icon: <Star className="h-5 w-5 text-primary" />,
-      progress: 98,
-      trend: 'stable'
+      progress: ((stats?.averageRating || 0) / 5) * 100,
     },
     { 
       label: 'Enfants transportés', 
-      value: '5', 
+      value: stats?.childrenTransported?.toString() || '0', 
       icon: <User className="h-5 w-5 text-primary" />,
-      progress: 100,
-      trend: 'up'
+      progress: Math.min((stats?.childrenTransported || 0) * 20, 100),
     },
   ];
 
@@ -88,7 +121,7 @@ export function DriverDashboard() {
         
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          {stats.map((stat, index) => (
+          {statsData.map((stat, index) => (
             <div key={index}>
               <Card className="h-full border-0 bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 shadow-lg rounded-xl overflow-hidden">
                 <CardContent className="p-4 flex flex-col h-full">
@@ -108,24 +141,7 @@ export function DriverDashboard() {
                         suffix={stat.label === 'Km parcourus' ? ' km' : ''}
                         decimalPlaces={stat.label === 'Km parcourus' ? 1 : 0}
                       />
-                      {stat.trend === 'up' && (
-                        <span className="text-sm font-medium text-green-600 dark:text-green-400 ml-2 flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
-                          +5%
-                        </span>
-                      )}
-                      {stat.trend === 'down' && (
-                        <span className="text-sm font-medium text-red-600 dark:text-red-400 ml-2 flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M12 5v14"/><path d="m5 12 7 7 7-7"/></svg>
-                          -3%
-                        </span>
-                      )}
                     </p>
-                  </div>
-                  
-                  <div className="mt-auto text-xs text-muted-foreground flex items-center">
-                    <Clock className="h-3 w-3 mr-1.5 text-primary" />
-                    Mis à jour il y a 5 min
                   </div>
                 </CardContent>
               </Card>
@@ -136,22 +152,22 @@ export function DriverDashboard() {
 
       {/* Current Mission */}
       <div>
-        <DriverMissionCard />
+        <DriverMissionCard mission={activeMission || undefined} />
       </div>
 
       {/* Upcoming Missions & Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="lg:col-span-2 order-2 lg:order-1">
-          <DriverUpcomingMissions />
+          <DriverUpcomingMissions missions={upcomingMissions || undefined} />
         </div>
 
         <div className="order-1 lg:order-2 mb-2 lg:mb-0">
-          <DriverStatsCard />
+          <DriverStatsCard stats={stats} />
         </div>
       </div>
 
       {/* Child Profile Section */}
-      <div>
+      {/* <div>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-primary">
           <CardHeader className="pb-0 relative z-10">
             <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
@@ -172,11 +188,11 @@ export function DriverDashboard() {
                 4.9
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-4">
+          </CardHeader> */}
+          {/* <CardContent className="pt-4">
+            <div className="space-y-4"> */}
               {/* About Section */}
-              <div>
+              {/* <div>
                 <div className="flex items-center gap-2 text-primary mb-2">
                   <Smile className="h-4 w-4 text-primary" />
                   <h4 className="text-sm font-semibold text-primary">À propos</h4>
@@ -184,10 +200,10 @@ export function DriverDashboard() {
                 <p className="text-sm">
                   Lucas est sociable mais a du mal à rester concentré pendant les longs trajets. Passionné de jeux vidéo.
                 </p>
-              </div>
+              </div> */}
               
               {/* Special Needs */}
-              <div>
+              {/* <div>
                 <div className="flex items-center gap-2 text-primary mb-3">
                   <AlertTriangle className="h-4 w-4 text-primary" />
                   <h4 className="text-sm font-semibold text-primary">Besoins spécifiques</h4>
@@ -212,20 +228,20 @@ export function DriverDashboard() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> */}
               
               {/* Action Button */}
-              <Button 
+              {/* <Button 
                 variant="ghost" 
                 className="w-full mt-2 text-primary hover:bg-primary/5 hover:text-primary/90"
                 onClick={() => router.push('/driver/children/lucas-dubois')}
               >
                 Voir fiche complète <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </Button> */}
+            {/* </div>
+          </CardContent> */}
+        {/* </Card>
+      </div> */}
     </div>
   );
 

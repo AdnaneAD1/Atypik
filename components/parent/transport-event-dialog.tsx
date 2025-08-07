@@ -28,7 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useChildren } from '@/hooks/use-children';
-import { GoogleAddressAutocomplete } from '@/components/ui/google-address-autocomplete';
+import { AddressSelector } from '@/components/ui/address-selector';
 
 // Fonction pour comparer les dates sans tenir compte de l'heure
 const isSameOrAfterToday = (date: Date) => {
@@ -157,11 +157,14 @@ export function TransportEventDialog({
       },
       (response, status) => {
         if (status === 'OK' && response && response.rows[0]?.elements[0]?.status === 'OK') {
-          setDistance(response.rows[0].elements[0].distance.value); // en mètres
-          form.setValue('distance', response.rows[0].elements[0].distance.value);
+          const distanceValue = response.rows[0].elements[0].distance.value; // en mètres
+          setDistance(distanceValue);
+          form.setValue('distance', distanceValue);
+          console.log('Distance calculée:', distanceValue, 'm');
         } else {
+          console.log('Erreur calcul distance:', status, response);
           setDistance(null);
-          form.setValue('distance', undefined);
+          form.setValue('distance', 0); // Utiliser 0 au lieu de undefined
         }
       }
     );
@@ -173,7 +176,7 @@ export function TransportEventDialog({
       // Réinitialiser le formulaire avec les valeurs par défaut mais avec la date sélectionnée
       form.reset({
         childId: '',
-        transportType: 'aller-retour',
+        transportType: 'aller',
         date: selectedDate,
         time: '08:00',
       });
@@ -185,13 +188,29 @@ export function TransportEventDialog({
       const selectedChild = children?.find(child => child.id === data.childId);
       const childName = selectedChild ? `${selectedChild.firstName} ${selectedChild.lastName}` : 'Enfant';
 
-      if (!from || !to || !distance) {
+      if (!from || !to) {
         toast({ title: 'Adresse manquante', description: 'Merci de renseigner le lieu de départ et d\'arrivée valides.' });
+        return;
+      }
+      
+      // Vérifier que la distance a été calculée
+      if (distance === null || distance === undefined) {
+        toast({ title: 'Distance non calculée', description: 'Veuillez attendre le calcul de la distance ou vérifier les adresses.' });
         return;
       }
 
       if (onAddEvent) {
-        const result = await onAddEvent({ ...data, childName, from, to, distance });
+        // Utiliser la distance calculée (qui peut être 0 pour des adresses très proches)
+        const transportData = {
+          ...data,
+          childName,
+          from,
+          to,
+          distance: distance // Utiliser directement la distance calculée
+        };
+        
+        console.log('Données envoyées:', transportData); // Debug
+        const result = await onAddEvent(transportData);
         if (result && (result as any).success) {
           toast({
             title: 'Transport programmé',
@@ -290,7 +309,6 @@ export function TransportEventDialog({
                     <SelectContent>
                       <SelectItem value="aller">Aller (matin)</SelectItem>
                       <SelectItem value="retour">Retour (après-midi)</SelectItem>
-                      <SelectItem value="aller-retour">Aller-retour</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -313,31 +331,40 @@ export function TransportEventDialog({
             />
 
             {/* Champ Lieu de départ */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Lieu de départ</label>
-              <GoogleAddressAutocomplete
-                value={from?.address || ''}
-                onChange={val => setFrom(val ? { address: val, lat: 0, lng: 0 } : null)}
-                onSelect={res => setFrom(res)}
-                placeholder="Adresse de départ"
-                restrictRegion={process.env.NEXT_PUBLIC_REGION_CODE || 'FR'}
-                disabled={!mapsLoaded}
-              />
-              {from && from.address && <div className="text-xs text-muted-foreground mt-1">{from.address}</div>}
-            </div>
-            {/* Champ Lieu d'arrivée */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Lieu d'arrivée</label>
-              <GoogleAddressAutocomplete
-                value={to?.address || ''}
-                onChange={val => setTo(val ? { address: val, lat: 0, lng: 0 } : null)}
-                onSelect={res => setTo(res)}
-                placeholder="Adresse d'arrivée (France)"
-                restrictRegion={'FR'}
-                disabled={!mapsLoaded}
-              />
-              {to && to.address && <div className="text-xs text-muted-foreground mt-1">{to.address}</div>}
-            </div>
+            <AddressSelector
+              value={from?.address || ''}
+              onChange={val => {
+                const newFrom = val ? { address: val, lat: 0, lng: 0 } : null;
+                setFrom(newFrom);
+                form.setValue('from', newFrom || { address: '', lat: 0, lng: 0 });
+              }}
+              onSelect={res => {
+                setFrom(res);
+                form.setValue('from', res);
+              }}
+              placeholder="Adresse de départ"
+              restrictRegion={process.env.NEXT_PUBLIC_REGION_CODE || 'FR'}
+              disabled={!mapsLoaded}
+              label="Lieu de départ"
+            />
+            
+            {/* Champ Lieu d&apos;arrivée */}
+            <AddressSelector
+              value={to?.address || ''}
+              onChange={val => {
+                const newTo = val ? { address: val, lat: 0, lng: 0 } : null;
+                setTo(newTo);
+                form.setValue('to', newTo || { address: '', lat: 0, lng: 0 });
+              }}
+              onSelect={res => {
+                setTo(res);
+                form.setValue('to', res);
+              }}
+              placeholder="Adresse d&apos;arrivée (France)"
+              restrictRegion="FR"
+              disabled={!mapsLoaded}
+              label="Lieu d&apos;arrivée"
+            />
             {/* Distance affichée */}
             {distance !== null && distance !== undefined && (
               <div className="text-sm text-primary mt-2">

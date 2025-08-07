@@ -27,7 +27,8 @@ export type TransportEvent = {
     lng: number;
     placeId?: string;
   };
-  distance?: number; // en mètres
+  distance: number; // en mètres (obligatoire, 0 par défaut)
+  status: 'programmed' | 'in-progress' | 'completed' | 'cancelled'; // Statut du transport
 };
 
 // Type pour les données d'ajout de transport
@@ -71,6 +72,7 @@ export function useTransport() {
           from: data.from || { address: '', lat: 0, lng: 0 },
           to: data.to || { address: '', lat: 0, lng: 0 },
           distance: data.distance,
+          status: data.status || 'programmed', // Ajouter le statut avec fallback
         });
       });
 
@@ -106,6 +108,10 @@ export function useTransport() {
 
     try {
       const transportRef = collection(db, 'transports');
+      // S'assurer que tous les champs obligatoires sont présents et valides
+      console.log('Données reçues dans addTransport:', data);
+      console.log('Distance reçue:', data.distance, typeof data.distance);
+      
       const newTransport = {
         ...data,
         userId: user.id,
@@ -113,8 +119,12 @@ export function useTransport() {
         date: Timestamp.fromDate(data.date), // Convertir Date en Timestamp pour Firestore
         from: data.from,
         to: data.to,
-        distance: data.distance,
+        distance: data.distance ?? 0, // S'assurer que distance n'est jamais undefined
+        status: 'programmed', // Statut par défaut
       };
+      
+      console.log('Transport à enregistrer dans Firestore:', newTransport);
+      console.log('Distance finale:', newTransport.distance);
 
       const docRef = await addDoc(transportRef, newTransport);
       
@@ -243,6 +253,54 @@ export function useTransport() {
     });
   }, [transportEvents]);
 
+  // Ajouter un commentaire à un transport (dans la collection reviews)
+  const addTransportComment = useCallback(async (transportId: string, comment: string) => {
+    if (!user?.id || !comment.trim()) return false;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Trouver le transport pour récupérer le childId
+      const transport = transportEvents.find(t => t.id === transportId);
+      if (!transport) {
+        throw new Error('Transport non trouvé');
+      }
+
+      // Créer un document de review dans la collection reviews
+      const reviewsRef = collection(db, 'reviews');
+      await addDoc(reviewsRef, {
+        transportId,
+        childId: transport.childId,
+        userId: user.id,
+        parentId: user.id,
+        driverId: transport.driverId,
+        comment: comment.trim(),
+        rating: null, // Pas de note, juste un commentaire
+        createdAt: Timestamp.now(),
+        type: 'comment', // Distinguer les commentaires des évaluations avec note
+      });
+
+      toast({
+        title: 'Commentaire ajouté',
+        description: 'Votre commentaire a été enregistré avec succès.',
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Erreur lors de l\'ajout du commentaire:', err);
+      setError('Impossible d\'ajouter le commentaire');
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'ajouter le commentaire',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, toast, transportEvents]);
+
   // Charger les transports au montage du composant
   useEffect(() => {
     if (user?.id) {
@@ -258,6 +316,7 @@ export function useTransport() {
     addTransport,
     updateTransport,
     deleteTransport,
+    addTransportComment,
     getTransportsForDate,
     hasTransportsOnDate,
   };

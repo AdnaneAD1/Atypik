@@ -86,11 +86,11 @@ export function DriverCalendar() {
                       <div className="mt-2 space-y-1">
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="h-4 w-4 text-primary" />
-                          <span>{mission.from}</span>
+                          <span>{typeof mission.from === 'object' && mission.from && 'address' in mission.from ? mission.from.address : typeof mission.from === 'string' ? mission.from : 'Adresse non définie'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="h-4 w-4 text-primary" />
-                          <span>{mission.to}</span>
+                          <span>{typeof mission.to === 'object' && mission.to && 'address' in mission.to ? mission.to.address : typeof mission.to === 'string' ? mission.to : 'Adresse non définie'}</span>
                         </div>
                       </div>
                     </div>

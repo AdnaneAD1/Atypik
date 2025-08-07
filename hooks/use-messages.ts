@@ -637,6 +637,98 @@ export function useMessages() {
     }
   }, [user]);
 
+  // Fonction optimisée pour partager un document déjà uploadé
+  const shareDocument = useCallback(async (
+    conversationId: string,
+    document: {
+      id: string;
+      name: string;
+      type: string;
+      size: string;
+      url: string;
+    },
+    customMessage?: string
+  ) => {
+    const userId = user?.id;
+    if (!userId || !conversationId || !document) {
+      console.error('shareDocument: paramètres manquants', { userId, conversationId, document });
+      return null;
+    }
+
+    const messageContent = customMessage || `📄 Document partagé : ${document.name}`;
+
+    try {
+      // Créer l'attachment directement depuis les informations du document
+      const documentAttachment = {
+        id: document.id,
+        name: document.name,
+        type: document.type,
+        size: document.size,
+        url: document.url
+      };
+
+      // Créer le message avec le document en pièce jointe
+      const messageData = {
+        conversationId,
+        senderId: userId,
+        senderName: user?.name || '',
+        content: messageContent,
+        timestamp: serverTimestamp(),
+        status: 'sent',
+        attachments: [documentAttachment]
+      };
+
+      // Ajouter le message à la collection
+      const messagesRef = collection(db, 'messages');
+      const messageRef = await addDoc(messagesRef, messageData);
+
+      // Mettre à jour la conversation
+      const conversationRef = doc(db, 'conversations', conversationId);
+      const conversationDoc = await getDoc(conversationRef);
+      
+      if (conversationDoc.exists()) {
+        const conversationData = conversationDoc.data();
+        const participantIds = conversationData.participantIds || [];
+        
+        // Mettre à jour les compteurs de messages non lus pour tous les participants sauf l'expéditeur
+        const unreadCount = conversationData.unreadCount || {};
+        
+        for (const participantId of participantIds) {
+          if (participantId !== userId) {
+            unreadCount[participantId] = (unreadCount[participantId] || 0) + 1;
+          }
+        }
+
+        // Mettre à jour la conversation
+        const lastMessageText = messageContent || 'Document partagé';
+        
+        await updateDoc(conversationRef, {
+          lastMessage: lastMessageText,
+          lastMessageSender: userId,  
+          lastMessageTime: serverTimestamp(),
+          unreadCount
+        });
+      }
+
+      console.log('Document partagé avec succès:', messageRef.id);
+      
+      toast({
+        title: 'Document partagé',
+        description: `Le document "${document.name}" a été partagé avec succès`,
+      });
+
+      return messageRef.id;
+    } catch (error) {
+      console.error('Erreur lors du partage du document:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de partager le document',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  }, [user, toast]);
+
   return {
     conversations,
     messages,
@@ -648,6 +740,7 @@ export function useMessages() {
     loadConversations,
     loadMessages,
     sendMessage,
+    shareDocument,
     createConversation,
     deleteMessage,
     deleteConversation,
