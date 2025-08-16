@@ -32,7 +32,7 @@ export function ChatHeader({
           {role && <span className="text-xs text-muted-foreground leading-none">{role}</span>}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      {/* <div className="flex items-center gap-2">
         <button
           onClick={onCallVoice}
           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
@@ -47,7 +47,7 @@ export function ChatHeader({
         >
           <Video className="h-5 w-5 text-primary" />
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }

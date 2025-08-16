@@ -54,6 +54,23 @@ export function useTracking() {
   
   const watchIdRef = useRef<number | null>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
+  const lastSentAtRef = useRef<number>(0);
+  const lastCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  // Utilitaire: distance en mètres (Haversine simplifié)
+  const distanceMeters = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+    const toRad = (x: number) => (x * Math.PI) / 180;
+    const R = 6371000; // m
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const sinDLat = Math.sin(dLat / 2);
+    const sinDLng = Math.sin(dLng / 2);
+    const h = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+    const c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    return R * c;
+  };
 
   // Démarrer une mission et commencer le tracking
   const startMission = useCallback(async (transportId: string, missionData: Omit<ActiveMission, 'id' | 'status' | 'startTime'>) => {
@@ -78,15 +95,30 @@ export function useTracking() {
 
       // Démarrer la géolocalisation
       if (navigator.geolocation) {
+        // Réinitialiser le throttling au démarrage
+        lastSentAtRef.current = 0;
+        lastCoordsRef.current = null;
+
         const watchId = navigator.geolocation.watchPosition(
           (position) => {
             setCurrentPosition(position);
-            // Mettre à jour la position dans Firestore
-            updateMissionPosition(docRef.id, {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-              timestamp: new Date(),
-            });
+
+            const now = Date.now();
+            const coords = { lat: position.coords.latitude, lng: position.coords.longitude };
+            const last = lastCoordsRef.current;
+            const elapsed = now - (lastSentAtRef.current || 0);
+            const moved = last ? distanceMeters(last, coords) : Infinity;
+
+            // Règles de throttling: au moins toutes les 3s ou si déplacement > 25m
+            if (elapsed >= 3000 || moved >= 25) {
+              lastSentAtRef.current = now;
+              lastCoordsRef.current = coords;
+              updateMissionPosition(docRef.id, {
+                lat: coords.lat,
+                lng: coords.lng,
+                timestamp: new Date(),
+              });
+            }
           },
           (error) => {
             console.error('Erreur de géolocalisation:', error);
@@ -225,6 +257,36 @@ export function useTracking() {
     unsubscribeRef.current = unsubscribe;
   }, [user?.id]);
 
+  // Écoute ciblée par transportId (pour le parent)
+  const listenMissionByTransport = useCallback((transportId: string, onChange: (mission?: ActiveMission) => void) => {
+    if (!transportId) return () => {};
+    const activeMissionsRef = collection(db, 'activeMissions');
+    const q = query(
+      activeMissionsRef,
+      where('transportId', '==', transportId),
+      where('status', 'in', ['started', 'in_progress'])
+    );
+
+    const unsub = onSnapshot(q, (snapshot) => {
+      let mission: ActiveMission | undefined;
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        mission = {
+          id: docSnap.id,
+          ...data,
+          startTime: data.startTime?.toDate() || new Date(),
+          currentPosition: data.currentPosition ? {
+            ...data.currentPosition,
+            timestamp: data.currentPosition.timestamp?.toDate() || new Date(),
+          } : undefined,
+        } as ActiveMission;
+      });
+      onChange(mission);
+    });
+
+    return unsub;
+  }, []);
+
   // Obtenir les missions actives pour un parent (par transportId)
   const getActiveMissionByTransport = useCallback((transportId: string) => {
     return activeMissions.find(mission => mission.transportId === transportId);
@@ -268,5 +330,6 @@ export function useTracking() {
     getActiveMissionByTransport,
     getMissionPosition,
     loadActiveMissions,
+    listenMissionByTransport,
   };
 }

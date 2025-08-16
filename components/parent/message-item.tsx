@@ -232,11 +232,24 @@ export function MessageItem({
                       {getFileIcon(attachment.name, attachment.type)}
                     </div>
                     <div className="flex-1 min-w-0 overflow-hidden">
-                      <div className="break-all text-xs sm:text-sm font-medium leading-tight">
-                        {attachment.name}
+                      <div className="text-xs sm:text-sm font-medium leading-tight truncate" title={attachment.name}>
+                        {/* Troncature intelligente : afficher début + extension si nom trop long */}
+                        {attachment.name.length > 25 ? (
+                          (() => {
+                            const parts = attachment.name.split('.');
+                            const extension = parts.length > 1 ? `.${parts.pop()}` : '';
+                            const nameWithoutExt = parts.join('.');
+                            const maxNameLength = 20 - extension.length;
+                            return nameWithoutExt.length > maxNameLength 
+                              ? `${nameWithoutExt.substring(0, maxNameLength)}...${extension}`
+                              : attachment.name;
+                          })()
+                        ) : (
+                          attachment.name
+                        )}
                       </div>
                       {attachment.size && (
-                        <div className="text-xs opacity-70 mt-0.5">{attachment.size}</div>
+                        <div className="text-xs opacity-70 mt-0.5 truncate">{attachment.size}</div>
                       )}
                     </div>
                     <div className="flex-shrink-0 ml-1">

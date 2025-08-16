@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,61 +10,44 @@ import {
 } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NotificationItem } from './notification-item';
-
-// Mock notifications data
-const mockNotifications = [
-  {
-    id: '1',
-    title: 'Nouvelle mission',
-    message: 'Vous avez une nouvelle mission pour demain à 8h30',
-    time: '2h',
-    read: false,
-  },
-  {
-    id: '2',
-    title: 'Message de Lucie',
-    message: 'Bonjour, est-ce que vous pouvez passer prendre Emma à 16h15 ?',
-    time: '3h',
-    read: false,
-  },
-  {
-    id: '3',
-    title: 'Rappel transport',
-    message: 'N\'oubliez pas le transport de Thomas demain matin',
-    time: '5h',
-    read: true,
-  },
-  {
-    id: '4',
-    title: 'Nouvelle formation disponible',
-    message: 'Découvrez notre nouvelle formation sur la gestion des enfants TDAH',
-    time: '1j',
-    read: true,
-  },
-  {
-    id: '5',
-    title: 'Modification d\'horaire',
-    message: 'Le transport de vendredi a été déplacé à 15h au lieu de 16h30',
-    time: '2j',
-    read: true,
-  },
-];
+import { useNotifications } from '@/hooks/use-notifications';
 
 export function NotificationsPopover() {
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [open, setOpen] = useState(false);
-  
-  const unreadCount = notifications.filter(notif => !notif.read).length;
-  
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(notif => ({ ...notif, read: true })));
+
+  // Utilitaire pour formater un temps relatif simple à partir d'une date
+  const formatRelative = (date?: Date): string => {
+    if (!date) return '';
+    const now = Date.now();
+    const diffMs = Math.max(0, now - date.getTime());
+    const sec = Math.floor(diffMs / 1000);
+    if (sec < 60) return `${sec}s`;
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min}m`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `${h}h`;
+    const d = Math.floor(h / 24);
+    return `${d}j`;
   };
-  
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(notif => 
-      notif.id === id ? { ...notif, read: true } : notif
-    ));
-  };
+
+  // Adapter la structure attendue par NotificationItem (ajout du champ time)
+  const displayNotifications = useMemo(() => {
+    return notifications.map((n) => ({
+      id: n.id,
+      title: n.title,
+      message: n.message,
+      read: n.read,
+      time: formatRelative(n.createdAt ? n.createdAt.toDate() : undefined),
+    }));
+  }, [notifications]);
+
+  // Séparer non lues et lues
+  const { unreadList, readList } = useMemo(() => {
+    const unread = displayNotifications.filter(n => !n.read);
+    const read = displayNotifications.filter(n => n.read);
+    return { unreadList: unread, readList: read };
+  }, [displayNotifications]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -86,10 +69,30 @@ export function NotificationsPopover() {
             </Button>
           )}
         </div>
-        {notifications.length > 0 ? (
+        {displayNotifications.length > 0 ? (
           <ScrollArea className="h-[300px]">
             <div className="divide-y">
-              {notifications.map((notification) => (
+              {/* Non lues */}
+              {unreadList.length > 0 && (
+                <div className="px-4 py-2 text-xs font-medium text-foreground/80 bg-muted/30">
+                  Non lues
+                </div>
+              )}
+              {unreadList.map((notification) => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  onMarkAsRead={() => markAsRead(notification.id)}
+                />
+              ))}
+
+              {/* Lues */}
+              {readList.length > 0 && (
+                <div className="px-4 py-2 text-xs font-medium text-muted-foreground/80">
+                  Lues
+                </div>
+              )}
+              {readList.map((notification) => (
                 <NotificationItem
                   key={notification.id}
                   notification={notification}

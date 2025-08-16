@@ -266,7 +266,6 @@ export default function DriverMissionCard() {
                       <div className="inline-flex items-center rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 text-[10px] font-medium px-2 py-0 h-5">
                         {mission.type}
                       </div>
-                      <p className="text-xs text-muted-foreground">{mission.timeEstimate} restant</p>
                     </div>
                   </div>
                 </div>
@@ -305,7 +304,6 @@ export default function DriverMissionCard() {
                   </div>
                   <div className="mt-5">
                     <div className="flex justify-between text-xs mb-1.5">
-                      <span className="font-medium text-primary">{mission.progress}% du trajet</span>
                       <span>{mission.distance}</span>
                     </div>
                     <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden relative">
@@ -337,13 +335,13 @@ export default function DriverMissionCard() {
                       </p>
                     </div>
                   </div>
-                  <Button 
+                  {/* <Button 
                     className="text-primary-foreground rounded-md px-3 text-xs h-9 bg-primary hover:bg-primary/90"
                     onClick={handleViewMap}
                   >
                     <MapPin className="h-3.5 w-3.5 mr-1.5" />
                     Suivre en direct
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </div>

@@ -196,20 +196,20 @@ export function ParentDocuments() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 sm:block">
-                      <div className="sm:hidden p-2 rounded-lg bg-primary/10 mr-1">
+                    <div className="flex items-center gap-2 sm:block min-w-0 flex-1">
+                      <div className="sm:hidden p-2 rounded-lg bg-primary/10 flex-shrink-0">
                         <FileText className="h-4 w-4 text-primary" />
                       </div>
-                      <div>
-                        <h4 className="text-sm sm:text-base font-medium truncate">{doc.name}</h4>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm sm:text-base font-medium truncate max-w-full">{doc.name}</h4>
                         <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mt-1">
-                          <FileIcon className="h-3 w-3" />
-                          <span>{doc.type}</span>
-                          <span className="hidden xs:inline">•</span>
-                          <span>{doc.size}</span>
-                          <span className="hidden xs:inline">•</span>
-                          <Clock className="h-3 w-3" />
-                          <span>{doc.uploadedAt}</span>
+                          <FileIcon className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{doc.type}</span>
+                          <span className="hidden xs:inline flex-shrink-0">•</span>
+                          <span className="truncate">{doc.size}</span>
+                          <span className="hidden xs:inline flex-shrink-0">•</span>
+                          <Clock className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{doc.uploadedAt}</span>
                         </div>
                       </div>
                     </div>
@@ -219,7 +219,7 @@ export function ParentDocuments() {
                         doc.status === 'pending' ? 'secondary' :
                         'destructive'
                       }
-                      className="hidden sm:inline-flex"
+                      className="hidden sm:inline-flex flex-shrink-0"
                     >
                       {doc.status === 'validated' ? 'Validé' :
                        doc.status === 'pending' ? 'En attente' :
@@ -227,24 +227,24 @@ export function ParentDocuments() {
                     </Badge>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 mt-3">
-                    <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-3">
+                    <div className="flex flex-wrap gap-1 min-w-0">
                       {doc.tags.map((tag, index) => (
                         <Badge
                           key={index}
                           variant="outline"
-                          className="text-[10px] sm:text-xs py-0 h-5 bg-primary/5 text-primary border-primary/20"
+                          className="text-[10px] sm:text-xs py-0 h-5 bg-primary/5 text-primary border-primary/20 truncate"
                         >
                           {tag}
                         </Badge>
                       ))}
                     </div>
-                    <div className="flex-1" />
-                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                    <div className="flex-1 hidden sm:block" />
+                    <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto">
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 sm:h-8 text-[10px] sm:text-xs flex-1 sm:flex-auto"
+                        className="h-7 sm:h-8 text-[10px] sm:text-xs flex-1 sm:flex-none px-2 sm:px-3"
                         onClick={() => openShareDialog(doc)}
                       >
                         <Share2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
@@ -254,7 +254,7 @@ export function ParentDocuments() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 sm:h-8 text-[10px] sm:text-xs flex-1 sm:flex-auto"
+                        className="h-7 sm:h-8 text-[10px] sm:text-xs flex-1 sm:flex-none px-2 sm:px-3"
                         onClick={() => window.open(doc.url, '_blank')}
                         disabled={!doc.url}
                       >
@@ -264,7 +264,7 @@ export function ParentDocuments() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 sm:h-8 text-[10px] sm:text-xs flex-1 sm:flex-auto"
+                        className="h-7 sm:h-8 text-[10px] sm:text-xs flex-1 sm:flex-none px-2 sm:px-3"
                         onClick={() => downloadDocument(doc)}
                       >
                         <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />

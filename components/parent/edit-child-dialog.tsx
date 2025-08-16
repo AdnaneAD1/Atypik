@@ -35,6 +35,7 @@ const formSchema = z.object({
   }),
   school: z.string().min(2, 'Le nom de l\'école est requis'),
   specialNeeds: z.string().optional(),
+  personality: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -57,6 +58,7 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
       age: '',
       school: '',
       specialNeeds: '',
+      personality: '',
     },
   });
 
@@ -69,6 +71,7 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
         age: child.age.toString(),
         school: child.school,
         specialNeeds: child.needs ? child.needs.join(', ') : '',
+        personality: child.personality || '',
       });
     }
   }, [child, form]);
@@ -191,6 +194,24 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
                   <FormControl>
                     <Textarea 
                       placeholder="Ex: Allergies, médicaments, besoins particuliers..." 
+                      className="resize-none" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="personality"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Personnalité de l'enfant (optionnel)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Ex: Timide, extraverti, curieux, calme, énergique..." 
                       className="resize-none" 
                       {...field} 
                     />

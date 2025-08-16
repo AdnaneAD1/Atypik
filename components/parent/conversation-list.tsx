@@ -33,27 +33,37 @@ export function ConversationList({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-2 p-4 pb-2">
-        <h2 className="text-lg font-semibold">Messages</h2>
-        <Button variant="ghost" size="icon" onClick={onNewConversation}>
+      {/* Header fixe */}
+      <div className="flex-shrink-0 flex items-center justify-between mb-2 p-3 sm:p-4 pb-2">
+        <h2 className="text-base sm:text-lg font-semibold truncate">Messages</h2>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onNewConversation}
+          className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+        >
           <Plus className="h-4 w-4" />
         </Button>
       </div>
       
-      <div className="relative px-4 pb-4">
-        <Search className="absolute left-7 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {/* Barre de recherche fixe */}
+      <div className="flex-shrink-0 relative px-3 sm:px-4 pb-3 sm:pb-4">
+        <Search className="absolute left-6 sm:left-7 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Rechercher..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-9 text-sm"
         />
       </div>
       
-      <div className="flex-1 overflow-y-auto px-4 space-y-2">
+      {/* Liste scrollable avec scroll indépendant */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 space-y-1 sm:space-y-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
         {filteredConversations.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            {searchQuery ? 'Aucune conversation trouvée' : 'Aucune conversation'}
+            <p className="text-sm">
+              {searchQuery ? 'Aucune conversation trouvée' : 'Aucune conversation'}
+            </p>
           </div>
         ) : (
           filteredConversations.map((conversation) => (
@@ -66,6 +76,8 @@ export function ConversationList({
             />
           ))
         )}
+        {/* Espacement en bas pour éviter que le dernier élément soit collé */}
+        <div className="h-2" />
       </div>
     </div>
   );

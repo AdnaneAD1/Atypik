@@ -45,6 +45,7 @@ export interface ActiveMission {
   scheduledTime: string;
   progress: number; // pourcentage de progression
   time: string;
+  transportType: 'aller' | 'retour' | 'aller-retour';
 }
 
 export interface UpcomingMission {
@@ -68,7 +69,7 @@ export interface UpcomingMission {
   };
   scheduledTime: string;
   distance: number;
-  transportType: 'aller' | 'retour';
+  transportType: 'aller' | 'retour' | 'aller-retour';
 }
 
 export interface FeaturedChild {
@@ -311,6 +312,7 @@ export function useDriverDashboard(): UseDriverDashboardResult {
             scheduledTime: transportData.time,
             progress: 50, // À calculer selon la position GPS
             time: transportData.time,
+            transportType: transportData.transportType || 'aller',
           };
         }
       }

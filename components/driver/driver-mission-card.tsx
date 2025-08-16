@@ -43,6 +43,7 @@ interface DriverMissionCardProps {
     scheduledTime: string;
     progress: number;
     time: string;
+    transportType: 'aller' | 'retour' | 'aller-retour';
   };
 }
 
@@ -271,9 +272,26 @@ function DriverMissionCard({ mission }: DriverMissionCardProps) {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h4 className="text-base font-semibold">{mission.child.name}</h4>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-muted-foreground">{mission.timeEstimate} restant</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="text-base font-semibold">{mission.child.name}</h4>
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-xs ${
+                          mission.transportType === 'aller-retour'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                            : mission.transportType === 'aller'
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : 'bg-orange-50 text-orange-700 border-orange-200'
+                        }`}
+                      >
+                        {
+                          mission.transportType === 'aller-retour'
+                            ? 'Aller-Retour'
+                            : mission.transportType === 'aller'
+                            ? 'Aller (matin)'
+                            : 'Retour (après-midi)'
+                        }
+                      </Badge>
                     </div>
                   </div>
                 </div>

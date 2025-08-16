@@ -235,6 +235,34 @@ export function ShareDocumentDialog({
             },
             messageText
           );
+
+          // Envoyer une notification au correspondant (autre participant)
+          try {
+            const currentUserId = user?.id;
+            const receiver = conversation.participants?.find((p: any) => p.id !== currentUserId);
+            const receiverId = receiver?.id || userId; // fallback sur l'utilisateur ciblé dans la boucle
+            if (receiverId) {
+              const title = `Nouveau document de ${user?.name || 'Utilisateur'}`;
+              const body = (messageText || `📄 ${document.name}`).slice(0, 140);
+              await fetch('/api/notifications/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: receiverId,
+                  title,
+                  body,
+                  data: {
+                    type: 'message',
+                    subtype: 'document',
+                    conversationId: conversation.id,
+                    documentId: document.id,
+                  },
+                }),
+              });
+            }
+          } catch (e) {
+            console.error('Erreur envoi notification document:', e);
+          }
         }
       } catch (error) {
         console.error(`Erreur lors de l'envoi à l'utilisateur ${userId}:`, error);

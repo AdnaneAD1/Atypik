@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useChildren } from '@/hooks/use-children';
+import { useAuth } from '@/lib/auth/auth-context';
 import { AddressSelector } from '@/components/ui/address-selector';
 
 // Fonction pour comparer les dates sans tenir compte de l'heure
@@ -114,6 +115,7 @@ export function TransportEventDialog({
   // pour afficher la date correcte dans le dialogue, mais empêcher la soumission si c'est une date passée
   const { toast } = useToast();
   const { children, isLoading: loadingChildren } = useChildren();
+  const { user } = useAuth();
   
   const [from, setFrom] = useState<{ address: string; lat: number; lng: number; placeId?: string } | null>(null);
   const [to, setTo] = useState<{ address: string; lat: number; lng: number; placeId?: string } | null>(null);
@@ -176,7 +178,7 @@ export function TransportEventDialog({
       // Réinitialiser le formulaire avec les valeurs par défaut mais avec la date sélectionnée
       form.reset({
         childId: '',
-        transportType: 'aller',
+        transportType: 'aller-retour',
         date: selectedDate,
         time: '08:00',
       });
@@ -216,6 +218,33 @@ export function TransportEventDialog({
             title: 'Transport programmé',
             description: (result as any).message || 'Le transport a été ajouté au calendrier',
           });
+
+          // Envoyer une notification push au chauffeur sélectionné (best effort)
+          try {
+            if (user?.selectedDriverId) {
+              const notifTitle = 'Transport programmé';
+              const notifBody = `${childName} • ${data.transportType} le ${format(data.date, 'dd/MM/yyyy', { locale: fr })} à ${data.time}`;
+              await fetch('/api/notifications/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: user.selectedDriverId,
+                  title: notifTitle,
+                  body: notifBody,
+                  data: {
+                    type: 'transport',
+                    childId: data.childId,
+                    date: data.date.toISOString(),
+                    time: data.time,
+                    transportType: data.transportType,
+                  },
+                }),
+              });
+            }
+          } catch (e) {
+            console.error('Erreur envoi notification push:', e);
+          }
+
           form.reset();
           setFrom(null); setTo(null); setDistance(null);
           onOpenChange(false);
@@ -307,6 +336,7 @@ export function TransportEventDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="aller-retour">Aller-Retour</SelectItem>
                       <SelectItem value="aller">Aller (matin)</SelectItem>
                       <SelectItem value="retour">Retour (après-midi)</SelectItem>
                     </SelectContent>

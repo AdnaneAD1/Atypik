@@ -8,7 +8,7 @@ export interface Mission {
   driverId: string;
   date: Timestamp;
   status: 'pending' | 'in_progress' | 'done';
-  child: { name: string; age: number; needs: string[] };
+  child: { name: string; age: number; needs: string[]; personality?: string };
   parent: { name: string; phone?: string }; // Ajouter les informations du parent
   from: { name: string; address: string; lat: number; lng: number };
   to: { name: string; address: string; lat: number; lng: number };
@@ -55,20 +55,21 @@ export function useMissions(driverId: string): UseMissionsResult {
       const snapshot = await getDocs(q);
       // Pour chaque transport, on va enrichir les infos de l'enfant et du parent
 const getChildInfo = async (childId: string) => {
-  if (!childId) return { age: null, needs: [] };
+  if (!childId) return { age: null, needs: [], personality: null };
   try {
     const childSnap = await getDocs(query(collection(db, 'children'), where('__name__', '==', childId)));
     if (!childSnap.empty) {
       const childData = childSnap.docs[0].data();
       return {
         age: childData.age ?? null,
-        needs: childData.needs ?? []
+        needs: childData.needs ?? [],
+        personality: childData.personality ?? null
       };
     }
   } catch (e) {
     // ignore
   }
-  return { age: null, needs: [] };
+  return { age: null, needs: [], personality: null };
 };
 
 const getParentInfo = async (parentId: string) => {
@@ -109,7 +110,8 @@ const missionsPromises = filteredDocs.map(async doc => {
   const child = {
     name: data.childName || 'Enfant',
     age: childInfo.age,
-    needs: childInfo.needs
+    needs: childInfo.needs,
+    personality: childInfo.personality
   };
   const parent = {
     name: parentInfo.name,

@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useRegion } from './use-region';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useToast } from './use-toast';
 import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where, Timestamp } from 'firebase/firestore';
@@ -32,14 +31,13 @@ export type TransportEvent = {
 };
 
 // Type pour les données d'ajout de transport
-export type AddTransportData = Omit<TransportEvent, 'id' | 'userId' | 'driverId'>; // driverId est déterminé automatiquement
+export type AddTransportData = Omit<TransportEvent, 'id' | 'userId'>; // driverId est fourni par le parent
 
 // Type pour les données de mise à jour de transport
 export type UpdateTransportData = Omit<TransportEvent, 'id' | 'userId'>;
 
 export function useTransport() {
   const { user } = useAuth();
-  const { userRegion } = useRegion();
   const { toast } = useToast();
   const [transportEvents, setTransportEvents] = useState<TransportEvent[]>([]);
   const [loading, setLoading] = useState(false);
@@ -94,10 +92,10 @@ export function useTransport() {
   // Ajouter un nouveau transport
   const addTransport = useCallback(async (data: AddTransportData) => {
     if (!user?.id) return null;
-    if (!userRegion?.driverId || userRegion.driverId === "") {
+    if (!data.driverId || data.driverId === "") {
       toast({
-        title: 'Aucun chauffeur disponible',
-        description: 'Aucun chauffeur n\'est actuellement disponible dans votre région. Veuillez réessayer plus tard ou contacter l\'administration.',
+        title: 'Chauffeur requis',
+        description: 'Vous devez sélectionner un chauffeur avant de programmer un transport.',
         variant: 'destructive',
       });
       return null;
@@ -115,7 +113,7 @@ export function useTransport() {
       const newTransport = {
         ...data,
         userId: user.id,
-        driverId: userRegion.driverId, // driverId déterminé automatiquement
+        driverId: data.driverId, // driverId fourni par le parent
         date: Timestamp.fromDate(data.date), // Convertir Date en Timestamp pour Firestore
         from: data.from,
         to: data.to,
@@ -138,7 +136,7 @@ export function useTransport() {
         ...data,
         id: docRef.id,
         userId: user.id,
-        driverId: userRegion.driverId,
+        driverId: data.driverId,
       };
     } catch (err) {
       console.error('Erreur lors de l\'ajout du transport:', err);
@@ -152,7 +150,7 @@ export function useTransport() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, userRegion, toast, loadTransports]);
+  }, [user?.id, toast, loadTransports]);
 
   // Mettre à jour un transport existant
   const updateTransport = useCallback(async (id: string, data: UpdateTransportData) => {
@@ -253,9 +251,9 @@ export function useTransport() {
     });
   }, [transportEvents]);
 
-  // Ajouter un commentaire à un transport (dans la collection reviews)
-  const addTransportComment = useCallback(async (transportId: string, comment: string) => {
-    if (!user?.id || !comment.trim()) return false;
+  // Ajouter une évaluation avec commentaire à un transport (dans la collection reviews)
+  const addTransportComment = useCallback(async (transportId: string, rating: number, comment: string) => {
+    if (!user?.id || !comment.trim() || rating < 1 || rating > 5) return false;
 
     setLoading(true);
     setError(null);
@@ -276,23 +274,23 @@ export function useTransport() {
         parentId: user.id,
         driverId: transport.driverId,
         comment: comment.trim(),
-        rating: null, // Pas de note, juste un commentaire
+        rating: rating, // Note obligatoire
         createdAt: Timestamp.now(),
-        type: 'comment', // Distinguer les commentaires des évaluations avec note
+        type: 'given', // Le parent donne une évaluation
       });
 
       toast({
-        title: 'Commentaire ajouté',
-        description: 'Votre commentaire a été enregistré avec succès.',
+        title: 'Évaluation ajoutée',
+        description: 'Votre évaluation a été enregistrée avec succès.',
       });
 
       return true;
     } catch (err) {
-      console.error('Erreur lors de l\'ajout du commentaire:', err);
-      setError('Impossible d\'ajouter le commentaire');
+      console.error('Erreur lors de l\'ajout de l\'évaluation:', err);
+      setError('Impossible d\'ajouter l\'évaluation');
       toast({
         title: 'Erreur',
-        description: 'Impossible d\'ajouter le commentaire',
+        description: 'Impossible d\'ajouter l\'évaluation',
         variant: 'destructive',
       });
       return false;

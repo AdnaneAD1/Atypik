@@ -13,6 +13,7 @@ export interface Child {
   school: string;
   avatar: string | null;
   needs: string[];
+  personality?: string;
   parentId: string;
 }
 
@@ -22,6 +23,7 @@ export interface AddChildData {
   age: string;
   school: string;
   specialNeeds?: string;
+  personality?: string;
 }
 
 export function useChildren() {
@@ -91,6 +93,7 @@ export function useChildren() {
         school: data.school,
         avatar: null,
         needs: data.specialNeeds ? data.specialNeeds.split(',').map((need: string) => need.trim()) : [],
+        personality: data.personality || '', // ✅ Ajout de la personnalité
         parentId: user.id
       };
       

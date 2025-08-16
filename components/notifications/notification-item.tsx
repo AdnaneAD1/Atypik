@@ -20,14 +20,14 @@ interface NotificationItemProps {
 export function NotificationItem({ notification, onMarkAsRead }: NotificationItemProps) {
   return (
     <motion.div
-      whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.02)' }}
+      whileHover={notification.read ? undefined : { backgroundColor: 'rgba(0, 0, 0, 0.02)' }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "p-4 cursor-pointer",
-        notification.read ? "opacity-80" : "bg-secondary/30"
+        "p-4",
+        notification.read ? "opacity-80 cursor-default" : "bg-secondary/30 cursor-pointer"
       )}
-      onClick={onMarkAsRead}
+      onClick={notification.read ? undefined : onMarkAsRead}
     >
       <div className="flex justify-between items-start">
         <h4 className={cn(

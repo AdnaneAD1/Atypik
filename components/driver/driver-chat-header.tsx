@@ -17,8 +17,8 @@ export function DriverChatHeader({ conversation, currentUserId }: { conversation
         <div className="font-medium truncate">{other.name}</div>
         <div className="text-xs text-muted-foreground truncate">{other.role}</div>
       </div>
-      <button className="p-2 rounded-full hover:bg-primary/10 transition-colors"><Phone className="h-5 w-5 text-primary" /></button>
-      <button className="p-2 rounded-full hover:bg-primary/10 transition-colors"><Video className="h-5 w-5 text-primary" /></button>
+      {/* <button className="p-2 rounded-full hover:bg-primary/10 transition-colors"><Phone className="h-5 w-5 text-primary" /></button>
+      <button className="p-2 rounded-full hover:bg-primary/10 transition-colors"><Video className="h-5 w-5 text-primary" /></button> */}
     </div>
   );
 }

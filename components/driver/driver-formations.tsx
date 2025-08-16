@@ -18,36 +18,8 @@ import {
 } from 'lucide-react';
 
 export function DriverFormations() {
-  // Mock formations data
-  const formations = [
-    {
-      id: '1',
-      title: 'Gestion des enfants TDAH',
-      description: 'Apprenez à accompagner les enfants atteints de TDAH pendant les trajets.',
-      duration: '2h30',
-      progress: 75,
-      status: 'in-progress',
-      icon: Brain
-    },
-    {
-      id: '2',
-      title: 'Premiers secours pédiatriques',
-      description: 'Formation aux gestes de premiers secours adaptés aux enfants.',
-      duration: '4h',
-      progress: 100,
-      status: 'completed',
-      icon: Heart
-    },
-    {
-      id: '3',
-      title: 'Sécurité routière avancée',
-      description: 'Perfectionnement à la conduite sécurisée avec des enfants.',
-      duration: '3h',
-      progress: 0,
-      status: 'not-started',
-      icon: Award
-    }
-  ];
+  // Aucune formation disponible pour le moment
+  const formations = [];
 
   return (
     <div className="space-y-8">
@@ -66,84 +38,23 @@ export function DriverFormations() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {formations.map((formation) => (
-              <div
-                key={formation.id}
-                className="p-4 bg-secondary/50 rounded-lg"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-lg bg-primary/10">
-                    <formation.icon className="h-6 w-6 text-primary" />
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="font-medium">{formation.title}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {formation.description}
-                        </p>
-                      </div>
-
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "bg-primary/5 text-primary border-primary/20",
-                          formation.status === 'completed' && "bg-success/5 text-success border-success/20"
-                        )}
-                      >
-                        {formation.status === 'completed' ? 'Terminée' :
-                         formation.status === 'in-progress' ? 'En cours' :
-                         'À commencer'}
-                      </Badge>
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span>{formation.duration}</span>
-                        </div>
-                        <span className="font-medium">
-                          {formation.progress}%
-                        </span>
-                      </div>
-
-                      <Progress value={formation.progress} className="h-2" />
-
-                      <div className="flex justify-end">
-                        <Button
-                          variant={formation.status === 'completed' ? 'outline' : 'default'}
-                          size="sm"
-                          className={cn(
-                            "text-xs",
-                            formation.status !== 'completed' && "bg-primary hover:bg-primary/90"
-                          )}
-                        >
-                          {formation.status === 'completed' ? (
-                            <>
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Revoir
-                            </>
-                          ) : (
-                            <>
-                              <Play className="h-3 w-3 mr-1" />
-                              {formation.status === 'in-progress' ? 'Continuer' : 'Commencer'}
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div className="p-6 rounded-full bg-primary/10 mb-6">
+              <GraduationCap className="h-12 w-12 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Aucune formation disponible</h3>
+            <p className="text-muted-foreground mb-6 max-w-md">
+              Les formations seront bientôt disponibles pour vous aider à développer vos compétences et améliorer votre service.
+            </p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span>Nouvelles formations à venir prochainement</span>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
@@ -181,7 +92,7 @@ export function DriverFormations() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

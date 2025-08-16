@@ -36,6 +36,8 @@ import { SideNav } from '@/components/navigation/side-nav';
 import { BottomNav } from '@/components/navigation/bottom-nav';
 import { NotificationsPopover } from '@/components/notifications/notifications-popover';
 import { motion, AnimatePresence } from 'framer-motion';
+import { db, generateToken, onMessageListener } from '@/firebase/ClientApp';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -81,7 +83,71 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
+    
   }, []);
+  // Demander la permission de notifications (une seule fois au montage si à l'état par défaut)
+  useEffect(() => {
+    const askPermission = async () => {
+      if (typeof window === 'undefined') return;
+      if (!('Notification' in window)) {
+        console.warn('Notifications non supportées par ce navigateur');
+        return;
+      }
+      try {
+        if (Notification.permission === 'default') {
+          const res = await Notification.requestPermission();
+          console.log('Permission notifications:', res);
+        }
+      } catch (e) {
+        console.error('Erreur lors de la demande de permission notifications:', e);
+      }
+    };
+    askPermission();
+  }, []);
+  useEffect(() => {
+    // Écoute sécurisée côté client uniquement
+    onMessageListener().then((payload) => {
+      if (payload) {
+        console.log('Message received. ', payload);
+      }
+    });
+  }, []);
+
+  // Génération et stockage du token FCM via generateToken() (global)
+  useEffect(() => {
+    const setupFCMToken = async () => {
+      if (typeof window === 'undefined') return;
+      if (!user?.id) return;
+
+      try {
+        const token = await generateToken();
+        if (!token) return;
+
+        await setDoc(
+          doc(db, 'notificationSettings', user.id),
+          {
+            id: user.id,
+            userId: user.id,
+            fcmToken: token,
+            isEnabled: true,
+            permissions: {
+              browser: true,
+              transport: true,
+              messages: true,
+              general: true,
+            },
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      } catch (err) {
+        console.error('Erreur lors de la génération/enregistrement du token FCM:', err);
+      }
+    };
+
+    setupFCMToken();
+  }, [user?.id]);
 
   if (!isMounted) {
     return null;
@@ -261,6 +327,8 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
+        
+        {/* Zone réservée pour une implémentation custom des notifications (init SW, prompts, etc.) */}
       </div>
     </AuthGuard>
   );

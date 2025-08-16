@@ -66,8 +66,8 @@ export function MessageList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-2 py-2 sm:px-3 md:px-4 md:py-4 bg-gray-50 dark:bg-gray-900 relative">
-      <div className="max-w-4xl mx-auto">
+    <div className="h-full overflow-y-auto px-2 py-2 sm:px-3 md:px-4 md:py-4 bg-gray-50 dark:bg-gray-900 relative scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+      <div className="max-w-4xl mx-auto min-h-full">
         {sortedDates.map(date => (
           <div key={date} className="mb-4 sm:mb-6">
             <div className="flex justify-center my-3 sm:my-4">
@@ -81,7 +81,7 @@ export function MessageList({
                   key={message.id}
                   className={`flex w-full ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className="w-full max-w-[90%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[70%]">
+                  <div className="w-full max-w-[95%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[70%]">
                     <MessageItem
                       message={message}
                       isCurrentUser={message.senderId === currentUserId}
@@ -95,7 +95,7 @@ export function MessageList({
             </div>
           </div>
         ))}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4" />
       </div>
     </div>
   );

@@ -65,6 +65,8 @@ export type ChildProfile = {
   totalTrips: number;
   favoriteDriver?: string;
   lastTrip?: Date;
+  personality?: string; // ✅ Ajout de la personnalité
+  needs?: string[]; // ✅ Ajout des besoins spécifiques
   preferences?: {
     music: boolean;
     stories: boolean;
@@ -85,6 +87,7 @@ export type Review = {
   childName?: string;
   canReply?: boolean;
   hasReplied?: boolean;
+  recipientName?: string; // Nom du destinataire de l'évaluation
 };
 
 export type Notification = {
@@ -409,6 +412,8 @@ export function useDashboard() {
           grade: data.grade || 'Classe non renseignée',
           totalTrips: stats.totalTrips,
           lastTrip: stats.lastTrip,
+          personality: data.personality || '', // ✅ Ajout de la personnalité
+          needs: data.needs || [], // ✅ Ajout des besoins spécifiques
           preferences: data.preferences,
         });
       }
@@ -430,6 +435,7 @@ export function useDashboard() {
       const receivedQuery = query(
         reviewsRef,
         where('parentId', '==', user.id),
+        where('type', '==', 'received'),
         orderBy('createdAt', 'desc'),
         limit(10)
       );
@@ -437,7 +443,8 @@ export function useDashboard() {
       // Évaluations données (par le parent)
       const givenQuery = query(
         reviewsRef,
-        where('reviewerId', '==', user.id),
+        where('userId', '==', user.id),
+        where('type', '==', 'given'),
         orderBy('createdAt', 'desc'),
         limit(10)
       );
@@ -468,15 +475,31 @@ export function useDashboard() {
         });
       });
 
-      // Traiter les évaluations données
-      givenSnapshot.forEach((doc) => {
-        const data = doc.data();
-        allReviews.push({
-          id: doc.id,
-          type: 'given',
-          reviewerName: user.name || 'Vous',
+      // Traiter les évaluations données avec récupération du nom du destinataire
+      const givenReviewsPromises = givenSnapshot.docs.map(async (reviewDoc) => {
+        const data = reviewDoc.data();
+        
+        // Récupérer le nom du chauffeur (destinataire)
+        let recipientName = 'Chauffeur';
+        if (data.driverId) {
+          try {
+            const driverDoc = await getDoc(doc(db, 'users', data.driverId));
+            if (driverDoc.exists()) {
+              recipientName = driverDoc.data().firstName + ' ' + driverDoc.data().lastName || 'Chauffeur';
+            }
+          } catch (error) {
+            console.error('Erreur lors de la récupération du nom du chauffeur:', error);
+          }
+        }
+        
+        return {
+          id: reviewDoc.id,
+          type: 'given' as const,
+          reviewerName: (user as any).firstName && (user as any).lastName 
+            ? (user as any).firstName + ' ' + (user as any).lastName 
+            : (user as any).displayName || 'Vous',
           reviewerAvatar: user.avatar,
-          reviewerRole: 'parent',
+          reviewerRole: 'parent' as const,
           rating: data.rating || 5,
           comment: data.comment || '',
           date: data.createdAt?.toDate() || new Date(),
@@ -484,8 +507,12 @@ export function useDashboard() {
           childName: data.childName,
           canReply: false,
           hasReplied: false,
-        });
+          recipientName: recipientName,
+        };
       });
+      
+      const givenReviews = await Promise.all(givenReviewsPromises);
+      allReviews.push(...givenReviews);
 
       // Trier par date
       allReviews.sort((a, b) => b.date.getTime() - a.date.getTime());

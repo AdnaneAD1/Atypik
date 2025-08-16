@@ -6,11 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useCallback } from "react";
 import { TransportEventDialog } from './transport-event-dialog';
+import { SubscriptionModal } from './subscription-modal';
+import { DriverSelectionModal } from './driver-selection-modal';
 import { useToast } from '@/hooks/use-toast';
 import { useTransport, TransportEvent } from '@/hooks/use-transport';
+import { useSubscription } from '@/hooks/use-subscription';
+import { useDriverSelection, Driver } from '@/hooks/use-driver-selection';
+import { useAuth } from '@/lib/auth/auth-context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarPlus, Info, Bus, MapPin, Clock, User, MessageSquare, X } from 'lucide-react';
+import { CalendarPlus, Info, Bus, MapPin, Clock, User, MessageSquare, X, Loader2, Star } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -42,8 +47,15 @@ export function ParentCalendar() {
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [selectedTransport, setSelectedTransport] = useState<TransportEvent | null>(null);
   const [comment, setComment] = useState('');
+  const [rating, setRating] = useState(0);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  
+  // États pour le modal d'abonnement
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  
+  // États pour le modal de sélection de chauffeur
+  const [isDriverSelectionOpen, setIsDriverSelectionOpen] = useState(false);
   
   // Utiliser le hook useTransport
   const { 
@@ -57,8 +69,53 @@ export function ParentCalendar() {
     hasTransportsOnDate 
   } = useTransport();
   
+  // Utiliser le hook useSubscription
+  const { 
+    subscription, 
+    loading: subscriptionLoading, 
+    hasActiveSubscription, 
+    canCreateTransport,
+    weeklyTransportCount,
+    loadSubscription 
+  } = useSubscription();
+  
+  // Utiliser les hooks d'authentification et de sélection de chauffeur
+  const { user } = useAuth();
+  const { selectedDriver, hasSelectedDriver, canCreateTransport: canCreateWithDriver } = useDriverSelection();
+  
   // Fonction pour ajouter un nouvel événement de transport
   const handleAddEvent = async (data: any) => {
+    // Vérifier l'abonnement avant de créer le transport
+    if (!canCreateTransport) {
+      // Déterminer le message d'erreur selon la situation
+      let message = 'Vous devez souscrire à un abonnement pour programmer un transport.';
+      
+      if (hasActiveSubscription && subscription?.type === 'standard' && weeklyTransportCount >= 2) {
+        message = `Limite atteinte : votre abonnement Standard permet jusqu'à 2 transports par semaine. Vous avez déjà programmé ${weeklyTransportCount} transport(s) cette semaine. Passez à l'abonnement Premium pour des transports illimités.`;
+      } else if (!hasActiveSubscription) {
+        message = 'Vous devez souscrire à un abonnement pour programmer un transport.';
+      }
+      
+      setIsSubscriptionModalOpen(true);
+      return {
+        success: false,
+        message,
+      };
+    }
+
+    // Vérifier qu'un chauffeur est sélectionné
+    if (!hasSelectedDriver || !selectedDriver) {
+      toast({
+        title: "Chauffeur requis",
+        description: "Vous devez sélectionner un chauffeur avant de programmer un transport.",
+        variant: "destructive",
+      });
+      return {
+        success: false,
+        message: 'Veuillez sélectionner un chauffeur avant de programmer un transport.',
+      };
+    }
+
     const result = await addTransport({
       childId: data.childId,
       childName: data.childName,
@@ -68,6 +125,7 @@ export function ParentCalendar() {
       from: data.from,
       to: data.to,
       distance: data.distance,
+      driverId: selectedDriver.id,
       status: 'programmed',
     });
 
@@ -88,6 +146,7 @@ export function ParentCalendar() {
   const handleOpenTransportDetail = (transport: TransportEvent) => {
     setSelectedTransport(transport);
     setComment('');
+    setRating(0);
     setIsDetailDialogOpen(true);
   };
 
@@ -96,8 +155,49 @@ export function ParentCalendar() {
     setIsDetailDialogOpen(false);
     setSelectedTransport(null);
     setComment('');
+    setRating(0);
     setIsSubmittingComment(false);
     setIsCancelling(false);
+  };
+
+  // Gestionnaires pour le modal d'abonnement
+  const handleCloseSubscriptionModal = () => {
+    setIsSubscriptionModalOpen(false);
+  };
+
+  const handleSubscriptionCreated = async () => {
+    // Recharger les données d'abonnement
+    await loadSubscription();
+    toast({
+      title: 'Abonnement activé !',
+      description: 'Vous pouvez maintenant programmer vos transports.',
+    });
+  };
+
+  // Fonction pour gérer l'ouverture du modal de sélection de chauffeur
+  const handleOpenDriverSelection = () => {
+    setIsDriverSelectionOpen(true);
+  };
+
+  // Fonction pour gérer la sélection d'un chauffeur
+  const handleDriverSelected = (driver: Driver) => {
+    toast({
+      title: "Chauffeur sélectionné",
+      description: `${driver.name} a été sélectionné comme votre chauffeur.`,
+    });
+    // Le modal se ferme automatiquement après la sélection
+  };
+
+  // Fonction pour ouvrir le dialog de transport (avec vérification du chauffeur)
+  const handleOpenTransportDialog = () => {
+    if (!hasSelectedDriver || !selectedDriver) {
+      // Ouvrir le modal de sélection de chauffeur si aucun n'est sélectionné
+      handleOpenDriverSelection();
+      return;
+    }
+    
+    // Si un chauffeur est sélectionné, ouvrir directement le dialog de transport
+    setIsEventDialogOpen(true);
   };
 
   // Fonction pour déterminer si un transport peut être annulé
@@ -147,13 +247,13 @@ export function ParentCalendar() {
     }
   };
 
-  // Fonction pour soumettre un commentaire
+  // Fonction pour soumettre une évaluation avec commentaire
   const handleSubmitComment = async () => {
-    if (!selectedTransport || !comment.trim()) return;
+    if (!selectedTransport || !comment.trim() || rating === 0) return;
     
     setIsSubmittingComment(true);
     try {
-      const success = await addTransportComment(selectedTransport.id, comment.trim());
+      const success = await addTransportComment(selectedTransport.id, rating, comment.trim());
       
       if (success) {
         handleCloseTransportDetail();
@@ -161,7 +261,7 @@ export function ParentCalendar() {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: 'Impossible d\'ajouter le commentaire.',
+        description: 'Impossible d\'ajouter l\'évaluation.',
         variant: 'destructive',
       });
     } finally {
@@ -183,7 +283,7 @@ export function ParentCalendar() {
           className="bg-primary hover:bg-primary/90 h-9 sm:h-10 text-xs sm:text-sm w-full sm:w-auto max-w-[250px]"
           onClick={() => {
             setSelectedTransportDate(date);
-            setIsEventDialogOpen(true);
+            handleOpenTransportDialog();
           }}
           disabled={isDatePast(date)}
         >
@@ -192,6 +292,69 @@ export function ParentCalendar() {
         </Button>
       </div>
       
+      {/* Section chauffeur sélectionné */}
+      {user?.role === 'parent' && (
+        <Card className="bg-white dark:bg-background mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Chauffeur sélectionné
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {selectedDriver ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                    {selectedDriver.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                  </div>
+                  <div>
+                    <p className="font-medium">{selectedDriver.name}</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      {selectedDriver.rating && selectedDriver.rating > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                          <span>{selectedDriver.rating.toFixed(1)}</span>
+                        </div>
+                      )}
+                      {selectedDriver.totalTrips && selectedDriver.totalTrips > 0 && (
+                        <span>• {selectedDriver.totalTrips} trajets</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenDriverSelection}
+                >
+                  Changer
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                    <User className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground">Aucun chauffeur sélectionné</p>
+                    <p className="text-sm text-muted-foreground">Choisissez un chauffeur pour programmer des transports</p>
+                  </div>
+                </div>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleOpenDriverSelection}
+                >
+                  Sélectionner
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         <Card className="bg-white dark:bg-background lg:col-span-2">
           <CardHeader className="pb-3">
@@ -280,7 +443,7 @@ export function ParentCalendar() {
                   className="mt-4"
                   onClick={() => {
                     setSelectedTransportDate(date);
-                    setIsEventDialogOpen(true);
+                    handleOpenTransportDialog();
                   }}
                   disabled={isDatePast(date)}
                 >
@@ -304,7 +467,7 @@ export function ParentCalendar() {
       
       {/* Modal de détail des transports */}
       <Dialog open={isDetailDialogOpen} onOpenChange={handleCloseTransportDetail}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bus className="h-5 w-5 text-primary" />
@@ -382,20 +545,53 @@ export function ParentCalendar() {
                 </div>
               </div>
               
-              {/* Section commentaire pour les transports passés/terminés */}
+              {/* Section évaluation pour les transports passés/terminés */}
               {canCommentTransport(selectedTransport) && (
-                <div className="space-y-3 pt-4 border-t">
+                <div className="space-y-4 pt-4 border-t">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-primary" />
-                    <Label htmlFor="comment" className="font-medium">Laisser un commentaire</Label>
+                    <Star className="h-4 w-4 text-primary" />
+                    <Label className="font-medium">Évaluer ce transport</Label>
                   </div>
-                  <Textarea
-                    id="comment"
-                    placeholder="Partagez votre expérience avec ce transport..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    rows={3}
-                  />
+                  
+                  {/* Système de notation avec étoiles */}
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Note (obligatoire)</Label>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className="p-1 hover:scale-110 transition-transform"
+                        >
+                          <Star 
+                            className={`h-6 w-6 transition-colors ${
+                              star <= rating 
+                                ? "text-amber-400 fill-amber-400" 
+                                : "text-muted-foreground hover:text-amber-300"
+                            }`} 
+                          />
+                        </button>
+                      ))}
+                      {rating > 0 && (
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          {rating} étoile{rating > 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Commentaire */}
+                  <div className="space-y-2">
+                    <Label htmlFor="comment" className="text-sm text-muted-foreground">Commentaire</Label>
+                    <Textarea
+                      id="comment"
+                      placeholder="Partagez votre expérience avec ce transport..."
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -420,17 +616,38 @@ export function ParentCalendar() {
               </Button>
             )}
             
-            {selectedTransport && canCommentTransport(selectedTransport) && comment.trim() && (
+            {selectedTransport && canCommentTransport(selectedTransport) && comment.trim() && rating > 0 && (
               <Button
                 onClick={handleSubmitComment}
                 disabled={isSubmittingComment || isCancelling}
               >
-                {isSubmittingComment ? 'Envoi...' : 'Envoyer le commentaire'}
+                {isSubmittingComment ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Envoi...
+                  </>
+                ) : (
+                  'Envoyer l\'évaluation'
+                )}
               </Button>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Modal d'abonnement */}
+      <SubscriptionModal
+        isOpen={isSubscriptionModalOpen}
+        onClose={handleCloseSubscriptionModal}
+        onSubscriptionCreated={handleSubscriptionCreated}
+      />
+      
+      {/* Modal de sélection de chauffeur */}
+      <DriverSelectionModal
+        isOpen={isDriverSelectionOpen}
+        onClose={() => setIsDriverSelectionOpen(false)}
+        onDriverSelected={handleDriverSelected}
+      />
     </div>
 
   );

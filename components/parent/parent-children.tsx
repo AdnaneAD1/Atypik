@@ -41,7 +41,8 @@ export function ParentChildren() {
         name: `${data.firstName} ${data.lastName}`,
         age: parseInt(data.age),
         school: data.school,
-        needs: data.specialNeeds ? data.specialNeeds.split(',').map((need: string) => need.trim()) : []
+        needs: data.specialNeeds ? data.specialNeeds.split(',').map((need: string) => need.trim()) : [],
+        personality: data.personality || '' // ✅ Ajout de la personnalité
       };
       
       return await updateChild(id, updatedChild);
@@ -202,27 +203,19 @@ export function ParentChildren() {
                           <p className="text-xs text-muted-foreground">Aucun besoin spécifique</p>
                         )}
                       </div>
-  
-                      <div className="flex flex-wrap items-center gap-2 mt-3 sm:mt-4">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="text-[10px] sm:text-xs h-7 sm:h-8 bg-primary/10 text-primary hover:bg-primary/20"
-                        >
-                          <AlertTriangle className="h-3 w-3 mr-1" />
-                          <span className="hidden xs:inline">Besoins spécifiques</span>
-                          <span className="xs:hidden">Besoins</span>
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="text-[10px] sm:text-xs h-7 sm:h-8 bg-primary/10 text-primary hover:bg-primary/20"
-                        >
-                          <User className="h-3 w-3 mr-1" />
-                          <span className="hidden xs:inline">Chauffeurs attitrés</span>
-                          <span className="xs:hidden">Chauffeurs</span>
-                        </Button>
-                      </div>
+
+                      {/* Affichage de la personnalité */}
+                      {child.personality && (
+                        <div className="mt-3 p-2 sm:p-3 bg-secondary/30 rounded-lg border border-secondary/50">
+                          <div className="flex items-center gap-2 mb-1">
+                            <User className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs font-medium text-muted-foreground">Personnalité</span>
+                          </div>
+                          <p className="text-xs sm:text-sm text-foreground leading-relaxed">
+                            {child.personality}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

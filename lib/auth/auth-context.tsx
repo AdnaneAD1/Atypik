@@ -11,7 +11,7 @@ import {
   updateProfile,
   User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/firebase/ClientApp';
 
 export type UserRole = 'parent' | 'driver';
@@ -23,6 +23,8 @@ interface User {
   role: UserRole;
   avatar?: string;
   status?: string;
+  regionId?: string;
+  selectedDriverId?: string;
 }
 
 interface AuthContextType {
@@ -32,6 +34,7 @@ interface AuthContextType {
   loginWithGoogle: (role: UserRole) => Promise<void>;
   register: (userData: any, role: UserRole) => Promise<void>;
   logout: () => void;
+  updateUser: (data: Partial<User>) => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -58,6 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: userData.role as UserRole,
           avatar: userData.avatar || undefined,
           status: userData.status || undefined,
+          regionId: userData.regionId || undefined,
+          selectedDriverId: userData.selectedDriverId || undefined,
         });
         
         // Rediriger en fonction du rôle
@@ -92,6 +97,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: userData.role as UserRole,
           avatar: userData.avatar || userCredential.user.photoURL || undefined,
           status: userData.status || undefined,
+          regionId: userData.regionId || undefined,
+          selectedDriverId: userData.selectedDriverId || undefined,
         });
         
         // Rediriger en fonction du rôle existant
@@ -198,6 +205,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Update user function
+  const updateUser = async (data: Partial<User>) => {
+    if (!user) throw new Error('Utilisateur non connecté');
+    
+    try {
+      // Mettre à jour dans Firestore
+      await updateDoc(doc(db, 'users', user.id), data);
+      
+      // Mettre à jour l'état local
+      setUser(prev => prev ? { ...prev, ...data } : null);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
+      throw error;
+    }
+  };
+
   // Observer for authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -216,6 +239,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               role: userData.role as UserRole,
               avatar: userData.avatar || undefined,
               status: userData.status || undefined,
+              regionId: userData.regionId || undefined,
+              selectedDriverId: userData.selectedDriverId || undefined,
             });
           } else {
             // L'utilisateur existe dans Auth mais pas dans Firestore
@@ -247,6 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginWithGoogle,
         register,
         logout,
+        updateUser,
         isAuthenticated: !!user,
       }}
     >

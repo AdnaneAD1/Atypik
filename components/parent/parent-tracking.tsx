@@ -13,7 +13,9 @@ import { Badge } from '@/components/ui/badge';
 export function ParentTracking() {
   const { user } = useAuth();
   const { transportEvents, loadTransports } = useTransport();
-  const { getActiveMissionByTransport, getMissionPosition } = useTracking();
+  const { getActiveMissionByTransport, getMissionPosition, listenMissionByTransport } = useTracking();
+  const [watchedMission, setWatchedMission] = useState<any | null>(null);
+  const [watchedPosition, setWatchedPosition] = useState<{ lat: number; lng: number; timestamp: number } | null>(null);
   
   const [selectedTransportId, setSelectedTransportId] = useState<string>('');
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -32,7 +34,31 @@ export function ParentTracking() {
   // Obtenir le transport sélectionné et sa mission active
   const selectedTransport = transportEvents?.find(t => t.id === selectedTransportId);
   const activeMission = selectedTransportId ? getActiveMissionByTransport(selectedTransportId) : null;
-  const currentPosition = activeMission ? getMissionPosition(activeMission.id) : null;
+  const currentPosition = watchedPosition || (activeMission ? getMissionPosition(activeMission.id) : null);
+
+  // S'abonner en temps réel à la mission liée au transport sélectionné (pour parents)
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    setWatchedMission(null);
+    setWatchedPosition(null);
+    if (selectedTransportId) {
+      unsubscribe = listenMissionByTransport(selectedTransportId, (mission) => {
+        setWatchedMission(mission || null);
+        if (mission?.currentPosition) {
+          setWatchedPosition({
+            lat: mission.currentPosition.lat,
+            lng: mission.currentPosition.lng,
+            timestamp: mission.currentPosition.timestamp?.getTime?.() || new Date().getTime(),
+          });
+        } else {
+          setWatchedPosition(null);
+        }
+      });
+    }
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [selectedTransportId, listenMissionByTransport]);
 
   // Initialiser Google Maps
   const initializeMap = () => {

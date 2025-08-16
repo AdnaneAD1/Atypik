@@ -89,16 +89,19 @@ export function ParentMessages() {
   }, [currentCall]);
 
   // Sélectionner automatiquement la première conversation disponible si aucune n'est sélectionnée
+  // SEULEMENT sur desktop pour éviter la sélection automatique sur mobile
   useEffect(() => {
     console.log('Conversations disponibles:', conversations);
-    if (conversations.length > 0 && !selectedConversationId) {
-      console.log('Sélection automatique de la première conversation:', conversations[0].id);
+    // Vérifier si on est sur desktop (largeur d'écran >= 768px)
+    const isDesktop = window.innerWidth >= 768;
+    if (conversations.length > 0 && !selectedConversationId && isDesktop) {
+      console.log('Sélection automatique de la première conversation (desktop seulement):', conversations[0].id);
       setSelectedConversationId(conversations[0].id);
     }
   }, [conversations, selectedConversationId]);
 
   // Gestionnaires d'événements
-  const handleSendMessage = (content: string, attachments: any[] = []) => {
+  const handleSendMessage = async (content: string, attachments: any[] = []) => {
     console.log('handleSendMessage appelé avec:', { content, attachments, replyingTo });
     
     if (!selectedConversationId) {
@@ -112,9 +115,36 @@ export function ParentMessages() {
     }
     
     console.log('Envoi du message à la conversation:', selectedConversationId);
-    const messageId = sendMessage(selectedConversationId, content, attachments, replyingTo);
+    const messageId = await sendMessage(selectedConversationId, content, attachments, replyingTo);
     console.log('Message envoyé, ID:', messageId);
     setReplyingTo(null);
+
+    // Envoyer une notification au correspondant (autre participant)
+    try {
+      const conv = conversations.find(c => c.id === selectedConversationId);
+      const receiver = conv?.participants?.find((p: any) => p.id !== user?.id);
+      const receiverId = receiver?.id;
+
+      if (receiverId) {
+        const title = `Nouveau message de ${user?.name || 'Utilisateur'}`;
+        const body = content?.slice(0, 140) || 'Vous avez reçu un nouveau message';
+        await fetch('/api/notifications/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: receiverId,
+            title,
+            body,
+            data: {
+              type: 'message',
+              conversationId: selectedConversationId,
+            },
+          }),
+        });
+      }
+    } catch (e) {
+      console.error('Erreur envoi notification message:', e);
+    }
   };
 
   const handleNewConversation = () => {
@@ -203,76 +233,97 @@ export function ParentMessages() {
   const isCurrentUserCaller = currentCall ? currentCall.callerId === user?.id : false;
 
   return (
-    <div className="h-[calc(100vh-10rem)]">
-      <div className="grid grid-cols-1 md:grid-cols-3 h-full gap-6">
-        {/* Liste des conversations */}
-        <Card className="md:col-span-1">
-          <ConversationList
-            conversations={conversations}
-            selectedConversationId={selectedConversationId}
-            onSelectConversation={setSelectedConversationId}
-            onNewConversation={handleNewConversation}
-            currentUserId={user?.id || ''}
-          />
-        </Card>
+    <div className="h-[calc(100vh-8rem)] flex flex-col">
+      {/* Layout mobile : une seule vue à la fois, desktop : grid horizontal */}
+      <div className="flex flex-col md:grid md:grid-cols-3 h-full gap-4 md:gap-6">
+        {/* Mobile : Liste des conversations OU zone de chat (jamais les deux) */}
+        {/* Desktop : Toujours les deux côte à côte */}
+        
+        {/* Liste des conversations - Visible sur desktop OU sur mobile quand aucune conversation n'est sélectionnée */}
+        <div className={`${selectedConversationId ? 'hidden md:block' : 'block'} h-full md:col-span-1`}>
+          <Card className="h-full flex flex-col">
+            <ConversationList
+              conversations={conversations}
+              selectedConversationId={selectedConversationId}
+              onSelectConversation={setSelectedConversationId}
+              onNewConversation={handleNewConversation}
+              currentUserId={user?.id || ''}
+            />
+          </Card>
+        </div>
 
-        {/* Zone de chat */}
-        <Card className="md:col-span-2 p-0">
-          {selectedConversationId ? (
-            (() => {
-              const selectedConversation = conversations.find(c => c.id === selectedConversationId);
-              // Trouver le correspondant (différent de l'utilisateur connecté)
-              const correspondent = selectedConversation?.participants.find((p: any) => p.id !== user?.id);
-              return (
-                <div className="flex flex-col h-full">
-                  {/* Bannière en haut toujours visible */}
-                  <ChatHeader
-                    avatarUrl={correspondent?.avatar || ''}
-                    name={correspondent?.name || ''}
-                    role={correspondent?.role || ''}
-                    onCallVoice={() => handleInitiateCall('audio')}
-                    onCallVideo={() => handleInitiateCall('video')}
-                  />
-                  {/* Liste des messages scrollable */}
-                  <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-                    <MessageList
-                      messages={messages}
-                      currentUserId={user?.id || ''}
-                      currentUserAvatar={user?.avatar || ''}
-                      loading={loading}
-                      onReplyToMessage={handleReplyToMessage}
-                      onDeleteMessage={handleDeleteMessage}
-                      onDownloadAttachment={handleDownloadAttachment}
-                    />
+        {/* Zone de chat - Visible sur desktop OU sur mobile quand une conversation est sélectionnée */}
+        <div className={`${selectedConversationId ? 'block' : 'hidden md:block'} flex-1 md:col-span-2 min-h-0`}>
+          <Card className="h-full p-0 flex flex-col">
+            {selectedConversationId ? (
+              (() => {
+                const selectedConversation = conversations.find(c => c.id === selectedConversationId);
+                // Trouver le correspondant (différent de l'utilisateur connecté)
+                const correspondent = selectedConversation?.participants.find((p: any) => p.id !== user?.id);
+                return (
+                  <div className="flex flex-col h-full">
+                    {/* Bannière en haut avec bouton retour sur mobile */}
+                    <div className="flex-shrink-0">
+                      <div className="flex items-center md:hidden px-4 py-2 border-b bg-white dark:bg-gray-900">
+                        <button
+                          onClick={() => setSelectedConversationId(null)}
+                          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition mr-2"
+                        >
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <span className="text-sm font-medium">Retour aux conversations</span>
+                      </div>
+                      <ChatHeader
+                        avatarUrl={correspondent?.avatar || ''}
+                        name={correspondent?.name || ''}
+                        role={correspondent?.role || ''}
+                        onCallVoice={() => handleInitiateCall('audio')}
+                        onCallVideo={() => handleInitiateCall('video')}
+                      />
+                    </div>
+                    {/* Liste des messages avec scroll indépendant */}
+                    <div className="flex-1 min-h-0 overflow-hidden">
+                      <MessageList
+                        messages={messages}
+                        currentUserId={user?.id || ''}
+                        currentUserAvatar={user?.avatar || ''}
+                        loading={loading}
+                        onReplyToMessage={handleReplyToMessage}
+                        onDeleteMessage={handleDeleteMessage}
+                        onDownloadAttachment={handleDownloadAttachment}
+                      />
+                    </div>
+                    {/* Input toujours en bas */}
+                    <div className="flex-shrink-0 border-t bg-white dark:bg-gray-900 px-2 py-2">
+                      <MessageInput
+                        onSendMessage={handleSendMessage}
+                        replyingTo={replyingTo}
+                        onCancelReply={handleCancelReply}
+                        isUploading={isUploading}
+                        uploadProgress={uploadProgress}
+                      />
+                    </div>
                   </div>
-                  {/* Input toujours en bas */}
-                  <div className="border-t bg-white dark:bg-gray-900 px-2 py-2">
-                    <MessageInput
-                      onSendMessage={handleSendMessage}
-                      replyingTo={replyingTo}
-                      onCancelReply={handleCancelReply}
-                      isUploading={isUploading}
-                      uploadProgress={uploadProgress}
-                    />
-                  </div>
+                );
+              })()
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-muted-foreground">
+                  <p className="text-sm sm:text-base">Sélectionnez une conversation ou créez-en une nouvelle</p>
+                  <button
+                    onClick={handleNewConversation}
+                    className="mt-4 flex items-center mx-auto gap-2 text-primary hover:underline text-sm sm:text-base"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Nouvelle conversation
+                  </button>
                 </div>
-              );
-            })()
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center text-muted-foreground">
-                <p>Sélectionnez une conversation ou créez-en une nouvelle</p>
-                <button
-                  onClick={handleNewConversation}
-                  className="mt-4 flex items-center mx-auto gap-2 text-primary hover:underline"
-                >
-                  <Plus className="h-4 w-4" />
-                  Nouvelle conversation
-                </button>
               </div>
-            </div>
-          )}
-        </Card>
+            )}
+          </Card>
+        </div>
       </div>
 
       {/* Dialogues */}

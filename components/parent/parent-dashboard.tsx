@@ -303,8 +303,8 @@ export function ParentDashboard() {
                       <div className="flex items-center justify-center py-8">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                       </div>
-                    ) : reviews.filter(r => r.type === 'received').length > 0 ? (
-                      reviews.filter(r => r.type === 'received').map((review) => (
+                    ) : reviews.filter(r => r.type === 'received' && r.rating).length > 0 ? (
+                      reviews.filter(r => r.type === 'received' && r.rating).map((review) => (
                         <div key={review.id} className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
                           <div className="relative p-4 sm:p-5">
                             <div className="flex items-start gap-3">
@@ -423,6 +423,9 @@ export function ParentDashboard() {
                                     <div className="flex items-center gap-2 mt-0.5">
                                       <p className="text-xs text-muted-foreground">
                                         {review.date.toLocaleDateString('fr-FR')} · Parent
+                                        {review.recipientName && (
+                                          <span> · à {review.recipientName}</span>
+                                        )}
                                       </p>
                                       <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-300">
                                         {review.tripType === 'aller' ? 'Aller' : 'Retour'}
@@ -435,14 +438,16 @@ export function ParentDashboard() {
                                     </div>
                                   </div>
                                   
-                                  <div className="flex items-center gap-0.5">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                      <Star 
-                                        key={star} 
-                                        className={`h-3.5 w-3.5 ${star <= review.rating ? "text-amber-400 fill-amber-400" : "text-muted"}`} 
-                                      />
-                                    ))}
-                                  </div>
+                                  {review.rating && (
+                                    <div className="flex items-center gap-0.5">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star 
+                                          key={star} 
+                                          className={`h-3.5 w-3.5 ${star <= review.rating ? "text-amber-400 fill-amber-400" : "text-muted"}`} 
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                                 
                                 {review.comment && (

@@ -40,7 +40,8 @@ interface Child {
   preferences?: any;
   tags?: string[];
   description?: string;
-  needs?: ChildNeeds;
+  personality?: string; // ✅ Ajout de la personnalité
+  needs?: string[] | ChildNeeds; // ✅ Support des deux formats
 }
 
 interface ParentChildListCardProps {
@@ -168,7 +169,7 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
                     <Heart className="h-4 w-4 text-primary" />
                     Personnalité et comportement
                   </h4>
-                  <p className="text-sm">{selectedChild.description || 'Aucune description disponible'}</p>
+                  <p className="text-sm">{selectedChild.personality || 'Aucune personnalité renseignée'}</p>
                 </div>
                 
                 <div className="space-y-3">
@@ -177,53 +178,22 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
                     Besoins spécifiques
                   </h4>
                   
-                  {selectedChild.needs?.medication && (
-                    <div className="flex items-start gap-3 bg-secondary/70 p-3 rounded-lg">
-                      <div className="mt-0.5">
-                        <Pill className="h-4 w-4 text-accent" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Médicaments</p>
-                        <p className="text-xs text-muted-foreground">
-                          {selectedChild.needs.medicationDetails}
-                        </p>
-                      </div>
+                  {/* Affichage des besoins sous forme de badges */}
+                  {selectedChild.needs && Array.isArray(selectedChild.needs) && selectedChild.needs.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedChild.needs.map((need, index) => (
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-xs py-1 px-2 bg-primary/5 text-primary border-primary/20"
+                        >
+                          {need}
+                        </Badge>
+                      ))}
                     </div>
-                  )}
-                  
-                  {selectedChild.needs?.comfortItems && (
-                    <div className="flex items-start gap-3 bg-secondary/70 p-3 rounded-lg">
-                      <div className="mt-0.5">
-                        <Heart className="h-4 w-4 text-accent" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Objets réconfortants</p>
-                        <p className="text-xs text-muted-foreground">
-                          {selectedChild.needs.comfortItemsDetails}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedChild.needs?.allergies && (
-                    <div className="flex items-start gap-3 bg-secondary/70 p-3 rounded-lg">
-                      <div className="mt-0.5">
-                        <AlertTriangle className="h-4 w-4 text-warning" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Allergies</p>
-                        <p className="text-xs text-muted-foreground">
-                          {selectedChild.needs.allergiesDetails}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {!selectedChild.needs?.medication && 
-                   !selectedChild.needs?.comfortItems && 
-                   !selectedChild.needs?.allergies && (
-                    <p className="text-sm text-muted-foreground">
-                      Aucun besoin spécifique enregistré
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">
+                      Aucun besoin spécifique renseigné
                     </p>
                   )}
                 </div>
@@ -231,9 +201,6 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
                 <div className="flex justify-end space-x-2 pt-4">
                   <Button variant="outline" onClick={() => setShowDetails(false)}>
                     Fermer
-                  </Button>
-                  <Button onClick={() => router.push(`/parent/children/${selectedChild.id}/edit`)}>
-                    Modifier le profil
                   </Button>
                 </div>
               </div>
