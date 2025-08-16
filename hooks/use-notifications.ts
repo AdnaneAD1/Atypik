@@ -10,7 +10,8 @@ import {
   serverTimestamp,
   Timestamp 
 } from 'firebase/firestore';
-import { db, generateToken, onMessageListener } from '@/firebase/ClientApp';
+import { db, messaging, generateToken } from '@/firebase/ClientApp';
+import { onMessage } from 'firebase/messaging';
 import { 
   collection,
   onSnapshot,
@@ -126,7 +127,7 @@ export function useNotifications(): NotificationHook {
     setError(null);
 
     try {
-      // Obtenir le token FCM via helper sécurisé (client-only)
+      // Utiliser la fonction generateToken de ClientApp.ts (gère les guards)
       const token = await generateToken();
       
       if (!token) {
@@ -247,11 +248,15 @@ export function useNotifications(): NotificationHook {
   // Écouter les messages en premier plan
   useEffect(() => {
     if (!isSupported || !hasPermission) return;
-    onMessageListener().then((payload) => {
-      if (payload) {
-        console.log('Message reçu en premier plan:', payload);
-      }
+    if (typeof window === 'undefined') return;
+    if (!messaging) return;
+
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log('Message reçu en premier plan:', payload);
+      // Ici vous pouvez afficher une notification toast ou autre
     });
+
+    return unsubscribe;
   }, [isSupported, hasPermission]);
 
   // Charger les paramètres au montage

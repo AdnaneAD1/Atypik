@@ -36,7 +36,8 @@ import { SideNav } from '@/components/navigation/side-nav';
 import { BottomNav } from '@/components/navigation/bottom-nav';
 import { NotificationsPopover } from '@/components/notifications/notifications-popover';
 import { motion, AnimatePresence } from 'framer-motion';
-import { db, generateToken, onMessageListener } from '@/firebase/ClientApp';
+import { onMessage } from 'firebase/messaging';
+import { messaging, db, generateToken } from '@/firebase/ClientApp';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface AppLayoutProps {
@@ -105,12 +106,17 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
     askPermission();
   }, []);
   useEffect(() => {
-    // Écoute sécurisée côté client uniquement
-    onMessageListener().then((payload) => {
-      if (payload) {
-        console.log('Message received. ', payload);
-      }
+    if (typeof window === 'undefined') return;
+    if (!messaging) return;
+
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log('Message received. ', payload);
+      // ...
     });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   // Génération et stockage du token FCM via generateToken() (global)
