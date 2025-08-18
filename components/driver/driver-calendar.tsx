@@ -285,15 +285,6 @@ export function DriverCalendar() {
                     <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                     Envoyer un message au parent
                   </Button>
-                  <Button 
-                    onClick={() => handleStartNavigation(selectedMission)}
-                    variant="default" 
-                    size="sm" 
-                    className="w-full justify-start text-xs sm:text-sm h-8 sm:h-9"
-                  >
-                    <Navigation className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                    Démarrer la navigation
-                  </Button>
                 </div>
               </div>
             )}
