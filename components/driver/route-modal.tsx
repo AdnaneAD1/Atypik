@@ -310,7 +310,7 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Badge variant="secondary" className="text-xs">
                 <Car className="h-3 w-3 mr-1" />
-                {mission.distance?.toFixed(1) || '0.0'} km
+                {((mission.distance || 0)/1000).toFixed(1) || '0.0'} km
               </Badge>
               <Badge variant="outline" className="text-xs">
                 {

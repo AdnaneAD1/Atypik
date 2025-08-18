@@ -3,7 +3,6 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   CalendarRange, 
-  Home, 
   MessageSquare,
   UserRound,
   MapPin,
@@ -12,7 +11,6 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  Settings,
   HelpCircle,
   BarChart
 } from 'lucide-react';
@@ -101,9 +99,9 @@ export function SideNav({ className }: SideNavProps) {
 
   const bottomNavItems = [
     {
-      icon: Settings,
-      label: 'Paramètres',
-      href: `/${user.role}/settings`,
+      icon: UserRound,
+      label: 'Profil',
+      href: '/profile',
     },
     {
       icon: HelpCircle,

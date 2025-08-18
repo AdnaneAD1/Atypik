@@ -204,8 +204,13 @@ export function ParentTracking() {
   const todayTransports = transportEvents?.filter(transport => {
     const today = new Date();
     const transportDate = transport.date;
-    return transportDate.toDateString() === today.toDateString() && transport.status !== 'cancelled';
+    return (
+      transportDate.toDateString() === today.toDateString() &&
+      transport.status !== 'cancelled' &&
+      transport.status !== 'completed'
+    );
   }) || [];
+  const noTransports = todayTransports.length === 0;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -228,20 +233,26 @@ export function ParentTracking() {
         </CardHeader>
         <CardContent>
           <Select value={selectedTransportId} onValueChange={setSelectedTransportId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Choisissez un transport d'aujourd'hui" />
+            <SelectTrigger disabled={noTransports}>
+              <SelectValue placeholder={noTransports ? "Aucun transport disponible" : "Choisissez un transport d'aujourd'hui"} />
             </SelectTrigger>
             <SelectContent>
-              {todayTransports.map(transport => (
-                <SelectItem key={transport.id} value={transport.id}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{transport.childName} - {transport.time}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {transport.from.address} → {transport.to.address}
-                    </span>
-                  </div>
+              {noTransports ? (
+                <SelectItem value="none" disabled>
+                  Aucun transport disponible
                 </SelectItem>
-              ))}
+              ) : (
+                todayTransports.map(transport => (
+                  <SelectItem key={transport.id} value={transport.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{transport.childName} - {transport.time}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {transport.from.address} → {transport.to.address}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </CardContent>

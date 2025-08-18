@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '@/components/logo';
 import { ModeToggle } from '@/components/mode-toggle';
 import { AuthGuard } from '@/lib/auth/auth-guard';
@@ -48,6 +48,7 @@ interface AppLayoutProps {
 export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -272,6 +273,8 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
                   variant="ghost" 
                   size="icon" 
                   className="hidden md:flex text-muted-foreground hover:text-foreground h-9 w-9"
+                  onClick={() => router.push('/profile')}
+                  aria-label="Ouvrir le profil"
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
@@ -293,18 +296,20 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 sm:w-56">
                     <DropdownMenuLabel className="text-sm">Mon compte</DropdownMenuLabel>
-                    <DropdownMenuItem className="flex items-center gap-2 text-sm">
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2 text-sm"
+                      onClick={() => router.push('/profile')}
+                    >
                       <UserRound className="h-4 w-4" />
                       <span>Profil</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 text-sm">
-                      <Bell className="h-4 w-4" />
-                      <span>Notifications</span>
                     </DropdownMenuItem>
                     {isMobile && (
                       <>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="flex items-center gap-2 text-sm">
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-sm"
+                          onClick={() => router.push('/profile')}
+                        >
                           <Settings className="h-4 w-4" />
                           <span>Paramètres</span>
                         </DropdownMenuItem>

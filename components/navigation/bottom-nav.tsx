@@ -76,7 +76,7 @@ export function BottomNav() {
     {
       icon: UserRound,
       label: 'Profil',
-      href: '/driver/profile',
+      href: '/profile',
     },
   ];
   

@@ -91,7 +91,7 @@ export function DriverDashboard() {
       progress: Math.min((stats?.todayMissions || 0) * 25, 100),
     },
     { 
-      label: 'Km parcourus', 
+      label: 'Km à parcourir', 
       value: stats?.kmTraveled?.toFixed(1) || '0.0', 
       icon: <MapPin className="h-5 w-5 text-primary" />,
       progress: Math.min((stats?.kmTraveled || 0) * 2, 100),
@@ -138,8 +138,8 @@ export function DriverDashboard() {
                         value={stat.value} 
                         duration={1.5} 
                         delay={0.2 + index * 0.1}
-                        suffix={stat.label === 'Km parcourus' ? ' km' : ''}
-                        decimalPlaces={stat.label === 'Km parcourus' ? 1 : 0}
+                        suffix={stat.label === 'Km à parcourir' ? ' km' : ''}
+                        decimalPlaces={stat.label === 'Km à parcourir' ? 1 : 0}
                       />
                     </p>
                   </div>

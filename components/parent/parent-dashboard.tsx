@@ -225,7 +225,7 @@ export function ParentDashboard() {
               ) : (
                 <div className="text-center py-8">
                   <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Aucun trajet prévu aujourd'hui</p>
+                  <p className="text-sm text-muted-foreground">Aucun trajet prévu aujourd&apos;hui</p>
                 </div>
               )}
             </CardContent>
@@ -239,7 +239,7 @@ export function ParentDashboard() {
                 <CardTitle className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <CalendarRange className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                    <span className="text-sm sm:text-base">Planning de la semaine</span>
+                    <span>Planning de la semaine</span>
                   </div>
                   <Button 
                     variant="outline" 

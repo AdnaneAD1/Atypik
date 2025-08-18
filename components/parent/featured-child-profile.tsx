@@ -78,14 +78,6 @@ export function FeaturedChildProfile({ child, loading = false }: FeaturedChildPr
             <User className="h-5 w-5 text-primary" />
             <span>Enfant du jour</span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`h-8 w-8 p-0 ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}
-            onClick={handleLike}
-          >
-            <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-          </Button>
         </CardTitle>
       </CardHeader>
       

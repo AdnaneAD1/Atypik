@@ -22,6 +22,8 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '@/firebase/ClientApp';
 
 const formSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -33,6 +35,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const { login, loginWithGoogle, isLoading, error, clearError } = useFirebaseAuth();
   const { toast } = useToast();
   const router = useRouter();
@@ -64,6 +67,45 @@ export function LoginForm() {
           variant: 'destructive',
         });
       }
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const email = form.getValues('email');
+    if (!email) {
+      toast({
+        title: 'Email requis',
+        description: 'Veuillez saisir votre email pour réinitialiser le mot de passe.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    // Validation simple côté client
+    const emailRegex = /[^@\s]+@[^@\s]+\.[^@\s]+/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: 'Email invalide',
+        description: 'Veuillez renseigner une adresse email valide.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      setResetLoading(true);
+      await sendPasswordResetEmail(auth, email);
+      toast({
+        title: 'Email envoyé',
+        description: 'Un lien de réinitialisation vous a été envoyé si le compte existe.',
+        variant: 'default',
+      });
+    } catch (e: any) {
+      // Ne pas divulguer si l'email existe ou non
+      toast({
+        title: 'Réinitialisation du mot de passe',
+        description: 'Si un compte existe pour cet email, un lien a été envoyé.',
+      });
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -173,8 +215,14 @@ export function LoginForm() {
                 Se souvenir de moi
               </label>
             </div>
-            <Button variant="link" className="p-0 h-auto text-sm font-medium text-primary hover:text-primary/80 transition-colors">
-              Mot de passe oublié ?
+            <Button
+              type="button"
+              variant="link"
+              className="p-0 h-auto text-sm font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-60"
+              onClick={handleForgotPassword}
+              disabled={isSubmitting || isLoading || resetLoading}
+            >
+              {resetLoading ? 'Envoi...' : 'Mot de passe oublié ?'}
             </Button>
           </div>
 
