@@ -7,7 +7,7 @@ export interface Mission {
   id: string;
   driverId: string;
   date: Timestamp;
-  status: 'pending' | 'in_progress' | 'done';
+  status: 'programmed' | 'in_progress' | 'completed';
   child: { name: string; age: number; needs: string[]; personality?: string };
   parent: { name: string; phone?: string }; // Ajouter les informations du parent
   from: { name: string; address: string; lat: number; lng: number };
@@ -102,8 +102,27 @@ const missionsPromises = filteredDocs.map(async doc => {
   // Format HH:mm
   const pad = (n: number) => n.toString().padStart(2, '0');
   const time = data.time || `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
-  // Statut par défaut (à améliorer si besoin)
-  let status: 'pending' | 'in_progress' | 'done' = 'pending';
+  // Normaliser le statut depuis Firestore vers l'enum interne
+  const rawStatus = (data.status || '').toString();
+  let status: 'programmed' | 'in_progress' | 'completed';
+  switch (rawStatus) {
+    case 'programmed':
+    case 'pending':
+    case 'scheduled':
+      status = 'programmed';
+      break;
+    case 'in-progress':
+    case 'in_progress':
+    case 'started':
+      status = 'in_progress';
+      break;
+    case 'completed':
+    case 'done':
+      status = 'completed';
+      break;
+    default:
+      status = 'programmed';
+  }
   // Récupérer infos enfant et parent
   const childInfo = await getChildInfo(data.childId);
   const parentInfo = await getParentInfo(data.userId); // userId est l'ID du parent

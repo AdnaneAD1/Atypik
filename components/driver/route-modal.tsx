@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, Navigation, MapPin, Clock, User, Car, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTracking } from '@/hooks/use-tracking';
 
 interface Mission {
   id: string;
@@ -44,6 +45,8 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const routeRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
+  const liveMarkerRef = useRef<google.maps.Marker | null>(null);
+  const { currentPosition, isTracking } = useTracking();
 
   // Nettoyer la carte quand le modal se ferme
   useEffect(() => {
@@ -162,6 +165,39 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
       setIsMapLoaded(true);
     }
   }, [mission]);
+
+  // Mettre à jour la position en direct du chauffeur sur la carte
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    if (!currentPosition) return;
+
+    const pos = {
+      lat: currentPosition.coords.latitude,
+      lng: currentPosition.coords.longitude,
+    };
+
+    if (!liveMarkerRef.current) {
+      liveMarkerRef.current = new google.maps.Marker({
+        position: pos,
+        map: mapInstanceRef.current,
+        title: 'Position du chauffeur',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 6,
+          fillColor: '#2563EB',
+          fillOpacity: 1,
+          strokeColor: '#1D4ED8',
+          strokeWeight: 2,
+        },
+        zIndex: 999,
+      });
+    } else {
+      liveMarkerRef.current.setPosition(pos);
+    }
+
+    // Optionnel: recentrer légèrement sur la position courante
+    // mapInstanceRef.current.panTo(pos);
+  }, [currentPosition]);
 
   // Charger Google Maps si nécessaire et initialiser la carte
   useEffect(() => {
@@ -288,6 +324,11 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
               <Badge variant="outline" className="text-xs">
                 Parent: {mission.parent.name}
               </Badge>
+              {isTracking && (
+                <Badge variant="secondary" className="text-xs">
+                  Position en direct
+                </Badge>
+              )}
             </div>
           </div>
 

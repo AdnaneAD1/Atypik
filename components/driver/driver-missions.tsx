@@ -165,7 +165,7 @@ export function DriverMissions() {
 
             <TabsContent value="pending" className="space-y-4">
               {missions
-                .filter(m => m.status === 'pending')
+                .filter(m => m.status === 'programmed')
                 .map(mission => (
                   <div
                     key={mission.id}
@@ -287,7 +287,7 @@ export function DriverMissions() {
 
             <TabsContent value="completed" className="space-y-4">
               {missions
-                .filter(m => m.status === 'done')
+                .filter(m => m.status === 'completed')
                 .map(mission => (
                   <div
                     key={mission.id}
@@ -348,6 +348,7 @@ export function DriverMissions() {
                           variant="outline"
                           size="sm"
                           className="text-xs"
+                          onClick={() => handleShowDetails(mission)}
                         >
                           Voir détails
                         </Button>

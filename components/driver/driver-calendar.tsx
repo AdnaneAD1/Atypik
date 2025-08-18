@@ -91,16 +91,16 @@ export function DriverCalendar() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <Card className="h-fit">
+        <Card className="h-full flex flex-col">
           <CardHeader className="pb-3 sm:pb-6">
             <CardTitle className="text-lg sm:text-xl">Calendrier</CardTitle>
           </CardHeader>
-          <CardContent className="p-3 sm:p-6">
+          <CardContent className="p-0 flex-1">
             <Calendar
               mode="single"
               selected={date}
               onSelect={setDate}
-              className="rounded-md border w-full mx-auto max-w-sm sm:max-w-none"
+              className="w-full h-full"
               modifiers={modifiers}
               modifiersClassNames={modifiersClassNames}
             />

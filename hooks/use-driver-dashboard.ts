@@ -16,7 +16,8 @@ export interface DriverStats {
 
 export interface ActiveMission {
   id: string;
-  status: 'active' | 'pending' | 'completed';
+  transportId: string;
+  status: 'started' | 'in_progress' | 'completed';
   child: {
     name: string;
     age: number;
@@ -263,7 +264,11 @@ export function useDriverDashboard(): UseDriverDashboardResult {
     try {
       // Vérifier s'il y a une mission active dans la collection activeMissions
       const activeMissionsRef = collection(db, 'activeMissions');
-      const activeMissionQuery = query(activeMissionsRef, where('driverId', '==', driverId));
+      const activeMissionQuery = query(
+        activeMissionsRef,
+        where('driverId', '==', driverId),
+        where('status', '==', 'started')
+      );
       const activeMissionSnapshot = await getDocs(activeMissionQuery);
       
       if (!activeMissionSnapshot.empty) {
@@ -280,8 +285,9 @@ export function useDriverDashboard(): UseDriverDashboardResult {
           const parentInfo = await getParentInfo(transportData.userId);
           
           return {
-            id: missionData.transportId,
-            status: 'active' as const,
+            id: missionDoc.id,
+            transportId: missionData.transportId,
+            status: 'started' as const,
             child: {
               name: transportData.childName || 'Enfant',
               age: childInfo.age || 0,
@@ -344,8 +350,15 @@ export function useDriverDashboard(): UseDriverDashboardResult {
       for (const doc of snapshot.docs) {
         const data = doc.data();
         
-        // Exclure les missions annulées, complétées et actives
-        if (data.status === 'cancelled' || data.status === 'completed' || data.status === 'active') continue;
+        // Exclure les missions annulées, complétées et déjà démarrées/en cours
+        if (
+          data.status === 'cancelled' ||
+          data.status === 'completed' ||
+          data.status === 'active' ||
+          data.status === 'in_progress' ||
+          data.status === 'in-progress' ||
+          data.status === 'started'
+        ) continue;
         
         // Limiter à 3 missions
         if (missions.length >= 3) break;

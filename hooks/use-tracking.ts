@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useToast } from './use-toast';
-import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where, onSnapshot, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, getDoc, query, updateDoc, where, onSnapshot, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/ClientApp';
 
 // Type pour les positions GPS
@@ -92,6 +92,16 @@ export function useTracking() {
         ...newMission,
         startTime: serverTimestamp(),
       });
+
+      // Mettre à jour le statut du transport lié -> 'in_progress'
+      try {
+        const transportRef = doc(db, 'transports', transportId);
+        await updateDoc(transportRef, {
+          status: 'in_progress',
+        });
+      } catch (e) {
+        console.warn('Impossible de mettre à jour le statut du transport (start):', e);
+      }
 
       // Démarrer la géolocalisation
       if (navigator.geolocation) {
@@ -198,6 +208,21 @@ export function useTracking() {
         status: 'completed',
         endTime: serverTimestamp(),
       });
+
+      // Récupérer le transportId de la mission et mettre le transport à 'completed'
+      try {
+        const snap = await getDoc(missionRef);
+        const data = snap.data() as Partial<ActiveMission> | undefined;
+        const transportId = data?.transportId;
+        if (transportId) {
+          const transportRef = doc(db, 'transports', transportId);
+          await updateDoc(transportRef, {
+            status: 'completed',
+          });
+        }
+      } catch (e) {
+        console.warn('Impossible de mettre à jour le statut du transport (complete):', e);
+      }
 
       // Arrêter la géolocalisation
       if (watchIdRef.current) {

@@ -356,29 +356,25 @@ export function ParentCalendar() {
       )}
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        <Card className="bg-white dark:bg-background lg:col-span-2">
+        <Card className="bg-white dark:bg-background lg:col-span-2 h-full flex flex-col">
           <CardHeader className="pb-3">
             <CardTitle className="text-base sm:text-lg">Calendrier des transports</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="min-w-[320px] px-4 sm:px-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  className="rounded-md border mx-auto"
-                  modifiers={{
-                    hasEvent: (date) => hasTransportsOnDate(date),
-                    past: (date) => isDatePast(date)
-                  }}
-                  modifiersClassNames={{
-                    hasEvent: 'bg-primary/10 font-semibold text-primary relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full',
-                    past: 'text-muted-foreground opacity-50'
-                  }}
-                />
-              </div>
-            </div>
+          <CardContent className="p-0 flex-1">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              className="w-full h-full"
+              modifiers={{
+                hasEvent: (date) => hasTransportsOnDate(date),
+                past: (date) => isDatePast(date)
+              }}
+              modifiersClassNames={{
+                hasEvent: 'bg-primary/10 font-semibold text-primary relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full',
+                past: 'text-muted-foreground opacity-50'
+              }}
+            />
           </CardContent>
         </Card>
         

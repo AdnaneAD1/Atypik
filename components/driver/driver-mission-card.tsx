@@ -10,11 +10,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { AnimatedRoute } from '@/components/ui/animated-route';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
+import { useTracking } from '@/hooks/use-tracking';
+import { RouteModal } from '@/components/driver/route-modal';
 
 interface DriverMissionCardProps {
   mission?: {
     id: string;
-    status: 'active' | 'pending' | 'completed';
+    transportId: string;
+    status: 'started' | 'in_progress' | 'completed';
     child: {
       name: string;
       age: number;
@@ -51,6 +54,7 @@ function DriverMissionCard({ mission }: DriverMissionCardProps) {
   // États pour les popups
   const [showNeeds, setShowNeeds] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const { completeMission, loading } = useTracking();
 
   // Si aucune mission active, afficher un message
   if (!mission) {
@@ -69,6 +73,9 @@ function DriverMissionCard({ mission }: DriverMissionCardProps) {
 
   // Fonctions pour gérer les actions
   const handleCallParent = () => {
+    if (mission?.parent?.phone) {
+      window.location.href = `tel:${mission.parent.phone}`;
+    }
   };
 
   const handleViewMap = () => {
@@ -85,6 +92,11 @@ function DriverMissionCard({ mission }: DriverMissionCardProps) {
 
   const handleCloseMap = () => {
     setShowMap(false);
+  };
+
+  const handleCompleteMission = async () => {
+    if (!mission?.id) return;
+    await completeMission(mission.id);
   };
 
   // Composant pour la popup des besoins
@@ -159,50 +171,7 @@ function DriverMissionCard({ mission }: DriverMissionCardProps) {
     );
   };
 
-  // Composant pour la popup de la carte
-  const MapPopup = () => {
-    if (!showMap) return null;
-    
-    return (
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={handleCloseMap}
-        >
-          <motion.div
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.95 }}
-            className="bg-card max-w-3xl w-full h-[80vh] rounded-xl shadow-xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-4 bg-primary/5 border-b border-primary/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-lg">Suivi du trajet en direct</h3>
-              </div>
-              <Button variant="ghost" size="icon" onClick={handleCloseMap}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="p-0 h-full relative">
-              {/* Ici, dans une vraie application, on aurait une carte interactive */}
-              <div className="bg-gray-100 dark:bg-gray-800 h-full w-full flex items-center justify-center">
-                <div className="text-center p-6">
-                  <MapPin className="h-12 w-12 text-primary mx-auto mb-4" />
-                  <h4 className="text-xl font-semibold mb-2">Carte de suivi en temps réel</h4>
-                  <p className="text-muted-foreground">Dans une application réelle, une carte interactive serait affichée ici.</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
-    );
-  };
+  // RouteModal (Google Maps + suivi live)
 
   return (
     <>
@@ -239,18 +208,7 @@ function DriverMissionCard({ mission }: DriverMissionCardProps) {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-primary/20 text-primary hover:bg-primary/5 hover:text-primary text-xs h-9 px-3 rounded-md"
-                    onClick={handleViewMap}
-                  >
-                    <Navigation className="h-3.5 w-3.5 mr-1.5" />
-                    <span className="hidden sm:inline">Voir sur la carte</span>
-                    <span className="sm:hidden">Carte</span>
-                  </Button>
-                  
+                <div className="flex items-center gap-2">                  
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -329,7 +287,6 @@ function DriverMissionCard({ mission }: DriverMissionCardProps) {
                   </div>
                   <div className="mt-5">
                     <div className="flex justify-between text-xs mb-1.5">
-                      <span className="font-medium text-primary">{mission.progress}% du trajet</span>
                       <span>{mission.distance}</span>
                     </div>
                     <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden relative">
@@ -372,10 +329,11 @@ function DriverMissionCard({ mission }: DriverMissionCardProps) {
                     </Button>
                     <Button 
                       className="text-primary-foreground rounded-md px-3 text-xs h-9 bg-primary hover:bg-primary/90"
-                      onClick={handleCallParent}
+                      onClick={handleCompleteMission}
+                      disabled={loading}
                     >
-                      <Phone className="h-3.5 w-3.5 mr-1.5" />
-                      Contacter
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                      Terminer
                     </Button>
                   </div>
                 </div>
@@ -387,7 +345,20 @@ function DriverMissionCard({ mission }: DriverMissionCardProps) {
       
       {/* Popups */}
       <NeedsPopup />
-      <MapPopup />
+      <RouteModal 
+        isOpen={showMap}
+        onClose={handleCloseMap}
+        mission={mission ? {
+          id: mission.id,
+          child: { name: mission.child.name, age: mission.child.age },
+          parent: { name: mission.parent.name },
+          from: { name: mission.from.name, address: mission.from.address, lat: mission.from.lat, lng: mission.from.lng },
+          to: { name: mission.to.name, address: mission.to.address, lat: mission.to.lat, lng: mission.to.lng },
+          scheduledTime: mission.scheduledTime,
+          distance: typeof mission.distance === 'number' ? mission.distance : parseFloat(String(mission.distance)) || 0,
+          transportType: mission.transportType,
+        } : null}
+      />
     </>
   );
 }

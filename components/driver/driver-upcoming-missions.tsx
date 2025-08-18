@@ -278,7 +278,7 @@ export function DriverUpcomingMissions({ missions }: DriverUpcomingMissionsProps
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Car className="h-3 w-3" />
-                            Distance totale: {(mission.distance * 2).toFixed(1)} km
+                            Distance totale: {((mission.distance * 2) / 1000).toFixed(1)} km
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
