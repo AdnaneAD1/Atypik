@@ -12,7 +12,9 @@ import {
   Star,
   ChevronRight,
   MessageSquare,
-  Award
+  Award,
+  Navigation,
+  Route
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -121,15 +123,17 @@ export function ParentDashboard() {
     <>
       {/* Dialog de choix de région obligatoire */}
       <Dialog open={dialogOpen} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md border-0 bg-white/95 backdrop-blur-lg shadow-2xl">
           <DialogHeader>
-            <DialogTitle>Choisissez votre région</DialogTitle>
+            <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              Choisissez votre région
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Région</label>
+            <div className="grid gap-3">
+              <label className="text-sm font-medium text-slate-700">Région</label>
               <select
-                className="w-full border rounded px-3 py-2"
+                className="w-full border-0 bg-slate-50 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
                 value={selectedRegion || ''}
                 onChange={e => setSelectedRegion(e.target.value)}
               >
@@ -145,6 +149,7 @@ export function ParentDashboard() {
               type="button"
               disabled={!selectedRegion}
               onClick={() => selectedRegion && setRegionForUser(selectedRegion)}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0 shadow-lg hover:shadow-xl transition-all duration-200"
             >
               Valider
             </Button>
@@ -152,385 +157,461 @@ export function ParentDashboard() {
         </DialogContent>
       </Dialog>
 
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="space-y-6 sm:space-y-8 px-2 sm:px-4 md:px-6 max-w-7xl mx-auto pb-10"
-      >
-        <div className="flex flex-col gap-1 sm:gap-2">
-          <h1 className="text-2xl sm:text-3xl font-bold">Bonjour, {user?.name?.split(' ')[0]}</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Bienvenue sur votre tableau de bord de transport sécurisé
-          </p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+      <div className="min-h-screen bg-background">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-6 sm:space-y-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto pt-8 pb-16"
+        >
+          {/* Header moderne */}
+          <div className="space-y-2">
+            <motion.h1 
+              variants={itemVariants}
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground"
+            >
+              Bonjour, {user?.name?.split(' ')[0]} 👋
+            </motion.h1>
+            <motion.p 
+              variants={itemVariants}
+              className="text-muted-foreground text-sm sm:text-base lg:text-lg max-w-2xl"
+            >
+              Gérez le transport sécurisé de vos enfants en toute sérénité
+            </motion.p>
+          </div>
 
-        <motion.div variants={itemVariants}>
-          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-background to-secondary/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2">
-                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10">
-                  <Map className="h-4 w-4 text-primary" />
-                </div>
-                <span className="text-sm sm:text-base">Mission en cours</span>
-              </CardTitle>
-              <CardDescription>
-                Suivez en temps réel le transport de votre enfant
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pb-6">
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              ) : getNextTrip() ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+          {/* Mission en cours - Redesignée */}
+          <motion.div variants={itemVariants}>
+            <Card className="border shadow-md bg-card hover:shadow-lg transition-all duration-300 overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10">
+                      <Navigation className="h-5 w-5 text-primary" />
+                    </div>
                     <div>
-                      <h3 className="font-semibold">{getNextTrip()?.childName}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {getNextTrip()?.scheduledTime.toLocaleDateString('fr-FR')} à {getNextTrip()?.scheduledTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                      <span className="text-lg font-semibold">Mission Active</span>
+                      <p className="text-sm text-muted-foreground font-normal mt-0.5">Suivi en temps réel</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{getNextTrip()?.driverName}</p>
-                      <p className="text-xs text-muted-foreground">Chauffeur</p>
+                  </CardTitle>
+                  {getNextTrip() && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      En cours
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-muted-foreground">Départ:</span>
-                      <span>{getNextTrip()?.from.address}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                      <span className="text-muted-foreground">Arrivée:</span>
-                      <span>{getNextTrip()?.to.address}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-xs text-muted-foreground">
-                      Distance: {((getNextTrip()?.distance || 0) / 1000).toFixed(1)} km
-                    </span>
-                    <Button 
-                      size="sm" 
-                      onClick={() => router.push('/parent/tracking')}
-                      className="h-7 text-xs"
-                    >
-                      Suivre en temps réel
-                    </Button>
-                  </div>
+                  )}
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Aucun trajet prévu aujourd&apos;hui</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <motion.div variants={itemVariants} className="md:col-span-2 lg:col-span-2 order-1 lg:order-1">
-            <Card className="overflow-hidden border-0 shadow-md">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <CalendarRange className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                    <span className="text-sm sm:text-base">Planning de la semaine</span>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-7 sm:h-8 gap-1 text-xs"
-                    onClick={() => router.push('/parent/calendar')}
-                  >
-                    <CalendarRange className="h-3.5 w-3.5 mr-1" />
-                    <span>Voir tout</span>
-                  </Button>
-                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ParentCalendarView 
-            weeklySchedule={weeklySchedule} 
-            loading={loading} 
-          />
+              <CardContent className="pb-6">
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-muted border-t-primary"></div>
+                  </div>
+                ) : getNextTrip() ? (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
+                          <UserRound className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-lg">{getNextTrip()?.childName}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {getNextTrip()?.scheduledTime.toLocaleDateString('fr-FR', { 
+                              weekday: 'long',
+                              day: 'numeric',
+                              month: 'long'
+                            })} à {getNextTrip()?.scheduledTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-base font-semibold">{getNextTrip()?.driverName}</p>
+                        <p className="text-sm text-muted-foreground">Chauffeur attitré</p>
+                      </div>
+                    </div>
+                    
+                    <div className="relative">
+                      <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-green-500 to-red-500 rounded-full"></div>
+                      <div className="space-y-4 relative">
+                        <div className="flex items-center gap-4 pl-0">
+                          <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center border border-green-200">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          </div>
+                          <div className="flex-1 p-3 bg-white rounded-xl border">
+                            <p className="text-xs font-medium text-green-600 mb-1">DÉPART</p>
+                            <p className="text-sm font-medium">{getNextTrip()?.from.address}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 pl-0">
+                          <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center border border-red-200">
+                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                          </div>
+                          <div className="flex-1 p-3 bg-white rounded-xl border">
+                            <p className="text-xs font-medium text-red-600 mb-1">ARRIVÉE</p>
+                            <p className="text-sm font-medium">{getNextTrip()?.to.address}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Route className="h-4 w-4" />
+                          <span>{((getNextTrip()?.distance || 0) / 1000).toFixed(1)} km</span>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => router.push('/parent/tracking')}
+                        className="px-6"
+                      >
+                        <Navigation className="h-4 w-4 mr-2" />
+                        Suivre en direct
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                      <Clock className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-semibold mb-2">Aucun trajet prévu</h3>
+                    <p className="text-muted-foreground">Profitez de cette pause bien méritée</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="order-3 lg:order-2">
-            <FeaturedChildProfile 
-              child={getFeaturedChild()} 
-              loading={loading} 
-            />
-          </motion.div>
+          {/* Grille principale */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Planning - Plus large */}
+            <motion.div variants={itemVariants} className="lg:col-span-2 order-1">
+              <Card className="border shadow-md bg-card hover:shadow-lg transition-all duration-300 h-full">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10">
+                        <CalendarRange className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="text-lg font-semibold">Planning Hebdomadaire</span>
+                    </CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="transition-colors"
+                      onClick={() => router.push('/parent/calendar')}
+                    >
+                      <CalendarRange className="h-4 w-4 mr-2" />
+                      Voir plus
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ParentCalendarView 
+                    weeklySchedule={weeklySchedule} 
+                    loading={loading} 
+                  />
+                </CardContent>
+              </Card>
+            </motion.div>
 
-          <motion.div variants={itemVariants} className="md:col-span-2 lg:col-span-2 order-2 lg:order-3">
+            {/* Profil enfant */}
+            <motion.div variants={itemVariants} className="order-2">
+              <FeaturedChildProfile 
+                child={getFeaturedChild()} 
+                loading={loading} 
+              />
+            </motion.div>
+          </div>
+
+          {/* Liste des enfants */}
+          <motion.div variants={itemVariants}>
             <ParentChildListCard 
               childrenData={children} 
               loading={loading} 
             />
           </motion.div>
-        </div>
 
-        <motion.div variants={itemVariants}>
-          <Card className="overflow-hidden border-0 shadow-md bg-gradient-to-br from-background to-secondary/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/20">
-                    <Star className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          {/* Évaluations - Redesignées */}
+          <motion.div variants={itemVariants}>
+            <Card className="border shadow-md bg-card hover:shadow-lg transition-all duration-300 overflow-hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-amber-100">
+                    <Star className="h-5 w-5 text-amber-600" />
                   </div>
-                  <span className="text-sm sm:text-base">Dernières évaluations</span>
-                </div>
-              </CardTitle>
-              <CardDescription>
-                Vos évaluations récentes de trajets
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="received" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
-                  <TabsTrigger value="received">Reçues</TabsTrigger>
-                  <TabsTrigger value="given">Données</TabsTrigger>
-                </TabsList>
-                <TabsContent value="received" className="space-y-4">
-                  <div className="space-y-4">
-                    {loading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                      </div>
-                    ) : reviews.filter(r => r.type === 'received' && r.rating).length > 0 ? (
-                      reviews.filter(r => r.type === 'received' && r.rating).map((review) => (
-                        <div key={review.id} className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
-                          <div className="relative p-4 sm:p-5">
-                            <div className="flex items-start gap-3">
-                              <div className="flex-shrink-0">
-                                <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center">
-                                  {review.reviewerAvatar ? (
-                                    <img src={review.reviewerAvatar} alt={review.reviewerName} className="h-10 w-10 rounded-full" />
-                                  ) : (
-                                    <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
-                                      {review.reviewerName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                                  <div>
-                                    <h4 className="text-sm font-semibold">{review.reviewerName}</h4>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                      <p className="text-xs text-muted-foreground">
-                                        {review.date.toLocaleDateString('fr-FR')} · {review.reviewerRole === 'driver' ? 'Chauffeur' : 'Parent'}
-                                      </p>
-                                      <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-300">
-                                        {review.tripType === 'aller' ? 'Aller' : 'Retour'}
-                                      </span>
-                                      {review.childName && (
-                                        <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-900/30 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-300">
-                                          {review.childName}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex items-center gap-0.5">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                      <Star 
-                                        key={star} 
-                                        className={`h-3.5 w-3.5 ${star <= review.rating ? "text-amber-400 fill-amber-400" : "text-muted"}`} 
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                                
-                                {review.comment && (
-                                  <div className="mt-2 text-sm">
-                                    <p className="relative pl-3 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:rounded-full before:bg-primary/30">
-                                      &quot;{review.comment}&quot;
-                                    </p>
-                                  </div>
-                                )}
-                                
-                                {review.canReply && (
-                                  <div className="flex items-center justify-end gap-2 mt-3">
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm" 
-                                      className="h-7 text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 hover:text-amber-800 dark:bg-amber-900/10 dark:border-amber-800/30 dark:text-amber-300 dark:hover:bg-amber-900/20"
-                                      onClick={() => handleThank(review.id, review.reviewerName)}
-                                    >
-                                      <Star className="h-3 w-3 mr-1 fill-amber-400 text-amber-400" />
-                                      Remercier
-                                    </Button>
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm" 
-                                      className="h-7 text-[10px]"
-                                      onClick={() => handleReply(review.id, review.reviewerName)}
-                                    >
-                                      <MessageSquare className="h-3 w-3 mr-1" />
-                                      Répondre
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                  <div>
+                    <span className="text-lg font-semibold">Évaluations</span>
+                    <p className="text-sm text-muted-foreground font-normal mt-0.5">Vos retours et avis</p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="received" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsTrigger value="received">
+                      Reçues
+                    </TabsTrigger>
+                    <TabsTrigger value="given">
+                      Données
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="received" className="space-y-4">
+                    <div className="space-y-4">
+                      {loading ? (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="animate-spin rounded-full h-8 w-8 border-2 border-muted border-t-primary"></div>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8">
-                        <Star className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">Aucune évaluation reçue</p>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="given" className="space-y-4">
-                  <div className="space-y-4">
-                    {loading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                      </div>
-                    ) : reviews.filter(r => r.type === 'given').length > 0 ? (
-                      reviews.filter(r => r.type === 'given').map((review) => (
-                        <div key={review.id} className="relative overflow-hidden rounded-xl border border-primary/10 bg-card shadow-sm hover:shadow-md transition-shadow duration-200 p-0.5">
-                          <div className="relative p-4 sm:p-5">
-                            <div className="flex items-start gap-3">
-                              <div className="flex-shrink-0">
-                                <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                                  {user?.avatar ? (
-                                    <img src={user.avatar} alt={user.name || 'Vous'} className="h-10 w-10 rounded-full" />
-                                  ) : (
-                                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                                      {(user?.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase()}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                                  <div>
-                                    <h4 className="text-sm font-semibold">Vous</h4>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                      <p className="text-xs text-muted-foreground">
-                                        {review.date.toLocaleDateString('fr-FR')} · Parent
-                                        {review.recipientName && (
-                                          <span> · à {review.recipientName}</span>
-                                        )}
-                                      </p>
-                                      <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-900/30 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-300">
-                                        {review.tripType === 'aller' ? 'Aller' : 'Retour'}
+                      ) : reviews.filter(r => r.type === 'received' && r.rating).length > 0 ? (
+                        reviews.filter(r => r.type === 'received' && r.rating).map((review) => (
+                          <div key={review.id} className="group relative overflow-hidden rounded-xl border bg-card/50 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="p-6">
+                              <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0">
+                                  <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center">
+                                    {review.reviewerAvatar ? (
+                                      <img src={review.reviewerAvatar} alt={review.reviewerName} className="h-12 w-12 rounded-xl object-cover" />
+                                    ) : (
+                                      <span className="text-sm font-semibold text-foreground">
+                                        {review.reviewerName.split(' ').map(n => n[0]).join('').toUpperCase()}
                                       </span>
-                                      {review.childName && (
-                                        <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-900/30 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-300">
-                                          {review.childName}
-                                        </span>
-                                      )}
-                                    </div>
+                                    )}
                                   </div>
-                                  
-                                  {review.rating && (
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between mb-3">
+                                    <div>
+                                      <h4 className="font-semibold text-base">{review.reviewerName}</h4>
+                                      <div className="flex items-center gap-3 mt-1">
+                                        <p className="text-xs text-muted-foreground">
+                                          {review.date.toLocaleDateString('fr-FR')} · {review.reviewerRole === 'driver' ? 'Chauffeur' : 'Parent'}
+                                        </p>
+                                        <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-2.5 py-0.5 text-xs font-medium border border-green-200">
+                                          {review.tripType === 'aller' ? 'Aller' : 'Retour'}
+                                        </span>
+                                        {review.childName && (
+                                          <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2.5 py-0.5 text-xs font-medium border border-blue-200">
+                                            {review.childName}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
                                     <div className="flex items-center gap-0.5">
                                       {[1, 2, 3, 4, 5].map((star) => (
                                         <Star 
                                           key={star} 
-                                          className={`h-3.5 w-3.5 ${star <= review.rating ? "text-amber-400 fill-amber-400" : "text-muted"}`} 
+                                          className={`h-4 w-4 ${star <= review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"}`} 
                                         />
                                       ))}
                                     </div>
+                                  </div>
+                                  
+                                  {review.comment && (
+                                    <div className="mb-4">
+                                      <div className="p-4 bg-muted/20 rounded-xl border">
+                                        <p className="text-sm italic leading-relaxed">
+                                          &quot;{review.comment}&quot;
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {review.canReply && (
+                                    <div className="flex items-center gap-2">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 transition-colors dark:bg-amber-950 dark:hover:bg-amber-900 dark:text-amber-300 dark:border-amber-800"
+                                        onClick={() => handleThank(review.id, review.reviewerName)}
+                                      >
+                                        <Star className="h-3.5 w-3.5 mr-2 fill-amber-400 text-amber-400" />
+                                        Remercier
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="transition-colors"
+                                        onClick={() => handleReply(review.id, review.reviewerName)}
+                                      >
+                                        <MessageSquare className="h-3.5 w-3.5 mr-2" />
+                                        Répondre
+                                      </Button>
+                                    </div>
                                   )}
                                 </div>
-                                
-                                {review.comment && (
-                                  <div className="mt-2 text-sm">
-                                    <p className="relative pl-3 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:rounded-full before:bg-primary/30">
-                                      &quot;{review.comment}&quot;
-                                    </p>
-                                  </div>
-                                )}
                               </div>
                             </div>
                           </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 rounded-xl bg-amber-100 dark:bg-amber-950 flex items-center justify-center mx-auto mb-4">
+                            <Star className="h-8 w-8 text-amber-500 dark:text-amber-400" />
+                          </div>
+                          <h3 className="font-semibold mb-2">Aucune évaluation reçue</h3>
+                          <p className="text-muted-foreground">Les évaluations apparaîtront ici</p>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8">
-                        <Award className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">Aucune évaluation donnée</p>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="given" className="space-y-4">
+                    <div className="space-y-4">
+                      {loading ? (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="animate-spin rounded-full h-8 w-8 border-2 border-muted border-t-primary"></div>
+                        </div>
+                      ) : reviews.filter(r => r.type === 'given').length > 0 ? (
+                        reviews.filter(r => r.type === 'given').map((review) => (
+                          <div key={review.id} className="group relative overflow-hidden rounded-xl border bg-card/50 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="p-6">
+                              <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0">
+                                  <div className="h-12 w-12 rounded-xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
+                                    {user?.avatar ? (
+                                      <img src={user.avatar} alt={user.name || 'Vous'} className="h-12 w-12 rounded-xl object-cover" />
+                                    ) : (
+                                      <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                        {(user?.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase()}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between mb-3">
+                                    <div>
+                                      <h4 className="font-semibold text-base">Vous</h4>
+                                      <div className="flex items-center gap-3 mt-1">
+                                        <p className="text-xs text-muted-foreground">
+                                          {review.date.toLocaleDateString('fr-FR')} · Parent
+                                          {review.recipientName && (
+                                            <span> · à {review.recipientName}</span>
+                                          )}
+                                        </p>
+                                        <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-2.5 py-0.5 text-xs font-medium border border-green-200">
+                                          {review.tripType === 'aller' ? 'Aller' : 'Retour'}
+                                        </span>
+                                        {review.childName && (
+                                          <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2.5 py-0.5 text-xs font-medium border border-blue-200">
+                                            {review.childName}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
+                                    {review.rating && (
+                                      <div className="flex items-center gap-0.5">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                          <Star 
+                                            key={star} 
+                                            className={`h-4 w-4 ${star <= review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"}`} 
+                                          />
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {review.comment && (
+                                    <div className="p-4 bg-muted/30 rounded-xl border">
+                                      <div className="p-4 bg-muted/20 rounded-xl border">
+                                        <p className="text-sm italic leading-relaxed">
+                                          &quot;{review.comment}&quot;
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 rounded-xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center mx-auto mb-4">
+                            <Award className="h-8 w-8 text-blue-500 dark:text-blue-400" />
+                          </div>
+                          <h3 className="font-semibold mb-2">Aucune évaluation donnée</h3>
+                          <p className="text-muted-foreground">Vos évaluations apparaîtront ici</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
+      </div>
       
-      {/* Dialog pour répondre à une évaluation */}
+      {/* Dialogues modernisés */}
       <Dialog open={isReplyDialogOpen} onOpenChange={setIsReplyDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-card">
           <DialogHeader>
-            <DialogTitle>Répondre à {selectedReview?.name}</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">
+              Répondre à {selectedReview?.name}
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
+            <div className="grid gap-3">
               <label htmlFor="message" className="text-sm font-medium">
                 Votre message
               </label>
               <textarea
                 id="message"
-                className="flex h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-28 w-full rounded-xl border bg-card px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all resize-none"
                 placeholder="Merci pour votre évaluation..."
               />
             </div>
           </div>
-          <DialogFooter className="sm:justify-end">
+          <DialogFooter className="sm:justify-end gap-2">
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               onClick={() => setIsReplyDialogOpen(false)}
             >
               Annuler
             </Button>
-            <Button type="button" onClick={handleSendReply}>
+            <Button 
+              type="button" 
+              onClick={handleSendReply}
+            >
               Envoyer
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog pour remercier */}
       <Dialog open={isThankDialogOpen} onOpenChange={setIsThankDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-card">
           <DialogHeader>
-            <DialogTitle>Remercier {selectedReview?.name}</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">
+              Remercier {selectedReview?.name}
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
+            <div className="grid gap-3">
               <label htmlFor="thank-message" className="text-sm font-medium">
                 Message de remerciement
               </label>
               <textarea
                 id="thank-message"
-                className="flex h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-28 w-full rounded-xl border bg-card px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all resize-none"
                 placeholder="Merci beaucoup pour votre service exceptionnel..."
               />
             </div>
           </div>
-          <DialogFooter className="sm:justify-end">
+          <DialogFooter className="sm:justify-end gap-2">
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               onClick={() => setIsThankDialogOpen(false)}
             >
               Annuler
@@ -538,7 +619,7 @@ export function ParentDashboard() {
             <Button 
               type="button" 
               onClick={handleSendThanks}
-              className="bg-amber-500 hover:bg-amber-600 text-white"
+              className="bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-600 dark:hover:bg-amber-700"
             >
               <Star className="h-4 w-4 mr-2 fill-white" />
               Envoyer un remerciement

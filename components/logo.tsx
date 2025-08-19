@@ -33,10 +33,11 @@ export function Logo({ variant = 'default', className, onClick }: LogoProps) {
         <span className="text-white font-bold text-2xl">A</span>
       </div>
       {variant === 'default' && (
-        <span className="text-2xl font-bold text-primary">
-          Atypik Driver
-        </span>
-      )}
+  <span className="text-2xl font-bold text-primary whitespace-nowrap">
+    Atypik Driver
+  </span>
+)}
+
     </div>
   );
 }

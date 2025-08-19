@@ -85,13 +85,13 @@ export function FeaturedChildProfile({ child, loading = false }: FeaturedChildPr
         <div className="flex items-start gap-4">
           <Avatar className="h-16 w-16">
             <AvatarImage src={child.avatar || undefined} alt={child.name} />
-            <AvatarFallback className="text-lg bg-primary/10 text-primary">
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
               {child.name?.split(' ').map((n: string) => n[0]).join('') || 'E'}
             </AvatarFallback>
           </Avatar>
           
           <div className="flex-1 space-y-1">
-            <h3 className="text-lg font-semibold">{child.name}</h3>
+            <h3 className="font-semibold">{child.name}</h3>
             <p className="text-sm text-muted-foreground">
               {child.age} ans • {child.school}
             </p>
