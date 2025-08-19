@@ -40,7 +40,7 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
           ? '/parent/dashboard' 
           : user?.role === 'driver' 
           ? '/driver/dashboard' 
-          : '/admin';
+          : '/admin/dashboard';
         router.push(dashboardPath);
         return;
       }
@@ -57,7 +57,7 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
           ? '/parent/dashboard' 
           : user?.role === 'driver' 
           ? '/driver/dashboard' 
-          : '/admin';
+          : '/admin/dashboard';
         router.push(dashboardPath);
         return;
       }
