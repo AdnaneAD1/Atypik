@@ -123,7 +123,7 @@ export function DriverDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {statsData.map((stat, index) => (
             <div key={index}>
-              <Card className="h-full border-0 bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 shadow-lg rounded-xl overflow-hidden">
+              <Card className="h-full border-0 dark:from-gray-800 dark:to-gray-700/80 shadow-lg rounded-xl overflow-hidden">
                 <CardContent className="p-4 flex flex-col h-full">
                   <div className="flex justify-between items-center mb-2">
                     <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
@@ -169,82 +169,7 @@ export function DriverDashboard() {
         </div>
       </div>
 
-      {/* Child Profile Section */}
-      {/* <div>
-        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-primary">
-          <CardHeader className="pb-0 relative z-10">
-            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
-              <CardTitle className="flex items-center gap-3 w-full sm:w-auto">
-                <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg sm:text-xl flex-shrink-0">
-                  LD
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-lg sm:text-xl font-bold text-black dark:text-white truncate">Lucas Dubois</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
-                    <MapPin className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-primary flex-shrink-0" />
-                    <span className="truncate">Hopital Montessori Étoile</span>
-                  </p>
-                </div>
-              </CardTitle>
-              <div className="flex items-center gap-1 text-primary bg-primary/10 px-3 py-1 rounded-full text-sm font-medium ml-auto sm:ml-0">
-                <Star className="h-4 w-4 fill-primary" />
-                4.9
-              </div>
-            </div>
-          </CardHeader> */}
-          {/* <CardContent className="pt-4">
-            <div className="space-y-4"> */}
-              {/* About Section */}
-              {/* <div>
-                <div className="flex items-center gap-2 text-primary mb-2">
-                  <Smile className="h-4 w-4 text-primary" />
-                  <h4 className="text-sm font-semibold text-primary">À propos</h4>
-                </div>
-                <p className="text-sm">
-                  Lucas est sociable mais a du mal à rester concentré pendant les longs trajets. Passionné de jeux vidéo.
-                </p>
-              </div> */}
-              
-              {/* Special Needs */}
-              {/* <div>
-                <div className="flex items-center gap-2 text-primary mb-3">
-                  <AlertTriangle className="h-4 w-4 text-primary" />
-                  <h4 className="text-sm font-semibold text-primary">Besoins spécifiques</h4>
-                </div>
-                <div className="grid gap-2 sm:gap-3">
-                  <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-red-50/50 rounded-lg border border-red-100">
-                    <div className="p-1.5 sm:p-2 bg-red-100 rounded-lg text-red-600 flex-shrink-0">
-                      <HeartPulse className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs sm:text-sm font-medium truncate">Allergie sévère au gluten</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">EpiPen dans son sac</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-red-50/50 rounded-lg border border-red-100">
-                    <div className="p-1.5 sm:p-2 bg-red-100 rounded-lg text-red-600 flex-shrink-0">
-                      <Activity className="h-3.5 sm:h-4 w-3.5 sm:w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs sm:text-sm font-medium truncate">TDAH diagnostiqué</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Activités pour concentration</p>
-                    </div>
-                  </div>
-                </div>
-              </div> */}
-              
-              {/* Action Button */}
-              {/* <Button 
-                variant="ghost" 
-                className="w-full mt-2 text-primary hover:bg-primary/5 hover:text-primary/90"
-                onClick={() => router.push('/driver/children/lucas-dubois')}
-              >
-                Voir fiche complète <ChevronRight className="h-4 w-4 ml-2" />
-              </Button> */}
-            {/* </div>
-          </CardContent> */}
-        {/* </Card>
-      </div> */}
+ 
     </div>
   );
 
