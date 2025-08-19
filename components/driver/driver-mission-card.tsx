@@ -183,161 +183,160 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
      
   
         
-        <CardContent className="p-6 mt-5 pb-6">
-          <Card className="rounded-lg text-card-foreground border-0 shadow-md bg-card overflow-hidden">
-            <div className="p-0">
-              {/* Header avec statut et boutons */}
-              <div className="bg-primary/5 border-b border-primary/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Car className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-semibold">Transport en cours</h3>
-                      <div className="inline-flex items-center rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 text-[10px] font-medium px-2 py-0 h-5">
-                        En route
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Départ {mission.time}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-primary/20 text-primary hover:bg-primary/5 hover:text-primary text-xs h-9 px-3 rounded-md"
-                    onClick={handleCallParent}
-                  >
-                    <Phone className="h-3.5 w-3.5 mr-1.5" />
-                    <span>Contacter</span>
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="p-4 sm:p-5">
-                {/* Informations sur l'enfant */}
-                <div className="flex items-center gap-3 mb-5">
-                  <Avatar className="relative flex shrink-0 overflow-hidden rounded-full h-12 w-12 border-2 border-primary">
-                    <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
-                      {mission.child.name[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="text-base font-semibold">{mission.child.name}</h4>
-                      <Badge 
-                        variant="secondary" 
-                        className={`text-xs ${
-                          mission.transportType === 'aller-retour'
-                            ? 'bg-purple-50 text-purple-700 border-purple-200'
-                            : mission.transportType === 'aller'
-                            ? 'bg-green-50 text-green-700 border-green-200'
-                            : 'bg-orange-50 text-orange-700 border-orange-200'
-                        }`}
-                      >
-                        {
-                          mission.transportType === 'aller-retour'
-                            ? 'Aller-Retour'
-                            : mission.transportType === 'aller'
-                            ? 'Aller (matin)'
-                            : 'Retour (après-midi)'
-                        }
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Itinéraire */}
-                <div className="bg-secondary/30 rounded-xl p-4 mb-5 relative overflow-hidden">
-                  <div className="flex items-start gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-50 dark:bg-green-900/20 flex items-center justify-center z-10">
-                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                      </div>
-                      <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
-                      <div className="h-6 w-6 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center z-10">
-                        <div className="h-2 w-2 rounded-full bg-primary"></div>
-                      </div>
-                    </div>
-                    <div className="flex-1 space-y-5">
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">{mission.from.name}</p>
-                          <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            <span>Départ à {mission.time}</span>
-                          </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">{mission.to.name}</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-5">
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span>{mission.distance}</span>
-                    </div>
-                    <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden relative">
-                      <div 
-                        className={`h-full bg-primary rounded-full transition-all duration-500 ease-in-out absolute top-0 left-0 w-[${mission.progress}%]`}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Informations sur le parent */}
-                <div className="flex items-center justify-between bg-secondary/30 rounded-xl p-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="relative flex shrink-0 overflow-hidden rounded-full h-10 w-10 border border-primary/20">
-                      <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-primary/5 text-primary">
-                        {mission.parent.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{mission.parent.name}</p>
-                        <Badge variant="outline" className="text-[10px] h-5 py-0 px-2 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30 font-medium">
-                          Parent
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3 text-primary" />
-                        <span>{mission.from.address}</span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline"
-                      className="border-primary/20 text-primary hover:bg-primary/5 hover:text-primary text-xs h-9 px-3 rounded-md"
-                      onClick={handleViewMap}
-                    >
-                      <MapPin className="h-3.5 w-3.5 mr-1.5" />
-                      <span className="hidden sm:inline">Carte</span>
-                    </Button>
-                    <Button 
-                      className="text-primary-foreground rounded-md px-3 text-xs h-9 bg-primary hover:bg-primary/90"
-                      onClick={handleCompleteMission}
-                      disabled={loading}
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                      Terminer
-                    </Button>
-                  </div>
-                </div>
-              </div>
+     <CardContent className="p-0 mt-5 rounded-lg bg-card text-card-foreground overflow-hidden border-0 shadow-lg">
+  <div className="w-full">
+    {/* Header avec statut et boutons */}
+    <div className="bg-primary/5 border-b border-primary/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <Car className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold">Transport en cours</h3>
+            <div className="inline-flex items-center rounded-full border transition-colors bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 text-[10px] font-medium px-2 py-0 h-5">
+              En route
             </div>
-          </Card>
-        </CardContent>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Départ {mission.time}
+          </p>
+        </div>
+      </div>
+
+      {/* Bouton responsive */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="border-primary/20 text-primary hover:bg-primary/5 hover:text-primary text-xs h-9 px-3 rounded-md w-full sm:w-auto"
+          onClick={handleCallParent}
+        >
+          <Phone className="h-3.5 w-3.5 mr-1.5" />
+          <span>Contacter</span>
+        </Button>
+      </div>
+    </div>
+
+    <div className="p-4 sm:p-5">
+      {/* Informations sur l'enfant */}
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <Avatar className="relative shrink-0 rounded-full h-12 w-12 border-2 border-primary">
+          <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
+            {mission.child.name[0]}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <h4 className="text-base font-semibold">{mission.child.name}</h4>
+            <Badge 
+              variant="secondary" 
+              className={`text-xs ${
+                mission.transportType === 'aller-retour'
+                  ? 'bg-purple-50 text-purple-700 border-purple-200'
+                  : mission.transportType === 'aller'
+                  ? 'bg-green-50 text-green-700 border-green-200'
+                  : 'bg-orange-50 text-orange-700 border-orange-200'
+              }`}
+            >
+              {mission.transportType === 'aller-retour'
+                ? 'Aller-Retour'
+                : mission.transportType === 'aller'
+                ? 'Aller (matin)'
+                : 'Retour (après-midi)'}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      {/* Itinéraire */}
+      <div className="bg-secondary/30 rounded-xl p-4 mb-5 relative overflow-hidden">
+        <div className="flex items-start gap-3">
+          <div className="flex flex-col items-center">
+            <div className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-50 dark:bg-green-900/20 flex items-center justify-center z-10">
+              <div className="h-2 w-2 rounded-full bg-green-500"></div>
+            </div>
+            <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
+            <div className="h-6 w-6 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center z-10">
+              <div className="h-2 w-2 rounded-full bg-primary"></div>
+            </div>
+          </div>
+          <div className="flex-1 space-y-5">
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium">{mission.from.name}</p>
+                <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Départ à {mission.time}</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">{mission.to.name}</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
+            </div>
+          </div>
+        </div>
+        <div className="mt-5">
+          <div className="flex justify-between text-xs mb-1.5">
+            <span>{mission.distance}</span>
+          </div>
+          <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden relative">
+            <div 
+              className="h-full bg-primary rounded-full transition-all duration-500 ease-in-out absolute top-0 left-0"
+              style={{ width: `${mission.progress}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Parent */}
+      <div className="flex flex-wrap items-center justify-between bg-secondary/30 rounded-xl p-4 gap-3">
+        <div className="flex items-center gap-3">
+          <Avatar className="relative shrink-0 rounded-full h-10 w-10 border border-primary/20">
+            <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-primary/5 text-primary">
+              {mission.parent.name.split(' ').map(n => n[0]).join('')}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium">{mission.parent.name}</p>
+              <Badge variant="outline" className="text-[10px] h-5 py-0 px-2 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30 font-medium">
+                Parent
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <MapPin className="h-3 w-3 text-primary" />
+              <span>{mission.from.address}</span>
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button 
+            variant="outline"
+            className="border-primary/20 text-primary hover:bg-primary/5 hover:text-primary text-xs h-9 px-3 rounded-md w-full sm:w-auto"
+            onClick={handleViewMap}
+          >
+            <MapPin className="h-3.5 w-3.5 mr-1.5" />
+            <span className="hidden sm:inline">Carte</span>
+          </Button>
+          <Button 
+            className="text-primary-foreground rounded-md px-3 text-xs h-9 bg-primary hover:bg-primary/90 w-full sm:w-auto"
+            onClick={handleCompleteMission}
+            disabled={loading}
+          >
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+            Terminer
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
+</CardContent>
+
      
       
       {/* Popups */}
