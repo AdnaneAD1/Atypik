@@ -11,7 +11,7 @@ export default function AdminDashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Tableau de bord Admin</h1>
-            <p className="text-sm text-muted-foreground mt-1">Vue d'ensemble du système et actions rapides</p>
+            <p className="text-sm text-muted-foreground mt-1">Vue d&apos;ensemble du système et actions rapides</p>
           </div>
           <div className="flex items-center gap-2">
             <Button className="gap-2">
@@ -47,7 +47,7 @@ export default function AdminDashboardPage() {
 
           <Card className="rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Transports aujourd'hui</CardTitle>
+              <CardTitle className="text-sm font-medium">Transports aujourd&apos;hui</CardTitle>
               <CalendarRange className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>

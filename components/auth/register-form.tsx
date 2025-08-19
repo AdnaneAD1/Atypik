@@ -146,7 +146,7 @@ export function RegisterForm() {
     }
   };
 
-  const handleGoogleLogin = async (role: UserRole) => {
+  const handleGoogleLogin = async (role: 'driver' | 'parent') => {
     clearError();
     try {
       await loginWithGoogle(role);
@@ -219,7 +219,7 @@ export function RegisterForm() {
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold">Inscription</h1>
         <p className="text-muted-foreground text-sm">
-          Créez votre compte pour accéder à l'application
+          Créez votre compte pour accéder à l&apos;application
         </p>
       </div>
 
@@ -491,7 +491,7 @@ export function RegisterForm() {
                       name="insuranceNumber"
                       render={({ field }) => (
                         <FormItem className="space-y-1.5">
-                          <FormLabel className="text-sm font-medium">N° d'assurance</FormLabel>
+                          <FormLabel className="text-sm font-medium">N° d&apos;assurance</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input placeholder="987654321" {...field} className="h-12 pl-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200" />

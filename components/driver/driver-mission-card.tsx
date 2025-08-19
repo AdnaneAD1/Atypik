@@ -180,10 +180,18 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
 
   return (
     <>
-     
-  
+      <Card className="rounded-lg bg-card text-card-foreground overflow-hidden border-0 shadow-lg bg-gradient-to-br from-background to-secondary/10">
+        <div className="flex flex-col space-y-1.5 p-6 pb-2">
+          <h3 className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
+            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10">
+              <MapPin className="h-4 w-4 text-primary" />
+            </div>
+            <span>Mission en cours</span>
+          </h3>
+          <p className="text-sm text-muted-foreground">Suivez en temps réel le transport de votre enfant</p>
+        </div>
         
-        <CardContent className="p-6 mt-5 pb-6">
+        <CardContent className="p-6 pt-0 pb-6">
           <Card className="rounded-lg text-card-foreground border-0 shadow-md bg-card overflow-hidden">
             <div className="p-0">
               {/* Header avec statut et boutons */}
@@ -338,7 +346,7 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
             </div>
           </Card>
         </CardContent>
-     
+      </Card>
       
       {/* Popups */}
       <NeedsPopup />
