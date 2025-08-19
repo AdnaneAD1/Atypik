@@ -71,7 +71,7 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
-            <span>Mes enfants</span>
+            <span className="text-sm sm:text-base">Mes enfants</span>
           </div>
           <Button 
             variant="outline" 

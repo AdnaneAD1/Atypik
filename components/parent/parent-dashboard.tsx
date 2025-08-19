@@ -172,7 +172,7 @@ export function ParentDashboard() {
                 <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10">
                   <Map className="h-4 w-4 text-primary" />
                 </div>
-                <span>Mission en cours</span>
+                <span className="text-sm sm:text-base">Mission en cours</span>
               </CardTitle>
               <CardDescription>
                 Suivez en temps réel le transport de votre enfant
@@ -239,7 +239,7 @@ export function ParentDashboard() {
                 <CardTitle className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <CalendarRange className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                    <span>Planning de la semaine</span>
+                    <span className="text-sm sm:text-base">Planning de la semaine</span>
                   </div>
                   <Button 
                     variant="outline" 
@@ -284,7 +284,7 @@ export function ParentDashboard() {
                   <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/20">
                     <Star className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <span>Dernières évaluations</span>
+                  <span className="text-sm sm:text-base">Dernières évaluations</span>
                 </div>
               </CardTitle>
               <CardDescription>

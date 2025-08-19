@@ -48,9 +48,10 @@ interface DriverMissionCardProps {
     time: string;
     transportType: 'aller' | 'retour' | 'aller-retour';
   };
+  onCompleted?: () => void;
 }
 
-function DriverMissionCard({ mission }: DriverMissionCardProps) {
+function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
   // États pour les popups
   const [showNeeds, setShowNeeds] = useState(false);
   const [showMap, setShowMap] = useState(false);
@@ -96,7 +97,11 @@ function DriverMissionCard({ mission }: DriverMissionCardProps) {
 
   const handleCompleteMission = async () => {
     if (!mission?.id) return;
-    await completeMission(mission.id);
+    const ok = await completeMission(mission.id);
+    if (ok) {
+      // Inform parent to refresh active mission without full page reload
+      onCompleted?.();
+    }
   };
 
   // Composant pour la popup des besoins

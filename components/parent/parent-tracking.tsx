@@ -229,7 +229,9 @@ export function ParentTracking() {
       {/* Sélection du transport */}
       <Card>
         <CardHeader>
-          <CardTitle>Sélectionner un transport</CardTitle>
+          <CardTitle>
+            <span className="text-sm sm:text-base">Sélectionner un transport</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Select value={selectedTransportId} onValueChange={setSelectedTransportId}>

@@ -36,7 +36,7 @@ export function FeaturedChildProfile({ child, loading = false }: FeaturedChildPr
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <User className="h-5 w-5 text-primary" />
-              <span>Enfant du jour</span>
+              <span className="text-sm sm:text-base">Enfant du jour</span>
             </div>
           </CardTitle>
         </CardHeader>
@@ -56,7 +56,7 @@ export function FeaturedChildProfile({ child, loading = false }: FeaturedChildPr
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <User className="h-5 w-5 text-primary" />
-              <span>Enfant du jour</span>
+              <span className="text-sm sm:text-base">Enfant du jour</span>
             </div>
           </CardTitle>
         </CardHeader>
@@ -76,7 +76,7 @@ export function FeaturedChildProfile({ child, loading = false }: FeaturedChildPr
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
-            <span>Enfant du jour</span>
+            <span className="text-sm sm:text-base">Enfant du jour</span>
           </div>
         </CardTitle>
       </CardHeader>
