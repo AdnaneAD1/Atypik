@@ -123,14 +123,6 @@ export function RegisterForm() {
 
   const onDriverSubmit = async (data: DriverFormValues) => {
     try {
-      if (regionStatus === 'verified') {
-        toast({
-          title: 'Erreur',
-          description: 'Impossible de postuler sur une région déjà attribuée à un chauffeur validé.',
-          variant: 'destructive',
-        });
-        return;
-      }
       if (!data.regionId) {
         toast({
           title: 'Erreur',
@@ -536,16 +528,7 @@ export function RegisterForm() {
                             ))}
                           </select>
                         </FormControl>
-                        {regionStatus === 'verified' && (
-                          <div className="text-red-500 text-xs mt-1">
-                            Cette région a déjà un chauffeur validé ({validatedDriver?.displayName ?? 'Chauffeur'}). Veuillez en choisir une autre.
-                          </div>
-                        )}
-                        {regionStatus === 'pending' && (
-                          <div className="text-yellow-600 text-xs mt-1">
-                            Un chauffeur est déjà en attente de validation sur cette région. Vous pouvez tout de même postuler.
-                          </div>
-                        )}
+                        
                       </FormItem>
                     )}
                   />

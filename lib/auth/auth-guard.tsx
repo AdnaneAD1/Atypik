@@ -36,7 +36,11 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
       // Si authentifié mais sur une page d'authentification, rediriger vers le tableau de bord approprié
       if (isAuthenticated && (pathname.includes('/login') || pathname.includes('/register'))) {
         console.log('Redirection vers dashboard car déjà authentifié');
-        const dashboardPath = user?.role === 'parent' ? '/parent/dashboard' : '/driver/dashboard';
+        const dashboardPath = user?.role === 'parent' 
+          ? '/parent/dashboard' 
+          : user?.role === 'driver' 
+          ? '/driver/dashboard' 
+          : '/admin';
         router.push(dashboardPath);
         return;
       }
@@ -49,7 +53,11 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
         !allowedRoles.includes(user.role)
       ) {
         console.log('Redirection vers dashboard car rôle non autorisé');
-        const dashboardPath = user?.role === 'parent' ? '/parent/dashboard' : '/driver/dashboard';
+        const dashboardPath = user?.role === 'parent' 
+          ? '/parent/dashboard' 
+          : user?.role === 'driver' 
+          ? '/driver/dashboard' 
+          : '/admin';
         router.push(dashboardPath);
         return;
       }

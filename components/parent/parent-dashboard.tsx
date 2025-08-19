@@ -267,8 +267,7 @@ export function ParentDashboard() {
                         onClick={() => router.push('/parent/tracking')}
                         className="px-6"
                       >
-                        <Navigation className="h-4 w-4 mr-2" />
-                        Suivre en direct
+                        Suivre en temps réel
                       </Button>
                     </div>
                   </div>
@@ -277,8 +276,8 @@ export function ParentDashboard() {
                     <div className="w-16 h-16 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
                       <Clock className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <h3 className="font-semibold mb-2">Aucun trajet prévu</h3>
-                    <p className="text-muted-foreground">Profitez de cette pause bien méritée</p>
+                    <h3 className="font-semibold mb-2">Aucun trajet en cours</h3>
+                    <p className="text-muted-foreground">Vous serez notifié dès qu'une mission démarre</p>
                   </div>
                 )}
               </CardContent>

@@ -29,7 +29,7 @@ export type UpcomingTrip = {
   };
   scheduledTime: Date;
   estimatedArrival?: Date;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'programmed' | 'in-progress' | 'completed' | 'cancelled';
   transportType: 'aller' | 'retour' | 'aller-retour';
   distance: number;
 };
@@ -41,7 +41,7 @@ export type WeeklySchedule = {
     childName: string;
     time: string;
     type: 'aller' | 'retour';
-    status: 'scheduled' | 'completed' | 'cancelled';
+    status: 'programmed' | 'in-progress' | 'completed' | 'cancelled';
     from: {
       address: string;
       lat: number;
@@ -186,6 +186,26 @@ export function useDashboard() {
       );
 
       const snapshot = await getDocs(upcomingQuery);
+
+      // Préparer la liste des IDs de transports à vérifier dans activeMissions
+      const transportIds = snapshot.docs.map(d => d.id);
+      let activeTransportIds = new Set<string>();
+
+      if (transportIds.length > 0) {
+        try {
+          // Firestore 'in' supporte jusqu'à 10 éléments, nous sommes limités à 5 ci-dessus
+          const activeRef = collection(db, 'activeMissions');
+          const activeQueryRef = query(activeRef, where('transportId', 'in', transportIds));
+          const activeSnap = await getDocs(activeQueryRef);
+          activeSnap.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.transportId) activeTransportIds.add(data.transportId);
+          });
+        } catch (e) {
+          console.error('Erreur lors de la vérification des missions actives:', e);
+        }
+      }
+
       const trips: UpcomingTrip[] = [];
 
       for (const docSnap of snapshot.docs) {
@@ -208,6 +228,8 @@ export function useDashboard() {
           }
         }
 
+        const isActive = activeTransportIds.has(docSnap.id);
+
         trips.push({
           id: docSnap.id,
           childName: data.childName,
@@ -216,7 +238,7 @@ export function useDashboard() {
           from: data.from,
           to: data.to,
           scheduledTime: data.date.toDate(),
-          status: 'scheduled',
+          status: isActive ? 'in-progress' : 'programmed',
           transportType: data.transportType,
           distance: data.distance || 0,
         });
@@ -270,7 +292,7 @@ export function useDashboard() {
           childName: data.childName,
           time: data.time,
           type: data.transportType === 'aller-retour' ? 'aller' : data.transportType,
-          status: data.status || 'scheduled', // Utiliser le vrai statut de la DB
+          status: data.status || 'programmed', // Utiliser le vrai statut de la DB
           from: data.from || { address: 'Adresse de départ', lat: 0, lng: 0 },
           to: data.to || { address: 'Adresse d\'arrivée', lat: 0, lng: 0 },
         });
@@ -605,7 +627,9 @@ export function useDashboard() {
 
   // Obtenir le prochain trajet
   const getNextTrip = useCallback(() => {
-    return upcomingTrips.length > 0 ? upcomingTrips[0] : null;
+    // Ne retourner qu'un trajet réellement en cours
+    const active = upcomingTrips.find(t => t.status === 'in-progress');
+    return active || null;
   }, [upcomingTrips]);
 
   // Obtenir l'enfant vedette (celui avec le plus de trajets)

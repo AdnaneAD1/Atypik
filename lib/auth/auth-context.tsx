@@ -14,7 +14,7 @@ import {
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/firebase/ClientApp';
 
-export type UserRole = 'parent' | 'driver';
+export type UserRole = 'parent' | 'driver' | 'admin';
 
 interface User {
   id: string;
@@ -66,7 +66,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         
         // Rediriger en fonction du rôle
-        router.push(userData.role === 'parent' ? '/parent/dashboard' : '/driver/dashboard');
+        router.push(
+          userData.role === 'parent'
+            ? '/parent/dashboard'
+            : userData.role === 'driver'
+            ? '/driver/dashboard'
+            : '/admin/dashboard'
+        );
       } else {
         throw new Error('Données utilisateur non trouvées');
       }
