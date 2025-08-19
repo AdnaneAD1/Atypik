@@ -151,173 +151,184 @@ export function DriverUpcomingMissions({ missions }: DriverUpcomingMissionsProps
   
   return (
     <>
-      <Card className="rounded-lg bg-card text-card-foreground overflow-hidden border-0 shadow-lg bg-gradient-to-br from-background to-secondary/10">
-        <div className="flex flex-col space-y-1.5 p-6 pb-2">
-          <h3 className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10">
-              <Clock className="h-4 w-4 text-primary" />
+
+  <Card className="rounded-lg  shadow-md bg-card overflow-hidden">
+    <div className="p-0">
+      {/* Header avec titre et nombre de missions */}
+      <div className=" p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Clock className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-semibold">Missions à venir</h3>
+              <Badge 
+                variant="secondary" 
+                className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 text-[10px] font-medium px-2 py-0 h-5"
+              >
+                {upcomingMissions.length} prévues
+              </Badge>
             </div>
-            <span>Missions à venir</span>
-          </h3>
-          <p className="text-sm text-muted-foreground">Aujourd&apos;hui · {upcomingMissions.length} missions planifiées</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Aujourd’hui
+            </p>
+          </div>
         </div>
         
-        <CardContent className="p-6 pt-0 pb-6">
-          <div className="space-y-4">
-            {upcomingMissions.map((mission, index) => (
-            <Card 
-              key={mission.id}
-              className="rounded-lg text-card-foreground border-0 shadow-md bg-card overflow-hidden"
-            >
-              <div className="p-0">
-                {/* Header avec informations de l'enfant */}
-                <div className="bg-primary/5 border-b border-primary/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border-2 border-primary shadow-md flex-shrink-0">
-                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
-                        {mission.child.name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base font-semibold">{mission.child.name.split(' ')[0]}</h3>
-                        <div className="inline-flex items-center rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-[10px] font-medium px-2 py-0 h-5
-                          ${
-                            mission.transportType === 'aller-retour'
-                              ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800'
-                              : mission.transportType === 'aller'
-                              ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-                              : 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800'
-                          }
-                        ">
-                          {
-                            mission.transportType === 'aller-retour'
-                              ? 'Aller-Retour'
-                              : mission.transportType === 'aller'
-                              ? 'Aller (matin)'
-                              : 'Retour (après-midi)'
-                          }
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Départ prévu à {mission.scheduledTime || '00:00'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                </div>
-                
-                <div className="p-4">
-                  {/* Itinéraire */}
-                  <div className="bg-secondary/30 rounded-xl p-4 mb-4 relative overflow-hidden">
-                    {mission.transportType === 'aller-retour' ? (
-                      // Affichage pour Aller-Retour avec 3 points
-                      <div className="flex items-start gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-50 flex items-center justify-center z-10">
-                            <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                          </div>
-                          <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
-                          <div className="h-6 w-6 rounded-full border-2 border-blue-500 bg-blue-50 flex items-center justify-center z-10">
-                            <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                          </div>
-                          <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
-                          <div className="h-6 w-6 rounded-full border-2 border-orange-500 bg-orange-50 flex items-center justify-center z-10">
-                            <div className="h-2 w-2 rounded-full bg-orange-500"></div>
-                          </div>
-                        </div>
-                        <div className="flex-1 space-y-5">
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-2">
-                              <span className="text-green-600">Départ:</span> {mission.from.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-2">
-                              <span className="text-blue-600">Destination:</span> {mission.to.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium flex items-center gap-2">
-                              <span className="text-orange-600">Retour:</span> {mission.from.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      // Affichage standard pour Aller ou Retour
-                      <div className="flex items-start gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="h-6 w-6 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center z-10">
-                            <div className="h-2 w-2 rounded-full bg-primary"></div>
-                          </div>
-                          <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
-                          <div className="h-6 w-6 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center z-10">
-                            <div className="h-2 w-2 rounded-full bg-primary"></div>
-                          </div>
-                        </div>
-                        <div className="flex-1 space-y-5">
-                          <div>
-                            <p className="text-sm font-medium">{mission.from.name}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">{mission.to.name}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Informations supplémentaires pour Aller-Retour */}
-                    {mission.transportType === 'aller-retour' && (
-                      <div className="mt-4 pt-3 border-t border-primary/10">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Car className="h-3 w-3" />
-                            Distance totale: {((mission.distance * 2) / 1000).toFixed(1)} km
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Trajet complet
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Boutons d'action */}
-                  <div className="flex justify-end">
-                    <Button 
-                      size="sm" 
-                      className="text-xs font-medium whitespace-nowrap bg-primary hover:bg-primary/90 text-white"
-                      onClick={() => handleShowRoute(mission)}
-                    >
-                      <MapPin className="h-3.5 w-3.5 mr-1.5" />
-Voir itinéraire
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-        
-        <div className="mt-4 flex justify-center">
+        <div className="flex items-center gap-2">                  
           <Button 
             variant="outline" 
-            className="text-xs font-medium whitespace-nowrap text-primary border-primary/20 hover:bg-primary/5"
+            size="sm" 
+            className="border-primary/20 text-primary hover:bg-primary/5 hover:text-primary text-xs h-9 px-3 rounded-md"
             onClick={handleViewAllMissions}
           >
-            <Clock className="h-3.5 w-3.5 mr-1.5 text-primary" />
-            Voir toutes les missions
+            <Clock className="h-3.5 w-3.5 mr-1.5" />
+            <span>Voir toutes</span>
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      <div className="p-4 sm:p-5 space-y-5">
+        {upcomingMissions.map((mission) => (
+          <Card 
+            key={mission.id} 
+            className="rounded-lg text-card-foreground border border-primary/10 shadow-sm bg-secondary/20 overflow-hidden"
+          >
+            <div className="p-4 sm:p-5">
+              {/* Enfant + type transport */}
+              <div className="flex items-center gap-3 mb-5">
+                <Avatar className="relative flex shrink-0 overflow-hidden rounded-full h-12 w-12 border-2 border-primary">
+                  <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
+                    {mission.child.name[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="text-base font-semibold">{mission.child.name}</h4>
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs ${
+                        mission.transportType === 'aller-retour'
+                          ? 'bg-purple-50 text-purple-700 border-purple-200'
+                          : mission.transportType === 'aller'
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : 'bg-orange-50 text-orange-700 border-orange-200'
+                      }`}
+                    >
+                      {
+                        mission.transportType === 'aller-retour'
+                          ? 'Aller-Retour'
+                          : mission.transportType === 'aller'
+                          ? 'Aller (matin)'
+                          : 'Retour (après-midi)'
+                      }
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Départ prévu à {mission.scheduledTime || '00:00'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Itinéraire */}
+              <div className="bg-secondary/30 rounded-xl p-4 mb-5 relative overflow-hidden">
+                {mission.transportType === 'aller-retour' ? (
+                  <div className="flex items-start gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-50 flex items-center justify-center z-10">
+                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                      </div>
+                      <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
+                      <div className="h-6 w-6 rounded-full border-2 border-blue-500 bg-blue-50 flex items-center justify-center z-10">
+                        <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                      </div>
+                      <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
+                      <div className="h-6 w-6 rounded-full border-2 border-orange-500 bg-orange-50 flex items-center justify-center z-10">
+                        <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                      </div>
+                    </div>
+                    <div className="flex-1 space-y-5">
+                      <div>
+                        <p className="text-sm font-medium flex items-center gap-2">
+                          <span className="text-green-600">Départ:</span> {mission.from.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium flex items-center gap-2">
+                          <span className="text-blue-600">Destination:</span> {mission.to.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium flex items-center gap-2">
+                          <span className="text-orange-600">Retour:</span> {mission.from.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="h-6 w-6 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center z-10">
+                        <div className="h-2 w-2 rounded-full bg-primary"></div>
+                      </div>
+                      <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
+                      <div className="h-6 w-6 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center z-10">
+                        <div className="h-2 w-2 rounded-full bg-primary"></div>
+                      </div>
+                    </div>
+                    <div className="flex-1 space-y-5">
+                      <div>
+                        <p className="text-sm font-medium">{mission.from.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{mission.to.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Infos supplémentaires */}
+                {mission.transportType === 'aller-retour' && (
+                  <div className="mt-4 pt-3 border-t border-primary/10">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Car className="h-3 w-3" />
+                        Distance: {((mission.distance * 2) / 1000).toFixed(1)} km
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Trajet complet
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Boutons actions */}
+              <div className="flex justify-end">
+                <Button 
+                  size="sm"
+                  className="text-xs font-medium whitespace-nowrap bg-primary hover:bg-primary/90 text-white rounded-md h-9 px-3"
+                  onClick={() => handleShowRoute(mission)}
+                >
+                  <MapPin className="h-3.5 w-3.5 mr-1.5" />
+                  Voir itinéraire
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </Card>
+ 
+
     
     {/* Rendu des popups */}
     <NeedsPopup />

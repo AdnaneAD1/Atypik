@@ -46,7 +46,7 @@ export function DriverStatsCard({ stats, loading = false, error = null }: Driver
   }
 
   return (
-    <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-primary">
+    <Card className="border-0 shadow-lg overflow-hidden   dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-primary">
       <CardHeader className="pb-3 relative z-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -150,7 +150,7 @@ export function DriverStatsCard({ stats, loading = false, error = null }: Driver
                     <AnimatedCounter value={stats.kmTraveled} duration={2} delay={0.8} decimalPlaces={1} />
                   </motion.p>
                   <p className="text-xs font-medium text-teal-600/70 dark:text-teal-500/70 ml-2">
-                    Kilomètres parcourus
+                    Km total
                   </p>
                 </div>
               </div>
