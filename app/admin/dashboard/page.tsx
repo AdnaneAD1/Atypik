@@ -1,9 +1,43 @@
+"use client";
+import { useState } from 'react';
 import { AppLayout } from '@/components/layouts/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, ShieldCheck, CalendarRange, AlertTriangle, PlusCircle } from 'lucide-react';
+import { Users, ShieldCheck, CalendarRange, PlusCircle, RefreshCw } from 'lucide-react';
+import { useAdminDashboard } from '@/hooks/use-admin-dashboard';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { db } from '@/firebase/ClientApp';
+import { addDoc, collection } from 'firebase/firestore';
 
 export default function AdminDashboardPage() {
+  const { stats, loading, error, reload } = useAdminDashboard();
+  const { toast } = useToast();
+  const [openNewRegion, setOpenNewRegion] = useState(false);
+  const [regionName, setRegionName] = useState('');
+  const [savingRegion, setSavingRegion] = useState(false);
+
+  const handleSaveRegion = async () => {
+    const name = regionName.trim();
+    if (!name) {
+      toast({ title: 'Nom requis', description: 'Veuillez entrer un nom de région.', variant: 'destructive' });
+      return;
+    }
+    try {
+      setSavingRegion(true);
+      await addDoc(collection(db, 'regions'), { name, driverId: '' });
+      toast({ title: 'Région créée', description: `“${name}” a été ajoutée.` });
+      setRegionName('');
+      setOpenNewRegion(false);
+    } catch (e: any) {
+      console.error('Erreur création région:', e);
+      toast({ title: 'Erreur', description: e?.message || "Impossible d'enregistrer la région.", variant: 'destructive' });
+    } finally {
+      setSavingRegion(false);
+    }
+  };
   return (
     <AppLayout allowedRoles={['admin']}>
       <div className="space-y-6">
@@ -14,23 +48,56 @@ export default function AdminDashboardPage() {
             <p className="text-sm text-muted-foreground mt-1">Vue d&apos;ensemble du système et actions rapides</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button className="gap-2">
-              <PlusCircle className="h-4 w-4" />
-              Nouvelle région
+            <Button variant="outline" className="gap-2" onClick={reload} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Actualiser
             </Button>
+            <Dialog open={openNewRegion} onOpenChange={setOpenNewRegion}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <PlusCircle className="h-4 w-4" />
+                  Nouvelle région
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter une région</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-2 py-2">
+                  <Label htmlFor="region-name">Nom de la région</Label>
+                  <Input
+                    id="region-name"
+                    placeholder="Ex: Île-de-France"
+                    value={regionName}
+                    onChange={(e) => setRegionName(e.target.value)}
+                    disabled={savingRegion}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setOpenNewRegion(false)} disabled={savingRegion}>Annuler</Button>
+                  <Button onClick={handleSaveRegion} disabled={savingRegion}>
+                    {savingRegion ? 'Enregistrement…' : 'Enregistrer'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
+        {error && (
+          <div className="text-sm text-red-600">{error}</div>
+        )}
+
         {/* Stats cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card className="rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Utilisateurs</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1912</div>
-              <p className="text-xs text-muted-foreground">+24 ce mois</p>
+              <div className="text-2xl font-bold">{loading ? '—' : stats?.totalUsers ?? 0}</div>
+              <p className="text-xs text-muted-foreground">{loading ? 'Chargement…' : `+${stats?.newUsersThisMonth ?? 0} ce mois`}</p>
             </CardContent>
           </Card>
 
@@ -40,7 +107,7 @@ export default function AdminDashboardPage() {
               <ShieldCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">7</div>
+              <div className="text-2xl font-bold">{loading ? '—' : stats?.pendingDrivers ?? 0}</div>
               <p className="text-xs text-muted-foreground">À vérifier</p>
             </CardContent>
           </Card>
@@ -51,21 +118,12 @@ export default function AdminDashboardPage() {
               <CalendarRange className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">86</div>
-              <p className="text-xs text-muted-foreground">12 en cours</p>
+              <div className="text-2xl font-bold">{loading ? '—' : stats?.transportsToday ?? 0}</div>
+              <p className="text-xs text-muted-foreground">{loading ? 'Chargement…' : `${stats?.transportsInProgress ?? 0} en cours`}</p>
             </CardContent>
           </Card>
 
-          <Card className="rounded-xl">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Alertes système</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-xs text-muted-foreground">Aucune critique</p>
-            </CardContent>
-          </Card>
+          
         </div>
 
         {/* Recent activity / placeholders */}

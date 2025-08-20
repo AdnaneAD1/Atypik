@@ -176,11 +176,14 @@ export function useDashboard() {
 
     try {
       const transportsRef = collection(db, 'transports');
+      // Inclure tous les trajets à partir du début de la journée courante
       const now = new Date();
+      const startOfDay = new Date(now);
+      startOfDay.setHours(0, 0, 0, 0);
       const upcomingQuery = query(
         transportsRef,
         where('userId', '==', user.id),
-        where('date', '>=', Timestamp.fromDate(now)),
+        where('date', '>=', Timestamp.fromDate(startOfDay)),
         orderBy('date', 'asc'),
         limit(5)
       );
@@ -230,6 +233,16 @@ export function useDashboard() {
 
         const isActive = activeTransportIds.has(docSnap.id);
 
+        // Calculer l'heure planifiée en combinant date + time si disponible
+        const scheduledDate: Date = data.date.toDate();
+        let scheduledTime: Date = scheduledDate;
+        const timeStr: string | undefined = data.time;
+        if (typeof timeStr === 'string' && /^(\d{1,2}):(\d{2})$/.test(timeStr)) {
+          const [h, m] = timeStr.split(':').map(Number);
+          scheduledTime = new Date(scheduledDate);
+          scheduledTime.setHours(h, m, 0, 0);
+        }
+
         trips.push({
           id: docSnap.id,
           childName: data.childName,
@@ -237,14 +250,89 @@ export function useDashboard() {
           driverAvatar,
           from: data.from,
           to: data.to,
-          scheduledTime: data.date.toDate(),
+          scheduledTime,
           status: isActive ? 'in-progress' : 'programmed',
           transportType: data.transportType,
           distance: data.distance || 0,
         });
       }
 
-      setUpcomingTrips(trips);
+      // Assurer l'inclusion du trajet actif, même s'il n'est pas dans les 5 premiers par date
+      try {
+        const activeRef = collection(db, 'activeMissions');
+        const activeQueryRef2 = query(activeRef, where('status', 'in', ['started', 'in_progress']));
+        const activeSnap2 = await getDocs(activeQueryRef2);
+
+        for (const missionDoc of activeSnap2.docs) {
+          const missionData = missionDoc.data() as any;
+          const transportId: string | undefined = missionData.transportId;
+          if (!transportId) continue;
+
+          // Récupérer le transport lié et vérifier qu'il appartient au parent courant
+          try {
+            const transportDoc = await getDoc(doc(db, 'transports', transportId));
+            if (!transportDoc.exists()) continue;
+            const t = transportDoc.data() as any;
+            if (t.userId !== user.id) continue;
+
+            // Construire/mettre à jour le trip correspondant
+            const scheduledDate: Date = t.date.toDate();
+            let scheduledTime: Date = scheduledDate;
+            const timeStr: string | undefined = t.time;
+            if (typeof timeStr === 'string' && /^(\d{1,2}):(\d{2})$/.test(timeStr)) {
+              const [h, m] = timeStr.split(':').map(Number);
+              scheduledTime = new Date(scheduledDate);
+              scheduledTime.setHours(h, m, 0, 0);
+            }
+
+            // Infos chauffeur si besoin
+            let driverName = 'Chauffeur assigné';
+            let driverAvatar: string | undefined = undefined;
+            if (t.driverId) {
+              try {
+                const driverDoc = await getDoc(doc(db, 'users', t.driverId));
+                if (driverDoc.exists()) {
+                  const driverData = driverDoc.data();
+                  driverName = driverData.name || 'Chauffeur assigné';
+                  driverAvatar = driverData.avatar;
+                }
+              } catch {}
+            }
+
+            const existingIdx = trips.findIndex(tr => tr.id === transportDoc.id);
+            const tripItem: UpcomingTrip = {
+              id: transportDoc.id,
+              childName: t.childName,
+              driverName,
+              driverAvatar,
+              from: t.from,
+              to: t.to,
+              scheduledTime,
+              status: 'in-progress',
+              transportType: t.transportType,
+              distance: t.distance || 0,
+            };
+
+            if (existingIdx >= 0) {
+              trips[existingIdx] = tripItem;
+            } else {
+              // Mettre le trajet actif en tête
+              trips.unshift(tripItem);
+            }
+          } catch (e) {
+            console.error('Erreur lors de la consolidation du trajet actif:', e);
+          }
+        }
+      } catch (e) {
+        console.error('Erreur lors de l\'inclusion du trajet actif:', e);
+      }
+
+      // Déduplication et limite à 5 éléments
+      const unique = new Map<string, UpcomingTrip>();
+      for (const t of trips) unique.set(t.id, t);
+      const finalTrips = Array.from(unique.values()).slice(0, 5);
+
+      setUpcomingTrips(finalTrips);
     } catch (error) {
       console.error('Erreur lors du chargement des prochains trajets:', error);
     }
@@ -628,7 +716,9 @@ export function useDashboard() {
   // Obtenir le prochain trajet
   const getNextTrip = useCallback(() => {
     // Ne retourner qu'un trajet réellement en cours
+    console.log(upcomingTrips);
     const active = upcomingTrips.find(t => t.status === 'in-progress');
+    console.log(active);
     return active || null;
   }, [upcomingTrips]);
 

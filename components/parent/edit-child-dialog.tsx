@@ -208,7 +208,7 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
               name="personality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Personnalité de l'enfant (optionnel)</FormLabel>
+                  <FormLabel>Personnalité de l&apos;enfant (optionnel)</FormLabel>
                   <FormControl>
                     <Textarea 
                       placeholder="Ex: Timide, extraverti, curieux, calme, énergique..." 

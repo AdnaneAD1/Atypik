@@ -71,7 +71,7 @@ export function useDriverStats(): UseDriverStatsResult {
     totalKmTraveled: 0,
     thisWeekKmTraveled: 0,
     thisMonthKmTraveled: 0,
-    averageRating: 5.0,
+    averageRating: 0,
     totalReviews: 0,
     ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
     totalChildrenTransported: 0,
@@ -305,9 +305,9 @@ export function useDriverStats(): UseDriverStatsResult {
       }
     });
     
-    const averageRating = totalReviews > 0 ? totalRating / totalReviews : 5.0;
-    const thisMonthAverage = thisMonthReviews > 0 ? thisMonthRating / thisMonthReviews : 5.0;
-    const lastMonthAverage = lastMonthReviews > 0 ? lastMonthRating / lastMonthReviews : 5.0;
+    const averageRating = totalReviews > 0 ? totalRating / totalReviews : 0;
+    const thisMonthAverage = thisMonthReviews > 0 ? thisMonthRating / thisMonthReviews : 0;
+    const lastMonthAverage = lastMonthReviews > 0 ? lastMonthRating / lastMonthReviews : 0;
     
     const ratingTrend = lastMonthAverage > 0 
       ? ((thisMonthAverage - lastMonthAverage) / lastMonthAverage) * 100 

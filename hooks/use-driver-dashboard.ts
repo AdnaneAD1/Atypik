@@ -243,7 +243,7 @@ export function useDriverDashboard(): UseDriverDashboardResult {
         }
       });
       
-      const averageRating = ratingCount > 0 ? totalRating / ratingCount : 5.0;
+      const averageRating = ratingCount > 0 ? totalRating / ratingCount : 0;
       
       return {
         todayMissions,
@@ -463,7 +463,7 @@ export function useDriverDashboard(): UseDriverDashboardResult {
             }
           });
           
-          const rating = ratingCount > 0 ? totalRating / ratingCount : 5.0;
+          const rating = ratingCount > 0 ? totalRating / ratingCount : 0;
           
           return {
             id: mostFrequentChildId,

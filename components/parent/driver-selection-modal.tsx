@@ -111,7 +111,7 @@ export const DriverSelectionModal = ({
                     Aucun chauffeur disponible
                   </h3>
                   <p className="text-gray-600">
-                    Aucun chauffeur n'est actuellement disponible dans votre région.
+                    Aucun chauffeur n&apos;est actuellement disponible dans votre région.
                   </p>
                 </div>
               )}

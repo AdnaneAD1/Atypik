@@ -78,7 +78,7 @@ export default function AdminAdminsPage() {
             </div>
             <div className="col-span-1 sm:col-span-1">
               <Button onClick={handleCreate} disabled={!email || creating} className="w-full sm:w-auto gap-2">
-                <UserPlus className="h-4 w-4" /> Créer l'admin
+                <UserPlus className="h-4 w-4" /> Créer l&apos;admin
               </Button>
             </div>
             {createdInfo && (

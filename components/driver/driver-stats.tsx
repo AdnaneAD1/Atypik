@@ -150,14 +150,14 @@ export function DriverStats() {
             </div>
             
             {/* Message si aucune activité */}
-            {stats.weeklyActivity.every(v => v === 0) && (
+            {/* {stats.weeklyActivity.every(v => v === 0) && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center text-muted-foreground">
                   <p className="text-sm font-medium">Aucune activité cette semaine</p>
                   <p className="text-xs mt-1">Les missions apparaîtront ici une fois effectuées</p>
                 </div>
               </div>
-            )}
+            )} */}
           </CardContent>
         </Card>
 

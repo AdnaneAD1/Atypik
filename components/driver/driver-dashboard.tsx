@@ -151,7 +151,7 @@ export function DriverDashboard() {
       </div>
 
       {/* Current Mission */}
-      <div>
+      <div >
         <DriverMissionCard 
           mission={activeMission || undefined} 
           onCompleted={refreshData}

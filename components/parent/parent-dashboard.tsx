@@ -277,7 +277,7 @@ export function ParentDashboard() {
                       <Clock className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <h3 className="font-semibold mb-2">Aucun trajet en cours</h3>
-                    <p className="text-muted-foreground">Vous serez notifié dès qu'une mission démarre</p>
+                    <p className="text-muted-foreground">Vous serez notifié dès qu&apos;une mission démarre</p>
                   </div>
                 )}
               </CardContent>

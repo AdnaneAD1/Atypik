@@ -97,8 +97,74 @@ export const useDriverSelection = () => {
         missionsSnapshot.docs.map(doc => doc.data().childId)
       ).size;
       
-      // Calculer le taux de ponctualité (simulation - à adapter selon vos critères)
-      const punctualityRate = Math.min(95, 80 + (averageRating * 3));
+      // Calculer le taux de ponctualité basé prioritairement sur activeMissions (startTime) vs heure planifiée du transport
+      // Règle: à l'heure si startTime <= (date/time planifiée) + 10 minutes
+      const graceMinutes = 10;
+      let considered = 0;
+      let onTime = 0;
+
+      try {
+        const activeRef = collection(db, 'activeMissions');
+        const activeQueryRef = query(
+          activeRef,
+          where('driverId', '==', driverId),
+          where('status', 'in', ['started', 'in_progress', 'completed'])
+        );
+        const activeSnap = await getDocs(activeQueryRef);
+
+        for (const docSnap of activeSnap.docs) {
+          const mission = docSnap.data() as any;
+
+          const transportId: string | undefined = mission?.transportId;
+          const actual: Date | undefined = mission?.startTime?.toDate?.();
+          if (!transportId || !actual) continue;
+
+          // Récupérer le transport pour l'heure planifiée
+          const transportDoc = await getDoc(doc(db, 'transports', transportId));
+          if (!transportDoc.exists()) continue;
+          const t = transportDoc.data() as any;
+
+          // Heure planifiée: date (+ éventuellement time HH:mm)
+          const scheduledDate: Date | undefined = t?.date?.toDate?.();
+          let scheduled: Date | undefined = scheduledDate;
+
+          // Si un champ time (string HH:mm) existe, l'appliquer sur la date planifiée
+          const timeStr: string | undefined = t?.time;
+          if (scheduledDate && typeof timeStr === 'string' && /^(\d{1,2}):(\d{2})$/.test(timeStr)) {
+            const [h, m] = timeStr.split(':').map(Number);
+            scheduled = new Date(scheduledDate);
+            scheduled.setHours(h, m, 0, 0);
+          }
+
+          if (!scheduled) continue;
+
+          considered += 1;
+          const diffMin = Math.round((actual.getTime() - scheduled.getTime()) / 60000);
+          if (diffMin <= graceMinutes) onTime += 1;
+        }
+      } catch (e) {
+        // En cas d'erreur sur activeMissions, on tombera sur le fallback ci-dessous
+        console.warn('Ponctualité (activeMissions) indisponible, fallback sur transports:', e);
+      }
+
+      // Fallback: calcul à partir des documents transports (comme avant) si aucun élément considéré
+      if (considered === 0) {
+        const completedTripsDocs = missionsSnapshot.docs.filter(d => d.data().status === 'completed');
+        for (const m of completedTripsDocs) {
+          const data = m.data() as any;
+          const scheduled: Date | undefined = data?.date?.toDate?.();
+          const actual: Date | undefined =
+            data?.pickupTime?.toDate?.() ||
+            data?.startTime?.toDate?.() ||
+            data?.driverArrivedAt?.toDate?.();
+          if (!scheduled || !actual) continue;
+          considered += 1;
+          const diffMin = Math.round((actual.getTime() - scheduled.getTime()) / 60000);
+          if (diffMin <= graceMinutes) onTime += 1;
+        }
+      }
+
+      const punctualityRate = considered > 0 ? Math.round((onTime / considered) * 100) : 0;
       
       // Score de fiabilité basé sur plusieurs facteurs
       const reliabilityScore = Math.min(100, 

@@ -218,7 +218,7 @@ export function NotificationSettings() {
                       <div>
                         <p className="text-sm font-medium">Informations générales</p>
                         <p className="text-xs text-muted-foreground">
-                          Mises à jour de l'application
+                          Mises à jour de l&apos;application
                         </p>
                       </div>
                     </div>
