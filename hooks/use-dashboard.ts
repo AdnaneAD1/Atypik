@@ -233,6 +233,12 @@ export function useDashboard() {
 
         const isActive = activeTransportIds.has(docSnap.id);
 
+        // Exclure les trajets terminés ou annulés de la liste des prochains trajets
+        const dbStatus: string | undefined = (data as any).status;
+        if (dbStatus === 'completed' || dbStatus === 'cancelled') {
+          continue;
+        }
+
         // Calculer l'heure planifiée en combinant date + time si disponible
         const scheduledDate: Date = data.date.toDate();
         let scheduledTime: Date = scheduledDate;
@@ -274,6 +280,11 @@ export function useDashboard() {
             if (!transportDoc.exists()) continue;
             const t = transportDoc.data() as any;
             if (t.userId !== user.id) continue;
+
+            // Exclure si le transport est terminé ou annulé
+            if (t.status === 'completed' || t.status === 'cancelled') {
+              continue;
+            }
 
             // Construire/mettre à jour le trip correspondant
             const scheduledDate: Date = t.date.toDate();
