@@ -24,6 +24,7 @@ export interface AddChildData {
   school: string;
   specialNeeds?: string;
   personality?: string;
+  avatarUrl?: string;
 }
 
 export function useChildren() {
@@ -91,7 +92,7 @@ export function useChildren() {
         name: `${data.firstName} ${data.lastName}`,
         age: parseInt(data.age),
         school: data.school,
-        avatar: null,
+        avatar: data.avatarUrl || null,
         needs: data.specialNeeds ? data.specialNeeds.split(',').map((need: string) => need.trim()) : [],
         personality: data.personality || '', // ✅ Ajout de la personnalité
         parentId: user.id

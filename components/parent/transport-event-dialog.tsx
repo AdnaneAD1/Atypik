@@ -62,6 +62,15 @@ const formSchema = z.object({
   }),
   distance: z.number().optional(), // en mètres
   childName: z.string().optional(),
+  motif: z
+    .string()
+    .max(200, '200 caractères max')
+    .optional()
+    .transform((v) => (v && v.trim() !== '' ? v.trim() : undefined)),
+  waitingTime: z
+    .preprocess((v) => (v === '' || v === null || typeof v === 'undefined' ? undefined : Number(v)),
+      z.number().int().min(0, 'Doit être >= 0').max(240, 'Max 240 minutes').optional()
+    ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -139,6 +148,8 @@ export function TransportEventDialog({
       from: { address: '', lat: 0, lng: 0 },
       to: { address: '', lat: 0, lng: 0 },
       distance: undefined,
+      motif: '',
+      waitingTime: undefined,
     },
   });
 
@@ -181,6 +192,8 @@ export function TransportEventDialog({
         transportType: 'aller-retour',
         date: selectedDate,
         time: '08:00',
+        motif: '',
+        waitingTime: undefined,
       });
     }
   }, [open, selectedDate, form]);
@@ -354,6 +367,36 @@ export function TransportEventDialog({
                   <FormLabel>Heure de prise en charge</FormLabel>
                   <FormControl>
                     <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Motif (optionnel) */}
+            <FormField
+              control={form.control}
+              name="motif"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Motif (optionnel)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: RDV à l&apos;hôpital, visite médicale, etc." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Délai d'attente en minutes (optionnel) */}
+            <FormField
+              control={form.control}
+              name="waitingTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Délai d&apos;attente (minutes, optionnel)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={0} max={240} placeholder="Ex: 30" value={field.value as any ?? ''} onChange={(e) => field.onChange(e.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -42,7 +42,8 @@ export function ParentChildren() {
         age: parseInt(data.age),
         school: data.school,
         needs: data.specialNeeds ? data.specialNeeds.split(',').map((need: string) => need.trim()) : [],
-        personality: data.personality || '' // ✅ Ajout de la personnalité
+        personality: data.personality || '', // ✅ Ajout de la personnalité
+        ...(data.avatarUrl !== undefined ? { avatar: data.avatarUrl } : {}),
       };
       
       return await updateChild(id, updatedChild);

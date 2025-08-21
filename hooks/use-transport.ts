@@ -28,6 +28,8 @@ export type TransportEvent = {
   };
   distance: number; // en mètres (obligatoire, 0 par défaut)
   status: 'programmed' | 'in-progress' | 'completed' | 'cancelled'; // Statut du transport
+  motif?: string; // raison du déplacement (optionnel)
+  waitingTime?: number; // délai d'attente en minutes (optionnel)
 };
 
 // Type pour les données d'ajout de transport
@@ -71,6 +73,8 @@ export function useTransport() {
           to: data.to || { address: '', lat: 0, lng: 0 },
           distance: data.distance,
           status: data.status || 'programmed', // Ajouter le statut avec fallback
+          motif: data.motif,
+          waitingTime: typeof data.waitingTime === 'number' ? data.waitingTime : undefined,
         });
       });
 
@@ -110,16 +114,26 @@ export function useTransport() {
       console.log('Données reçues dans addTransport:', data);
       console.log('Distance reçue:', data.distance, typeof data.distance);
       
-      const newTransport = {
-        ...data,
+      // Construire l'objet sans champs undefined
+      const newTransport: any = {
+        childId: data.childId,
+        childName: data.childName,
+        date: Timestamp.fromDate(data.date),
+        time: data.time,
+        transportType: data.transportType,
         userId: user.id,
-        driverId: data.driverId, // driverId fourni par le parent
-        date: Timestamp.fromDate(data.date), // Convertir Date en Timestamp pour Firestore
+        driverId: data.driverId,
         from: data.from,
         to: data.to,
-        distance: data.distance ?? 0, // S'assurer que distance n'est jamais undefined
-        status: 'programmed', // Statut par défaut
+        distance: data.distance ?? 0,
+        status: 'programmed',
       };
+      if (typeof data.motif === 'string' && data.motif.trim() !== '') {
+        newTransport.motif = data.motif.trim();
+      }
+      if (typeof data.waitingTime === 'number') {
+        newTransport.waitingTime = data.waitingTime;
+      }
       
       console.log('Transport à enregistrer dans Firestore:', newTransport);
       console.log('Distance finale:', newTransport.distance);
@@ -161,10 +175,28 @@ export function useTransport() {
 
     try {
       const transportRef = doc(db, 'transports', id);
-      await updateDoc(transportRef, {
-        ...data,
-        date: Timestamp.fromDate(data.date), // Convertir Date en Timestamp pour Firestore
-      });
+      // Construire un payload d'update sans undefined
+      const updatePayload: any = {
+        childId: data.childId,
+        childName: data.childName,
+        date: Timestamp.fromDate(data.date),
+        time: data.time,
+        transportType: data.transportType,
+        driverId: data.driverId,
+        from: data.from,
+        to: data.to,
+        distance: data.distance ?? 0,
+        status: data.status,
+      };
+      if (typeof data.motif === 'string' && data.motif.trim() !== '') {
+        updatePayload.motif = data.motif.trim();
+      } else {
+        // Pour effacer le motif on peut le set à FieldValue.delete() si nécessaire (non implémenté ici)
+      }
+      if (typeof data.waitingTime === 'number') {
+        updatePayload.waitingTime = data.waitingTime;
+      }
+      await updateDoc(transportRef, updatePayload);
 
       // Mettre à jour l'état local
       setTransportEvents((prev) =>

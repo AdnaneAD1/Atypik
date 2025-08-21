@@ -10,13 +10,65 @@ import {
   MapPin,
   Car,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  Banknote
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDriverStats } from '@/hooks/use-driver-stats';
+import { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/lib/auth/auth-context';
+import { db } from '@/firebase/ClientApp';
+import { Timestamp, collection, getDocs, query, where } from 'firebase/firestore';
 
 export function DriverStats() {
   const { stats, loading, error, refreshStats } = useDriverStats();
+  const { user } = useAuth();
+
+  const [monthlyGains, setMonthlyGains] = useState<number | null>(null);
+  const [gainsLoading, setGainsLoading] = useState<boolean>(false);
+  const [gainsError, setGainsError] = useState<string | null>(null);
+
+  const monthRange = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+    return {
+      startTs: Timestamp.fromDate(start),
+      endTs: Timestamp.fromDate(nextMonth),
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchMonthlyGains = async () => {
+      if (!user?.id) return;
+      setGainsLoading(true);
+      setGainsError(null);
+      try {
+        const gainsRef = collection(db, 'gains');
+        const q = query(
+          gainsRef,
+          where('driverId', '==', user.id),
+          where('createdAt', '>=', monthRange.startTs),
+          where('createdAt', '<', monthRange.endTs)
+        );
+        const snap = await getDocs(q);
+        let sum = 0;
+        snap.forEach((doc) => {
+          const data = doc.data() as any;
+          const amt = typeof data.amount === 'number' ? data.amount : 0;
+          sum += amt;
+        });
+        setMonthlyGains(sum);
+      } catch (e) {
+        console.error('Erreur chargement gains mensuels:', e);
+        setGainsError('Impossible de charger les gains');
+      } finally {
+        setGainsLoading(false);
+      }
+    };
+
+    fetchMonthlyGains();
+  }, [user?.id, monthRange.startTs, monthRange.endTs]);
 
   // Affichage de chargement
   if (loading) {
@@ -54,7 +106,7 @@ export function DriverStats() {
         </p>
       </div>
 
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
@@ -100,6 +152,26 @@ export function DriverStats() {
               {stats.trends.kmGrowth >= 0 ? '+' : ''}{stats.trends.kmGrowth.toFixed(1)}% vs mois dernier
             </p>
             <Progress value={Math.min((stats.thisMonthKmTraveled / Math.max(stats.totalKmTraveled, 1)) * 100, 100)} className="h-2 mt-2" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">
+              Gains du mois
+            </CardTitle>
+            <Banknote className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {gainsLoading && '—'}
+              {!gainsLoading && (
+                new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(monthlyGains || 0)
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {gainsError ? gainsError : 'Somme de vos gains ce mois-ci'}
+            </p>
           </CardContent>
         </Card>
       </div>

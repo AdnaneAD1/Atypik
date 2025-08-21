@@ -220,6 +220,22 @@ export function useTracking() {
             status: 'completed',
           });
         }
+
+        // Enregistrer le gain du chauffeur pour cette mission
+        try {
+          const gainsRef = collection(db, 'gains');
+          await addDoc(gainsRef, {
+            driverId: user.id,
+            missionId,
+            transportId: transportId || null,
+            amount: 86, // montant fixe (~86€) selon hypothèse 3 courses/sem, mois de 30j
+            currency: 'EUR',
+            calculationMethod: 'fixed_estimate_3_per_week_30d',
+            createdAt: serverTimestamp(),
+          });
+        } catch (e) {
+          console.warn('Impossible d\'enregistrer le gain:', e);
+        }
       } catch (e) {
         console.warn('Impossible de mettre à jour le statut du transport (complete):', e);
       }

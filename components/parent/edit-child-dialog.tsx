@@ -26,6 +26,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { Child } from '@/hooks/use-children';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { uploadImageToCloudinary, validateFile } from '@/hooks/use-cloudinary';
 
 const formSchema = z.object({
   firstName: z.string().min(2, 'Le prénom doit comporter au moins 2 caractères'),
@@ -43,12 +45,14 @@ type FormValues = z.infer<typeof formSchema>;
 interface EditChildDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEditChild?: (id: string, data: FormValues) => Promise<boolean>;
+  onEditChild?: (id: string, data: FormValues & { avatarUrl?: string | null }) => Promise<boolean>;
   child: Child | null;
 }
 
 export function EditChildDialog({ open, onOpenChange, onEditChild, child }: EditChildDialogProps) {
   const { toast } = useToast();
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -73,24 +77,49 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
         specialNeeds: child.needs ? child.needs.join(', ') : '',
         personality: child.personality || '',
       });
+      setAvatarPreview(child.avatar || null);
+      setAvatarFile(null);
     }
   }, [child, form]);
 
   const { isSubmitting } = form.formState;
+
+  const onSelectAvatar: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      validateFile(file, 5 * 1024 * 1024, ['image/']);
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    } catch (err: any) {
+      toast({ title: 'Fichier invalide', description: err?.message || 'Image non valide', variant: 'destructive' });
+    }
+  };
+
+  const onRemoveAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(child?.avatar || null);
+  };
 
   const onSubmit = async (data: FormValues) => {
     try {
       if (!child?.id || !onEditChild) {
         toast({
           title: 'Erreur',
-          description: 'Impossible de modifier l\'enfant',
+          description: "Impossible de modifier l'enfant",
           variant: 'destructive',
         });
         return;
       }
       
+      // Upload avatar si un nouveau fichier a été choisi
+      let avatarUrl: string | undefined;
+      if (avatarFile) {
+        avatarUrl = await uploadImageToCloudinary(avatarFile);
+      }
+
       // Appeler la fonction de modification
-      const success = await onEditChild(child.id, data);
+      const success = await onEditChild(child.id, { ...data, avatarUrl });
       
       if (success) {
         toast({
@@ -109,7 +138,7 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: 'Une erreur est survenue lors de la modification',
+        description: "Une erreur est survenue lors de la modification",
         variant: 'destructive',
       });
     }
@@ -127,6 +156,31 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Avatar uploader */}
+            <div className="flex items-center gap-4">
+              <Avatar className="h-14 w-14 border">
+                {avatarPreview ? (
+                  <AvatarImage src={avatarPreview} alt={`Photo de ${child?.name || 'enfant'}`} />
+                ) : (
+                  <AvatarFallback>ENF</AvatarFallback>
+                )}
+              </Avatar>
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <label htmlFor="child-edit-avatar-input">
+                    <input id="child-edit-avatar-input" type="file" accept="image/*" className="hidden" onChange={onSelectAvatar} />
+                    <Button type="button" variant="outline" onClick={() => document.getElementById('child-edit-avatar-input')?.click()}>
+                      Changer la photo
+                    </Button>
+                  </label>
+                  {avatarFile && (
+                    <Button type="button" variant="ghost" onClick={onRemoveAvatar}>Annuler</Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">PNG, JPG, max 5MB (optionnel).</p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

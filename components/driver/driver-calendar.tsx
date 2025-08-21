@@ -12,6 +12,7 @@ import { fr } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function DriverCalendar() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -185,7 +186,12 @@ export function DriverCalendar() {
               {/* Informations générales */}
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <User className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border">
+                    <AvatarImage src={(selectedMission as any)?.childAvatar || (selectedMission as any)?.child?.avatar || ''} alt={selectedMission.childName || 'Enfant'} />
+                    <AvatarFallback>
+                      {selectedMission.childName ? selectedMission.childName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'EN'}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="min-w-0">
                     <p className="font-medium text-sm sm:text-base truncate">{selectedMission.childName}</p>
                     <p className="text-xs sm:text-sm text-muted-foreground">
@@ -201,6 +207,26 @@ export function DriverCalendar() {
                     <p className="text-xs sm:text-sm text-muted-foreground">{selectedMission.time}</p>
                   </div>
                 </div>
+
+                {selectedMission.motif && selectedMission.motif.trim() !== '' && (
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-xs sm:text-sm">Motif</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground break-words">{selectedMission.motif}</p>
+                    </div>
+                  </div>
+                )}
+
+                {typeof (selectedMission as any).waitingTime === 'number' && (
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-xs sm:text-sm">Temps d&apos;attente</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{(selectedMission as any).waitingTime} min</p>
+                    </div>
+                  </div>
+                )}
                 
                 {selectedMission.from && selectedMission.to && (
                   <div className="space-y-2">

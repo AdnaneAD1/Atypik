@@ -11,6 +11,8 @@ import { auth, db } from "@/firebase/ClientApp";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useRegion } from "@/hooks/use-region";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { uploadImageToCloudinary, validateFile } from "@/hooks/use-cloudinary";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,12 +53,14 @@ const securitySchema = z
   });
 
 export function ProfileForm() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const { regions } = useRegion();
 
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingSecurity, setSavingSecurity] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const defaults = useMemo(
     () => ({
@@ -82,10 +86,40 @@ export function ProfileForm() {
     form.reset(defaults);
   }, [defaults, form]);
 
+  useEffect(() => {
+    // Pré-remplir l'aperçu avec l'avatar existant
+    setAvatarPreview(user?.avatar || auth.currentUser?.photoURL || null);
+  }, [user]);
+
+  const onSelectAvatar: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      validateFile(file, 5 * 1024 * 1024, ['image/']); // 5MB max, uniquement images
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    } catch (err: any) {
+      toast({ title: "Fichier invalide", description: err?.message || "Image non valide", variant: "destructive" });
+    }
+  };
+
+  const onRemoveAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(user?.avatar || auth.currentUser?.photoURL || null);
+  };
+
   const onSaveProfile = async (values: z.infer<typeof profileSchema>) => {
     if (!user?.id || !auth.currentUser) return;
     setSavingProfile(true);
     try {
+      // Upload avatar si un nouveau fichier a été choisi
+      let avatarUrl: string | undefined;
+      if (avatarFile) {
+        avatarUrl = await uploadImageToCloudinary(avatarFile);
+        await updateProfile(auth.currentUser, {
+          photoURL: avatarUrl,
+        });
+      }
       // Update Auth profile (displayName, photoURL)
       await updateProfile(auth.currentUser, {
         displayName: values.displayName,
@@ -102,7 +136,13 @@ export function ProfileForm() {
         displayName: values.displayName,
         phone: values.phone || null,
         regionId: values.regionId || null,
+        ...(avatarUrl ? { avatar: avatarUrl } : {}),
       });
+
+      // Mettre à jour le contexte local immédiatement si avatar changé
+      if (avatarUrl) {
+        await updateUser({ avatar: avatarUrl });
+      }
 
       toast({
         title: "Profil mis à jour",
@@ -149,6 +189,31 @@ export function ProfileForm() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSaveProfile)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Avatar uploader */}
+              <div className="sm:col-span-2 flex items-center gap-4">
+                <Avatar className="h-16 w-16 border">
+                  {avatarPreview ? (
+                    <AvatarImage src={avatarPreview} alt="Photo de profil" />
+                  ) : (
+                    <AvatarFallback>{(user?.name || 'U').charAt(0)}</AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <label htmlFor="avatar-input">
+                      <input id="avatar-input" type="file" accept="image/*" className="hidden" onChange={onSelectAvatar} />
+                      <Button type="button" variant="outline" onClick={() => document.getElementById('avatar-input')?.click()}>
+                        Changer la photo
+                      </Button>
+                    </label>
+                    {avatarFile && (
+                      <Button type="button" variant="ghost" onClick={onRemoveAvatar}>Annuler</Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">PNG, JPG, max 5MB.</p>
+                </div>
+              </div>
+
               <FormField
                 control={form.control}
                 name="displayName"

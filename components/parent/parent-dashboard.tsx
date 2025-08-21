@@ -29,6 +29,7 @@ import { ParentCalendarView } from '@/components/parent/parent-calendar-view';
 import { ParentChildListCard } from '@/components/parent/parent-child-list-card';
 import { ParentUpcomingTrip } from '@/components/parent/parent-upcoming-trip';
 import { FeaturedChildProfile } from '@/components/parent/featured-child-profile';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import { useRegion } from '@/hooks/use-region';
 import { useDashboard } from '@/hooks/use-dashboard';
@@ -212,9 +213,20 @@ export function ParentDashboard() {
                   <div className="space-y-6">
                     <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border">
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
-                          <UserRound className="h-6 w-6 text-muted-foreground" />
-                        </div>
+                        <Avatar className="h-12 w-12 rounded-xl border">
+                          <AvatarImage 
+                            src={(children.find(c => c.name === getNextTrip()?.childName)?.avatar) || ''}
+                            alt={getNextTrip()?.childName || 'Enfant'} 
+                          />
+                          <AvatarFallback className="rounded-xl text-sm font-semibold">
+                            {(getNextTrip()?.childName || 'EN')
+                              .split(' ')
+                              .map(n => n[0])
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
                           <h3 className="font-semibold text-lg">{getNextTrip()?.childName}</h3>
                           <p className="text-sm text-muted-foreground">

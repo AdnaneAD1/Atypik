@@ -111,7 +111,7 @@ export function DriverStatsCard({ stats, loading = false, error = null }: Driver
               Cette semaine
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="bg-gradient-to-br from-white to-teal-50/50 dark:from-background dark:to-teal-900/5 p-3 sm:p-4 rounded-xl border border-teal-200/50 dark:border-teal-800/20 shadow-sm">
+              <div className="bg-white dark:bg-background p-3 sm:p-4 rounded-xl border border-gray-200/60 dark:border-gray-800/40 shadow-sm">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="h-6 w-6 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
                     <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400">M</span>
@@ -133,12 +133,12 @@ export function DriverStatsCard({ stats, loading = false, error = null }: Driver
                 </div>
               </div>
               
-              <div className="bg-gradient-to-br from-white to-teal-50/50 dark:from-background dark:to-teal-900/5 p-3 sm:p-4 rounded-xl border border-teal-200/50 dark:border-teal-800/20 shadow-sm">
+              <div className="bg-white dark:bg-background p-3 sm:p-4 rounded-xl border border-gray-200/60 dark:border-gray-800/40 shadow-sm">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="h-6 w-6 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
                     <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400">KM</span>
                   </div>
-                  <p className="text-xs font-medium text-teal-700 dark:text-teal-400">Km parcourus</p>
+                  <p className="text-xs font-medium text-teal-700 dark:text-teal-400">Km totaux</p>
                 </div>
                 <div className="flex items-baseline">
                   <motion.p
@@ -150,7 +150,7 @@ export function DriverStatsCard({ stats, loading = false, error = null }: Driver
                     <AnimatedCounter value={stats.kmTraveled} duration={2} delay={0.8} decimalPlaces={1} />
                   </motion.p>
                   <p className="text-xs font-medium text-teal-600/70 dark:text-teal-500/70 ml-2">
-                    Kilomètres parcourus
+                    Kilomètres totaux
                   </p>
                 </div>
               </div>

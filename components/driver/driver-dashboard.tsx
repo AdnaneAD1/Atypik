@@ -123,7 +123,7 @@ export function DriverDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {statsData.map((stat, index) => (
             <div key={index}>
-              <Card className="h-full border-0 bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 shadow-lg rounded-xl overflow-hidden">
+              <Card className="h-full border-0 bg-gradient-to-br from-red-50 to-red-100/60 dark:from-gray-800 dark:to-gray-700/80 shadow-lg rounded-xl overflow-hidden">
                 <CardContent className="p-4 flex flex-col h-full">
                   <div className="flex justify-between items-center mb-2">
                     <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useToast } from './use-toast';
-import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, Timestamp, getDoc, doc } from 'firebase/firestore';
 import { db } from '@/firebase/ClientApp';
 
 // Type pour les événements de transport chauffeur
@@ -27,6 +27,7 @@ export type DriverTransportEvent = {
     placeId?: string;
   };
   distance: number; // en mètres (obligatoire, 0 par défaut)
+  childAvatar?: string | null;
 };
 
 export function useDriversTransport(driverId: string | undefined) {
@@ -44,23 +45,40 @@ export function useDriversTransport(driverId: string | undefined) {
       const transportRef = collection(db, 'transports');
       const q = query(transportRef, where('driverId', '==', driverId));
       const querySnapshot = await getDocs(q);
-      const results: DriverTransportEvent[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        results.push({
-          id: doc.id,
-          childId: data.childId,
-          childName: data.childName,
-          date: data.date instanceof Timestamp ? data.date.toDate() : new Date(data.date),
-          time: data.time,
-          transportType: data.transportType,
-          userId: data.userId,
-          driverId: data.driverId,
-          from: data.from,
-          to: data.to,
-          distance: data.distance || 0,
-        });
-      });
+
+      const results: DriverTransportEvent[] = await Promise.all(
+        querySnapshot.docs.map(async (d) => {
+          const data = d.data();
+          let childAvatar: string | null | undefined = null;
+          try {
+            if (data.childId) {
+              const childRef = doc(db, 'children', data.childId);
+              const childSnap = await getDoc(childRef);
+              if (childSnap.exists()) {
+                const childData = childSnap.data() as { avatar?: string | null };
+                childAvatar = childData.avatar ?? null;
+              }
+            }
+          } catch (_) {
+            // ignore avatar fetch errors
+          }
+          return {
+            id: d.id,
+            childId: data.childId,
+            childName: data.childName,
+            date: data.date instanceof Timestamp ? data.date.toDate() : new Date(data.date),
+            time: data.time,
+            transportType: data.transportType,
+            userId: data.userId,
+            driverId: data.driverId,
+            from: data.from,
+            to: data.to,
+            distance: data.distance || 0,
+            childAvatar,
+          } as DriverTransportEvent;
+        })
+      );
+
       setTransports(results);
     } catch (err) {
       setError('Impossible de charger les transports');

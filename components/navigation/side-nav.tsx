@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface SideNavProps {
   className?: string;
@@ -149,9 +150,12 @@ export function SideNav({ className }: SideNavProps) {
       {/* En-tête du menu */}
       <div className="p-4 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-            <UserRound className="h-5 w-5 text-primary" />
-          </div>
+          <Avatar className="h-8 w-8 border">
+            <AvatarImage src={user.avatar || ''} alt={user.name || 'Utilisateur'} />
+            <AvatarFallback>
+              {(user.name || 'U').split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div>
             <p className="text-sm font-medium">{user.name || 'Utilisateur'}</p>
             <p className="text-xs text-muted-foreground">{isAdmin ? 'Espace Admin' : isParent ? 'Espace Parent' : 'Espace Chauffeur'}</p>
