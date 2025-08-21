@@ -119,7 +119,7 @@ export function DriverStats() {
             <p className="text-xs text-muted-foreground mt-1">
               Basé sur {stats.totalReviews} évaluation{stats.totalReviews > 1 ? 's' : ''}
             </p>
-            <Progress value={(stats.averageRating / 5) * 100} className="h-2 mt-2" />
+            
           </CardContent>
         </Card>
 
@@ -135,7 +135,7 @@ export function DriverStats() {
             <p className="text-xs text-muted-foreground mt-1">
               {stats.trends.missionsGrowth >= 0 ? '+' : ''}{stats.trends.missionsGrowth.toFixed(1)}% par rapport au mois dernier
             </p>
-            <Progress value={Math.min((stats.thisMonthMissions / Math.max(stats.totalMissions, 1)) * 100, 100)} className="h-2 mt-2" />
+            
           </CardContent>
         </Card>
 
@@ -151,7 +151,7 @@ export function DriverStats() {
             <p className="text-xs text-muted-foreground mt-1">
               {stats.trends.kmGrowth >= 0 ? '+' : ''}{stats.trends.kmGrowth.toFixed(1)}% vs mois dernier
             </p>
-            <Progress value={Math.min((stats.thisMonthKmTraveled / Math.max(stats.totalKmTraveled, 1)) * 100, 100)} className="h-2 mt-2" />
+            
           </CardContent>
         </Card>
 

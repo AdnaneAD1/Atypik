@@ -60,15 +60,30 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
   // Si aucune mission active, afficher un message
   if (!mission) {
     return (
-      <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-primary/5 dark:from-gray-800 dark:to-gray-700/80 rounded-xl border-t-4 border-t-primary">
-        <CardContent className="p-6">
-          <div className="text-center py-8">
-            <Car className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-muted-foreground mb-2">Aucune mission active</h3>
-            <p className="text-sm text-muted-foreground">Vous n&apos;avez pas de mission en cours pour le moment.</p>
-          </div>
-        </CardContent>
-      </Card>
+<Card className="overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl bg-white dark:bg-gray-900 transition-transform hover:scale-[1.02] hover:shadow-xl duration-300">
+  <CardContent className="p-8">
+    <div className="text-center py-6">
+      {/* Icône dans un cercle animé */}
+      <div className="flex items-center justify-center mb-6">
+        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse shadow-inner">
+          <Car className="h-8 w-8 text-primary" />
+        </div>
+      </div>
+
+      {/* Titre */}
+      <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+        Aucune mission active
+      </h3>
+
+      {/* Texte */}
+      <p className="text-sm text-muted-foreground">
+        Vous n&apos;avez pas de mission en cours pour le moment.
+      </p>
+    </div>
+  </CardContent>
+</Card>
+
+
     );
   }
 
@@ -180,52 +195,40 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
 
   return (
     <>
-      <Card className="rounded-lg bg-card text-card-foreground overflow-hidden border-0 shadow-lg bg-gradient-to-br from-background to-secondary/10">
-        <div className="flex flex-col space-y-1.5 p-6 pb-2">
-          <h3 className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10">
-              <MapPin className="h-4 w-4 text-primary" />
-            </div>
-            <span>Mission en cours</span>
-          </h3>
-          <p className="text-sm text-muted-foreground">Suivez en temps réel le transport de votre enfant</p>
+ 
+ <Card className="rounded-lg bg-card text-card-foreground overflow-hidden border-0 shadow-lg bg-gradient-to-br from-background to-secondary/10">
+  {/* Header avec statut et boutons */}
+  <div className="bg-primary/5 border-b border-primary/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+        <Car className="h-5 w-5 text-primary" />
+      </div>
+      <div>
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-semibold">Transport en cours</h3>
+          <div className="inline-flex items-center rounded-full border transition-colors bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 text-[10px] font-medium px-2 py-0 h-5">
+            En route
+          </div>
         </div>
-        
-        <CardContent className="p-6 pt-0 pb-6">
-          <Card className="rounded-lg text-card-foreground border-0 shadow-md bg-card overflow-hidden">
-            <div className="p-0">
-              {/* Header avec statut et boutons */}
-              <div className="bg-primary/5 border-b border-primary/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Car className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-semibold">Transport en cours</h3>
-                      <div className="inline-flex items-center rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 text-[10px] font-medium px-2 py-0 h-5">
-                        En route
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Départ {mission.time}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-primary/20 text-primary hover:bg-primary/5 hover:text-primary text-xs h-9 px-3 rounded-md"
-                    onClick={handleCallParent}
-                  >
-                    <Phone className="h-3.5 w-3.5 mr-1.5" />
-                    <span>Contacter</span>
-                  </Button>
-                </div>
-              </div>
-              
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Départ {mission.time}
+        </p>
+      </div>
+    </div>
+    
+    <div className="flex items-center gap-2">                  
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="border-primary/20 text-primary hover:bg-primary/5 hover:text-primary text-xs h-9 px-3 rounded-md"
+        onClick={handleCallParent}
+      >
+        <Phone className="h-3.5 w-3.5 mr-1.5" />
+        <span>Contacter</span>
+      </Button>
+    </div>
+  </div>
+
               <div className="p-4 sm:p-5">
                 {/* Informations sur l'enfant */}
                 <div className="flex items-center gap-3 mb-5">
@@ -342,11 +345,9 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
                     </Button>
                   </div>
                 </div>
-              </div>
-            </div>
-          </Card>
-        </CardContent>
-      </Card>
+              </div> 
+</Card>
+
       
       {/* Popups */}
       <NeedsPopup />

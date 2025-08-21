@@ -151,9 +151,10 @@ export function DriverUpcomingMissions({ missions }: DriverUpcomingMissionsProps
   
   return (
     <>
-      <Card className="rounded-lg bg-card text-card-foreground overflow-hidden border-0 shadow-lg bg-gradient-to-br from-background to-secondary/10">
+      <Card className="rounded-lg bg-card text-card-foreground overflow-hidden border border-gray-200 dark:border-gray-700 shadow-md">
+
         <div className="flex flex-col space-y-1.5 p-6 pb-2">
-          <h3 className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
+          <h3 className="font-semibold text-base sm:text-lg whitespace-nowrap   leading-none tracking-tight flex items-center gap-2">
             <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10">
               <Clock className="h-4 w-4 text-primary" />
             </div>
