@@ -182,119 +182,198 @@ export function ParentDashboard() {
             </motion.p>
           </div>
 
-          {/* Mission en cours - Redesignée */}
-          <motion.div variants={itemVariants}>
-            <Card className="border shadow-md bg-card hover:shadow-lg transition-all duration-300 overflow-hidden">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-3">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10">
-                      <Navigation className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <span className="text-lg font-semibold">Mission Active</span>
-                      <p className="text-sm text-muted-foreground font-normal mt-0.5">Suivi en temps réel</p>
-                    </div>
-                  </CardTitle>
-                  {getNextTrip() && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                      En cours
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="pb-6">
-                {loading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-muted border-t-primary"></div>
-                  </div>
-                ) : getNextTrip() ? (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12 rounded-xl border">
-                          <AvatarImage 
-                            src={(children.find(c => c.name === getNextTrip()?.childName)?.avatar) || ''}
-                            alt={getNextTrip()?.childName || 'Enfant'} 
-                          />
-                          <AvatarFallback className="rounded-xl text-sm font-semibold">
-                            {(getNextTrip()?.childName || 'EN')
-                              .split(' ')
-                              .map(n => n[0])
-                              .join('')
-                              .slice(0, 2)
-                              .toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-lg">{getNextTrip()?.childName}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {getNextTrip()?.scheduledTime.toLocaleDateString('fr-FR', { 
-                              weekday: 'long',
-                              day: 'numeric',
-                              month: 'long'
-                            })} à {getNextTrip()?.scheduledTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-base font-semibold">{getNextTrip()?.driverName}</p>
-                        <p className="text-sm text-muted-foreground">Chauffeur attitré</p>
-                      </div>
-                    </div>
-                    
-                    <div className="relative">
-                      <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-green-500 to-red-500 rounded-full"></div>
-                      <div className="space-y-4 relative">
-                        <div className="flex items-center gap-4 pl-0">
-                          <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center border border-green-200">
-                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                          </div>
-                          <div className="flex-1 p-3 bg-white rounded-xl border">
-                            <p className="text-xs font-medium text-green-600 mb-1">DÉPART</p>
-                            <p className="text-sm font-medium">{getNextTrip()?.from.address}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 pl-0">
-                          <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center border border-red-200">
-                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                          </div>
-                          <div className="flex-1 p-3 bg-white rounded-xl border">
-                            <p className="text-xs font-medium text-red-600 mb-1">ARRIVÉE</p>
-                            <p className="text-sm font-medium">{getNextTrip()?.to.address}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Route className="h-4 w-4" />
-                          <span>{((getNextTrip()?.distance || 0) / 1000).toFixed(1)} km</span>
-                        </div>
-                      </div>
-                      <Button 
-                        onClick={() => router.push('/parent/tracking')}
-                        className="px-6"
-                      >
-                        Suivre en temps réel
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                      <Clock className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="font-semibold mb-2">Aucun trajet en cours</h3>
-                    <p className="text-muted-foreground">Vous serez notifié dès qu&apos;une mission démarre</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+{/* Mission en cours - Redesign avec couleurs d'origine */}
+<motion.div variants={itemVariants}>
+  <Card className="border shadow-lg bg-card hover:shadow-xl transition-all duration-300 overflow-hidden">
+    <CardHeader className="pb-4">
+      <div className="flex items-center justify-between">
+        <CardTitle className="flex items-center gap-3">
+          <div className="relative flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10">
+            <Navigation className="h-5 w-5 text-primary" />
+            {/* Animation subtile de pulsation */}
+            <motion.span 
+              animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="absolute -inset-1 rounded-xl bg-primary/20"
+            ></motion.span>
+          </div>
+          <div>
+            <span className="text-lg font-semibold">Mission Active</span>
+            <p className="text-sm text-muted-foreground font-normal mt-0.5">Suivi en temps réel</p>
+          </div>
+        </CardTitle>
+        {getNextTrip() && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200"
+          >
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="w-2 h-2 bg-emerald-500 rounded-full"
+            ></motion.div>
+            En cours
           </motion.div>
+        )}
+      </div>
+    </CardHeader>
+    
+    <CardContent className="pb-6">
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <motion.div 
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="rounded-full h-8 w-8 border-2 border-muted border-t-primary"
+          ></motion.div>
+        </div>
+      ) : getNextTrip() ? (
+        <div className="space-y-6">
+          {/* Carte enfant et chauffeur */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border"
+          >
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Avatar className="h-12 w-12 rounded-xl border">
+                  <AvatarImage 
+                    src={(children.find(c => c.name === getNextTrip()?.childName)?.avatar) || ''}
+                    alt={getNextTrip()?.childName || 'Enfant'} 
+                  />
+                  <AvatarFallback className="rounded-xl text-sm font-semibold">
+                    {(getNextTrip()?.childName || 'EN')
+                      .split(' ')
+                      .map(n => n[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border border-white"></div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{getNextTrip()?.childName}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {getNextTrip()?.scheduledTime.toLocaleDateString('fr-FR', { 
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long'
+                  })} à {getNextTrip()?.scheduledTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-base font-semibold">{getNextTrip()?.driverName}</p>
+              <p className="text-sm text-muted-foreground">Chauffeur attitré</p>
+            </div>
+          </motion.div>
+          
+          {/* Trajet avec animation */}
+          <div className="relative">
+            {/* Ligne de connexion animée */}
+            <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-green-400/30 to-red-400/30 rounded-full">
+              <motion.div 
+                animate={{ 
+                  translateY: ["0%", "100%", "0%"]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="w-full h-4 bg-gradient-to-b from-primary/50 to-primary rounded-full"
+              ></motion.div>
+            </div>
+            
+            <div className="space-y-4 relative">
+              {/* Point de départ */}
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-4 pl-0"
+              >
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center border border-green-200">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-0 rounded-xl bg-green-200"
+                  ></motion.div>
+                </div>
+                <div className="flex-1 p-3 bg-white rounded-xl border">
+                  <p className="text-xs font-medium text-green-600 mb-1">DÉPART</p>
+                  <p className="text-sm font-medium">{getNextTrip()?.from.address}</p>
+                </div>
+              </motion.div>
+              
+              {/* Point d'arrivée */}
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-center gap-4 pl-0"
+              >
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center border border-red-200">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  </div>
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                    className="absolute inset-0 rounded-xl bg-red-200"
+                  ></motion.div>
+                </div>
+                <div className="flex-1 p-3 bg-white rounded-xl border">
+                  <p className="text-xs font-medium text-red-600 mb-1">ARRIVÉE</p>
+                  <p className="text-sm font-medium">{getNextTrip()?.to.address}</p>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+          
+          {/* Informations supplémentaires et bouton */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex items-center justify-between pt-2"
+          >
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Route className="h-4 w-4" />
+                <span>{((getNextTrip()?.distance || 0) / 1000).toFixed(1)} km</span>
+              </div>
+            </div>
+            
+              <Button 
+                onClick={() => router.push('/parent/tracking')}
+                className="px-6 bg-primary hover:bg-primary/90"
+              >
+                <Navigation className="h-4 w-4 mr-2" />
+                Suivre en temps réel
+              </Button>
+            
+              </motion.div>
+        </div>
+      ) : (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-12"
+        >
+          <div className="w-16 h-16 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+            <Clock className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="font-semibold mb-2">Aucun trajet en cours</h3>
+          <p className="text-muted-foreground">Vous serez notifié dès qu&apos;une mission démarre</p>
+        </motion.div>
+      )}
+    </CardContent>
+  </Card>
+</motion.div>
 
           {/* Grille principale */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
