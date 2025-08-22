@@ -125,9 +125,12 @@ export function DriverCalendar() {
                     className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-secondary/50 rounded-lg hover:bg-secondary/70 transition-colors cursor-pointer"
                     onClick={() => handleOpenMissionDetail(mission)}
                   >
-                    <div className="flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 text-primary font-medium text-xs sm:text-sm">
-                      {mission.time}
-                    </div>
+                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border">
+                      <AvatarImage src={(mission as any)?.childAvatar || (mission as any)?.child?.avatar || ''} alt={mission.childName || 'Enfant'} />
+                      <AvatarFallback>
+                        {mission.childName ? mission.childName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'EN'}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <User className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
