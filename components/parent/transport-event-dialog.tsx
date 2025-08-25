@@ -30,6 +30,8 @@ import { fr } from 'date-fns/locale';
 import { useChildren } from '@/hooks/use-children';
 import { useAuth } from '@/lib/auth/auth-context';
 import { AddressSelector } from '@/components/ui/address-selector';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/firebase/ClientApp';
 
 // Fonction pour comparer les dates sans tenir compte de l'heure
 const isSameOrAfterToday = (date: Date) => {
@@ -64,13 +66,15 @@ const formSchema = z.object({
   childName: z.string().optional(),
   motif: z
     .string()
+    .min(1, 'Motif requis')
     .max(200, '200 caractères max')
-    .optional()
-    .transform((v) => (v && v.trim() !== '' ? v.trim() : undefined)),
+    .transform((v) => (typeof v === 'string' ? v.trim() : v)),
   waitingTime: z
-    .preprocess((v) => (v === '' || v === null || typeof v === 'undefined' ? undefined : Number(v)),
-      z.number().int().min(0, 'Doit être >= 0').max(240, 'Max 240 minutes').optional()
-    ),
+    .preprocess((v) => {
+      if (v === null || typeof v === 'undefined') return NaN;
+      if (typeof v === 'string' && v.trim() === '') return NaN;
+      return Number(v);
+    }, z.number({ invalid_type_error: 'Délai d\'attente requis' }).int().min(0, 'Doit être >= 0').max(240, 'Max 240 minutes')),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -149,7 +153,7 @@ export function TransportEventDialog({
       to: { address: '', lat: 0, lng: 0 },
       distance: undefined,
       motif: '',
-      waitingTime: undefined,
+      waitingTime: 0,
     },
   });
 
@@ -193,7 +197,7 @@ export function TransportEventDialog({
         date: selectedDate,
         time: '08:00',
         motif: '',
-        waitingTime: undefined,
+        waitingTime: 0,
       });
     }
   }, [open, selectedDate, form]);
@@ -258,6 +262,43 @@ export function TransportEventDialog({
             console.error('Erreur envoi notification push:', e);
           }
 
+          // Envoi email (best-effort) au chauffeur sélectionné
+          try {
+            const driverId = user?.selectedDriverId;
+            if (driverId) {
+              const driverSnap = await getDoc(doc(db, 'users', driverId));
+              const driverData = driverSnap.exists() ? (driverSnap.data() as any) : null;
+              const driverEmail: string | undefined = driverData?.email;
+              const driverName: string = driverData?.displayName || driverData?.name || 'Chauffeur';
+              if (driverEmail) {
+                const subject = `Nouveau transport programmé • ${childName} • ${format(data.date, 'dd/MM/yyyy', { locale: fr })}`;
+                const messageHtml = `
+                  <p style="margin:4px 0;">Bonjour ${driverName},</p>
+                  <p style="margin:4px 0;">Un parent a programmé un transport.</p>
+                  <p style="margin:4px 0;"><strong>Enfant:</strong> ${childName}</p>
+                  <p style="margin:4px 0;"><strong>Date:</strong> ${format(data.date, 'dd/MM/yyyy', { locale: fr })} à ${data.time}</p>
+                  <p style="margin:4px 0;"><strong>Type:</strong> ${data.transportType}</p>
+                  <p style="margin:4px 0;"><strong>Motif:</strong> ${data.motif}</p>
+                  <p style="margin:4px 0;"><strong>Délai d'attente:</strong> ${typeof data.waitingTime === 'number' ? data.waitingTime : ''} min</p>
+                  <p style="margin:4px 0;"><strong>Départ:</strong> ${from.address}</p>
+                  <p style="margin:4px 0;"><strong>Arrivée:</strong> ${to.address}</p>
+                  ${typeof distance === 'number' ? `<p style=\"margin:4px 0;\"><strong>Distance estimée:</strong> ${(distance / 1000).toFixed(2)} km</p>` : ''}
+                `;
+                await fetch('/api/email/send', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    to: driverEmail,
+                    subject,
+                    template: 'generic',
+                    variables: { title: 'Nouveau transport programmé', messageHtml },
+                  }),
+                });
+              }
+            }
+          } catch (e) {
+            console.error('Erreur envoi email au chauffeur:', e);
+          }
           form.reset();
           setFrom(null); setTo(null); setDistance(null);
           onOpenChange(false);
@@ -280,8 +321,8 @@ export function TransportEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
+        <DialogHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
           <DialogTitle>Programmer un transport</DialogTitle>
           <DialogDescription className="flex flex-col space-y-1">
             <span>Pour le {selectedDate ? format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr }) : ''}</span>
@@ -295,7 +336,9 @@ export function TransportEventDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
+            {/* Enfant et type de transport */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
               control={form.control}
               name="childId"
               render={({ field }) => (
@@ -306,7 +349,7 @@ export function TransportEventDialog({
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Sélectionner un enfant" />
                       </SelectTrigger>
                     </FormControl>
@@ -332,8 +375,7 @@ export function TransportEventDialog({
                 </FormItem>
               )}
             />
-
-            <FormField
+              <FormField
               control={form.control}
               name="transportType"
               render={({ field }) => (
@@ -344,7 +386,7 @@ export function TransportEventDialog({
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Sélectionner le type" />
                       </SelectTrigger>
                     </FormControl>
@@ -358,20 +400,39 @@ export function TransportEventDialog({
                 </FormItem>
               )}
             />
+            </div>
 
-            <FormField
-              control={form.control}
-              name="time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Heure de prise en charge</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Heure et délai d'attente */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Heure de prise en charge</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Délai d'attente en minutes */}
+              <FormField
+                control={form.control}
+                name="waitingTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Délai d&apos;attente (minutes)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={0} max={240} required placeholder="Ex: 30" value={field.value as any ?? ''} onChange={(e) => field.onChange(e.target.value)} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Motif (optionnel) */}
             <FormField
@@ -379,65 +440,55 @@ export function TransportEventDialog({
               name="motif"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Motif (optionnel)</FormLabel>
+                  <FormLabel>Motif</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: RDV à l&apos;hôpital, visite médicale, etc." {...field} />
+                    <Input placeholder="Ex: RDV à l&apos;hôpital, visite médicale, etc." required {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Délai d'attente en minutes (optionnel) */}
-            <FormField
-              control={form.control}
-              name="waitingTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Délai d&apos;attente (minutes, optionnel)</FormLabel>
-                  <FormControl>
-                    <Input type="number" min={0} max={240} placeholder="Ex: 30" value={field.value as any ?? ''} onChange={(e) => field.onChange(e.target.value)} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Champ Lieu de départ */}
-            <AddressSelector
-              value={from?.address || ''}
-              onChange={val => {
-                const newFrom = val ? { address: val, lat: 0, lng: 0 } : null;
-                setFrom(newFrom);
-                form.setValue('from', newFrom || { address: '', lat: 0, lng: 0 });
-              }}
-              onSelect={res => {
-                setFrom(res);
-                form.setValue('from', res);
-              }}
-              placeholder="Adresse de départ"
-              restrictRegion={process.env.NEXT_PUBLIC_REGION_CODE || 'FR'}
-              disabled={!mapsLoaded}
-              label="Lieu de départ"
-            />
             
-            {/* Champ Lieu d&apos;arrivée */}
-            <AddressSelector
-              value={to?.address || ''}
-              onChange={val => {
-                const newTo = val ? { address: val, lat: 0, lng: 0 } : null;
-                setTo(newTo);
-                form.setValue('to', newTo || { address: '', lat: 0, lng: 0 });
-              }}
-              onSelect={res => {
-                setTo(res);
-                form.setValue('to', res);
-              }}
-              placeholder="Adresse d&apos;arrivée (France)"
-              restrictRegion="FR"
-              disabled={!mapsLoaded}
-              label="Lieu d&apos;arrivée"
-            />
+
+            {/* Adresses: responsive grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Champ Lieu de départ */}
+              <AddressSelector
+                value={from?.address || ''}
+                onChange={val => {
+                  const newFrom = val ? { address: val, lat: 0, lng: 0 } : null;
+                  setFrom(newFrom);
+                  form.setValue('from', newFrom || { address: '', lat: 0, lng: 0 });
+                }}
+                onSelect={res => {
+                  setFrom(res);
+                  form.setValue('from', res);
+                }}
+                placeholder="Adresse de départ"
+                restrictRegion={process.env.NEXT_PUBLIC_REGION_CODE || 'FR'}
+                disabled={!mapsLoaded}
+                label="Lieu de départ"
+              />
+
+              {/* Champ Lieu d&apos;arrivée */}
+              <AddressSelector
+                value={to?.address || ''}
+                onChange={val => {
+                  const newTo = val ? { address: val, lat: 0, lng: 0 } : null;
+                  setTo(newTo);
+                  form.setValue('to', newTo || { address: '', lat: 0, lng: 0 });
+                }}
+                onSelect={res => {
+                  setTo(res);
+                  form.setValue('to', res);
+                }}
+                placeholder="Adresse d&apos;arrivée (France)"
+                restrictRegion="FR"
+                disabled={!mapsLoaded}
+                label="Lieu d&apos;arrivée"
+              />
+            </div>
             {/* Distance affichée */}
             {distance !== null && distance !== undefined && (
               <div className="text-sm text-primary mt-2">
@@ -446,7 +497,7 @@ export function TransportEventDialog({
             )}
 
 
-            <DialogFooter>
+            <DialogFooter className="sticky bottom-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
                 type="button"
                 variant="outline"

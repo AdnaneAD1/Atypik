@@ -99,6 +99,35 @@ export function useTracking() {
         await updateDoc(transportRef, {
           status: 'in_progress',
         });
+        // Best-effort: notify parent that the trip has started
+        try {
+          const transportSnap = await getDoc(transportRef);
+          const tData = transportSnap.data() as any | undefined;
+          const parentUserId = tData?.userId as string | undefined;
+          const childName = tData?.childName as string | undefined;
+          const fromAddr = tData?.from?.address as string | undefined;
+          const toAddr = tData?.to?.address as string | undefined;
+          if (parentUserId) {
+            await fetch('/api/notifications/send', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: parentUserId,
+                title: childName ? `Le trajet de ${childName} a démarré` : 'Trajet démarré',
+                body: fromAddr && toAddr
+                  ? `Le chauffeur a commencé le trajet: ${fromAddr} → ${toAddr}`
+                  : 'Le chauffeur a commencé le trajet. Vous pouvez suivre le déplacement en direct.',
+                data: {
+                  type: 'transport',
+                  transportId: transportId,
+                  status: 'in_progress'
+                },
+              }),
+            }).catch(() => {});
+          }
+        } catch (notifyErr) {
+          console.warn('Notification startMission failed:', notifyErr);
+        }
       } catch (e) {
         console.warn('Impossible de mettre à jour le statut du transport (start):', e);
       }
@@ -219,6 +248,31 @@ export function useTracking() {
           await updateDoc(transportRef, {
             status: 'completed',
           });
+          // Best-effort: notify parent that the trip has completed
+          try {
+            const transportSnap = await getDoc(transportRef);
+            const tData = transportSnap.data() as any | undefined;
+            const parentUserId = tData?.userId as string | undefined;
+            const childName = tData?.childName as string | undefined;
+            if (parentUserId) {
+              await fetch('/api/notifications/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: parentUserId,
+                  title: childName ? `Trajet terminé pour ${childName}` : 'Trajet terminé',
+                  body: 'Le chauffeur a terminé le trajet. Merci pour votre confiance.',
+                  data: {
+                    type: 'transport',
+                    transportId: transportId,
+                    status: 'completed'
+                  },
+                }),
+              }).catch(() => {});
+            }
+          } catch (notifyErr) {
+            console.warn('Notification completeMission failed:', notifyErr);
+          }
         }
 
         // Enregistrer le gain du chauffeur pour cette mission

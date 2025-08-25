@@ -10,7 +10,7 @@ export default function DriverPending() {
         <h2 className="text-2xl font-bold mb-4 text-primary">Compte en attente de validation</h2>
         <p className="text-muted-foreground mb-6">
           Merci pour votre inscription en tant que chauffeur.<br />
-          Votre compte est en cours d'examen par notre équipe. Vous serez contacté par email ou téléphone dès que votre profil aura été validé.
+          Votre compte est en cours d&apos;examen par notre équipe. Vous serez contacté par email ou téléphone dès que votre profil aura été validé.
         </p>
         <Button variant="outline" onClick={logout} className="flex items-center gap-2 mx-auto">
           <LogOut className="h-4 w-4" />

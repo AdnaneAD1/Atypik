@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           avatar: photoURL,
           status: 'pending', // Par défaut pour un nouveau chauffeur
         });
-        
+
         // Rediriger en fonction du rôle sélectionné
         router.push(role === 'parent' ? '/parent/dashboard' : '/driver/dashboard');
       }
@@ -181,6 +181,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
       });
       
+      // Envoi email de confirmation si nouveau compte chauffeur (best-effort, template brandé)
+      try {
+        if (role === 'driver' && userData.email) {
+          const subject = 'Atypik Driver • Votre compte chauffeur a été créé';
+          const messageHtml = `
+            <p style="margin:4px 0;">Bienvenue ${displayName},</p>
+            <p style="margin:4px 0;">Votre compte chauffeur a bien été créé.</p>
+            <p style="margin:4px 0;">Votre compte est en cours d\'examen par notre équipe. Vous serez contacté dès que votre profil aura été validé.</p>
+          `;
+          await fetch('/api/email/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: userData.email,
+              subject,
+              template: 'generic',
+              variables: { title: 'Compte chauffeur créé', messageHtml },
+            }),
+          });
+        }
+      } catch (e) {
+        console.error('Erreur envoi email inscription chauffeur:', e);
+      }
+
       // Mettre à jour l'état local
       setUser({
         id: userCredential.user.uid,

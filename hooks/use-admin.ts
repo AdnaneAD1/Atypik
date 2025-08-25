@@ -4,6 +4,7 @@ import {
   collection,
   doc,
   getDocs,
+  getDoc,
   query,
   updateDoc,
   where,
@@ -53,6 +54,31 @@ export function useAdmin() {
   const approveDriver = async (driverId: string) => {
     await updateDoc(doc(db, 'users', driverId), { status: 'verified' });
     setUsers((prev) => prev.map((u) => (u.id === driverId ? { ...u, status: 'verified' } : u)));
+
+    // Best-effort: envoyer un email d'information au chauffeur (template brandé)
+    try {
+      const snap = await getDoc(doc(db, 'users', driverId));
+      if (snap.exists()) {
+        const data = snap.data() as any;
+        const email: string | undefined = data?.email;
+        const name: string = data?.displayName || data?.name || 'Chauffeur';
+        if (email) {
+          const subject = 'Atypik Driver • Votre compte a été validé';
+          await fetch('/api/email/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: email,
+              subject,
+              template: 'accountApproved',
+              variables: { name },
+            }),
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Erreur lors de l\'envoi de l\'email de validation chauffeur:', e);
+    }
   };
 
   const assignDriverToParent = async (parentId: string, driverId: string) => {
