@@ -44,18 +44,19 @@ export const generateToken = async (): Promise<string | null> => {
         if (!supported || !messaging) return null;
         if (typeof Notification === 'undefined') return null;
         const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return null;
+        if (permission !== 'granted') {
+          return null;
+        }
         const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
         if (!vapidKey) {
             console.error('NEXT_PUBLIC_FIREBASE_VAPID_KEY manquante');
             return null;
         }
-        const token = await getToken(messaging, { vapidKey }).catch((e) => {
-            console.error('getToken error:', e);
+        const token = await getToken(messaging, { vapidKey }).catch((err) => {
+            console.error('getToken error:', err);
             return null;
         });
         if (token) {
-            console.log('FCM token:', token);
             return token;
         }
         return null;

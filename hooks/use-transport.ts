@@ -111,8 +111,6 @@ export function useTransport() {
     try {
       const transportRef = collection(db, 'transports');
       // S'assurer que tous les champs obligatoires sont présents et valides
-      console.log('Données reçues dans addTransport:', data);
-      console.log('Distance reçue:', data.distance, typeof data.distance);
       
       // Construire l'objet sans champs undefined
       const newTransport: any = {
@@ -135,9 +133,6 @@ export function useTransport() {
         newTransport.waitingTime = data.waitingTime;
       }
       
-      console.log('Transport à enregistrer dans Firestore:', newTransport);
-      console.log('Distance finale:', newTransport.distance);
-
       const docRef = await addDoc(transportRef, newTransport);
       
       // Recharge la liste des transports depuis Firestore après ajout

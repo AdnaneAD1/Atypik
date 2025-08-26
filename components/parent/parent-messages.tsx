@@ -64,17 +64,11 @@ export function ParentMessages() {
   
   // Afficher des informations sur l'utilisateur et l'état d'authentification
   useEffect(() => {
-    console.log('ParentMessages - État de l\'utilisateur:', { 
-      user, 
-      isAuthenticated: !!user,
-      userId: user?.id // Utiliser id car c'est la propriété dans le type User de auth-context
-    });
   }, [user]);
 
   // Charger les messages de la conversation sélectionnée
   useEffect(() => {
     if (selectedConversationId) {
-      console.log('Chargement des messages pour la conversation:', selectedConversationId);
       loadMessages(selectedConversationId);
     }
   }, [selectedConversationId, loadMessages]);
@@ -91,19 +85,15 @@ export function ParentMessages() {
   // Sélectionner automatiquement la première conversation disponible si aucune n'est sélectionnée
   // SEULEMENT sur desktop pour éviter la sélection automatique sur mobile
   useEffect(() => {
-    console.log('Conversations disponibles:', conversations);
     // Vérifier si on est sur desktop (largeur d'écran >= 768px)
     const isDesktop = window.innerWidth >= 768;
     if (conversations.length > 0 && !selectedConversationId && isDesktop) {
-      console.log('Sélection automatique de la première conversation (desktop seulement):', conversations[0].id);
       setSelectedConversationId(conversations[0].id);
     }
   }, [conversations, selectedConversationId]);
 
   // Gestionnaires d'événements
   const handleSendMessage = async (content: string, attachments: any[] = []) => {
-    console.log('handleSendMessage appelé avec:', { content, attachments, replyingTo });
-    
     if (!selectedConversationId) {
       console.error('handleSendMessage: Aucune conversation sélectionnée');
       toast({
@@ -114,9 +104,7 @@ export function ParentMessages() {
       return;
     }
     
-    console.log('Envoi du message à la conversation:', selectedConversationId);
     const messageId = await sendMessage(selectedConversationId, content, attachments, replyingTo);
-    console.log('Message envoyé, ID:', messageId);
     setReplyingTo(null);
 
     // Envoyer une notification au correspondant (autre participant)
@@ -152,9 +140,6 @@ export function ParentMessages() {
   };
 
   const handleCreateConversation = async (participants: string[]) => {
-    console.log('handleCreateConversation called with participants:', participants);
-    console.log('User state:', user);
-    
     if (!user) {
       console.error('Erreur: utilisateur non connecté');
       toast({
@@ -168,12 +153,10 @@ export function ParentMessages() {
     
     setLoadingUsers(true);
     const conversationId = await createConversation(participants);
-    console.log('Conversation créée avec ID:', conversationId);
     setLoadingUsers(false);
     setNewConversationDialogOpen(false);
     if (conversationId) {
       setSelectedConversationId(conversationId);
-      console.log('Conversation sélectionnée:', conversationId);
     } else {
       console.error('Impossible de créer la conversation: conversationId est null');
       toast({

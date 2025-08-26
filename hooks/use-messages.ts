@@ -83,13 +83,6 @@ export function useMessages() {
   const { user, isAuthenticated } = useAuth();
   // user: { id, name, email, role, avatar }
   
-  // Débogage de l'état de l'utilisateur
-  console.log('useMessages - État de l\'authentification:', { 
-    isAuthenticated, 
-    user,
-    userId: user?.id
-  });
-  
   const { toast } = useToast();
   const { uploadFile, isUploading, progress } = useFileUpload();
   
@@ -104,7 +97,6 @@ export function useMessages() {
 
   // Charger les conversations de l'utilisateur
   const loadConversations = useCallback(async () => {
-    console.log('loadConversations appelé, user:', user);
     
     const userId = user?.id;
     
@@ -113,8 +105,6 @@ export function useMessages() {
       return;
     }
     
-    console.log('loadConversations: utilisateur connecté avec ID:', userId);
-
     setLoading(true);
     setError(null);
 
@@ -321,7 +311,6 @@ export function useMessages() {
     attachments: File[] = [],
     replyToMessage?: Message
   ) => {
-    console.log('sendMessage appelé avec:', { conversationId, content, attachments, replyToMessage });
     
     // Récupérer l'ID de l'utilisateur (peut être uid pour FirebaseUser ou id pour notre type User)
     const userId = user?.id;
@@ -346,8 +335,6 @@ export function useMessages() {
       return null;
     }
     
-    console.log('sendMessage: toutes les vérifications passées, envoi du message avec userId:', userId);
-
     try {
       // Uploader les pièces jointes si présentes
       const uploadedAttachments: MessageAttachment[] = [];
@@ -435,7 +422,6 @@ export function useMessages() {
 
   // Créer une nouvelle conversation
   const createConversation = useCallback(async (participants: string[]) => {
-    console.log('createConversation called with participants:', participants);
     
     // Vérifier que l'utilisateur est connecté
     // L'utilisateur peut avoir soit uid (Firebase) soit id (notre structure personnalisée)
@@ -451,16 +437,9 @@ export function useMessages() {
       return null;
     }
     
-    // Afficher les informations de l'utilisateur pour le débogage
-    console.log('User info in createConversation:', {
-      userId,
-      userObject: user
-    });
-
     try {
       // S'assurer que l'utilisateur actuel est inclus dans les participants et qu'il n'y a pas de doublons
       const uniqueParticipantIds = Array.from(new Set([userId, ...participants])).sort();
-      console.log('uniqueParticipantIds:', uniqueParticipantIds);
       
       // Vérifier si une conversation existe déjà avec ces participants
       // Firestore ne peut pas comparer des tableaux entiers avec '==', donc nous devons vérifier différemment
@@ -468,32 +447,20 @@ export function useMessages() {
       const q = query(conversationsRef, where('participantIds', 'array-contains', userId));
       const snapshot = await getDocs(q);
       
-      console.log('Conversations existantes pour cet utilisateur:', snapshot.docs.length);
-      
       // Vérifier manuellement si l'une des conversations a exactement les mêmes participants
       for (const doc of snapshot.docs) {
         const data = doc.data();
         const participantIds = data.participantIds || [];
         
-        console.log('Comparaison des participants:', {
-          existants: participantIds,
-          nouveaux: uniqueParticipantIds,
-          tailleIdentique: participantIds.length === uniqueParticipantIds.length,
-          existantsTriés: [...participantIds].sort(),
-          nouveauxTriés: uniqueParticipantIds
-        });
-        
         // Vérifier si les deux tableaux ont la même taille et les mêmes éléments (après tri)
         if (participantIds.length === uniqueParticipantIds.length && 
             JSON.stringify([...participantIds].sort()) === JSON.stringify(uniqueParticipantIds)) {
-          console.log('Conversation existante trouvée avec ID:', doc.id);
           // Retourner la conversation existante
           return doc.id;
         }
       }
 
       // Créer une nouvelle conversation
-      console.log('Création d\'une nouvelle conversation avec participants:', uniqueParticipantIds);
       const conversationData = {
         participantIds: uniqueParticipantIds,
         lastMessage: '',
@@ -503,7 +470,6 @@ export function useMessages() {
       };
 
       const conversationRef = await addDoc(conversationsRef, conversationData);
-      console.log('Nouvelle conversation créée avec ID:', conversationRef.id);
       return conversationRef.id;
     } catch (error) {
       console.error('Erreur lors de la création de la conversation:', error);
@@ -710,8 +676,6 @@ export function useMessages() {
         });
       }
 
-      console.log('Document partagé avec succès:', messageRef.id);
-      
       toast({
         title: 'Document partagé',
         description: `Le document "${document.name}" a été partagé avec succès`,

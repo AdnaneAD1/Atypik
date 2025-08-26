@@ -177,9 +177,7 @@ export function TransportEventDialog({
           const distanceValue = response.rows[0].elements[0].distance.value; // en mètres
           setDistance(distanceValue);
           form.setValue('distance', distanceValue);
-          console.log('Distance calculée:', distanceValue, 'm');
         } else {
-          console.log('Erreur calcul distance:', status, response);
           setDistance(null);
           form.setValue('distance', 0); // Utiliser 0 au lieu de undefined
         }
@@ -228,7 +226,6 @@ export function TransportEventDialog({
           distance: distance // Utiliser directement la distance calculée
         };
         
-        console.log('Données envoyées:', transportData); // Debug
         const result = await onAddEvent(transportData);
         if (result && (result as any).success) {
           toast({

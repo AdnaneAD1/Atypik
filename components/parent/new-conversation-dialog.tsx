@@ -108,20 +108,16 @@ export function NewConversationDialog({
   });
 
   const toggleUserSelection = (userId: string) => {
-    console.log('toggleUserSelection called with userId:', userId);
     setSelectedUsers(prev => {
       const newSelection = prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId];
-      console.log('New selected users:', newSelection);
       return newSelection;
     });
   };
 
   const handleCreateConversation = () => {
-    console.log('handleCreateConversation called, selectedUsers:', selectedUsers);
     if (selectedUsers.length > 0) {
-      console.log('Appel de onCreateConversation avec:', selectedUsers);
       onCreateConversation(selectedUsers);
     } else {
       console.error('Aucun utilisateur sélectionné');

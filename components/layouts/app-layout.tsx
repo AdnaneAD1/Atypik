@@ -106,7 +106,6 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
     if (!messaging) return;
 
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log('Message received. ', payload);
       // ...
     });
 
@@ -262,13 +261,13 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
               </div>
 
               <div className="flex items-center gap-1 sm:gap-2">
-                <Button 
+                {/* <Button 
                   variant="ghost" 
                   size="icon" 
                   className="hidden lg:flex text-muted-foreground hover:text-foreground h-9 w-9"
                 >
                   <HelpCircle className="h-4 w-4" />
-                </Button>
+                </Button> */}
                 <Button 
                   variant="ghost" 
                   size="icon" 

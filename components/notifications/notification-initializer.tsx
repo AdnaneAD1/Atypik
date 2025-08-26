@@ -14,20 +14,15 @@ export function NotificationInitializer() {
           const existingRegistration = await navigator.serviceWorker.getRegistration('/firebase-cloud-messaging-push-scope');
           
           if (!existingRegistration) {
-            console.log('Enregistrement du service worker Firebase...');
-            
             const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
               scope: '/firebase-cloud-messaging-push-scope',
             });
             
-            console.log('Service Worker Firebase enregistré avec succès:', registration);
-            
             // Attendre que le service worker soit prêt
             await navigator.serviceWorker.ready;
-            console.log('Service Worker Firebase prêt');
             
           } else {
-            console.log('Service Worker Firebase déjà enregistré:', existingRegistration);
+            // Service worker déjà enregistré
           }
         } catch (error) {
           console.error('Erreur lors de l\'enregistrement du service worker:', error);

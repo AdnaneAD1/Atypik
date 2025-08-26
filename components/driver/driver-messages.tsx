@@ -47,11 +47,9 @@ export function DriverMessages() {
   // Sélectionner automatiquement la première conversation disponible si aucune n'est sélectionnée
   // SEULEMENT sur desktop pour éviter la sélection automatique sur mobile
   useEffect(() => {
-    console.log('Conversations disponibles:', conversations);
     // Vérifier si on est sur desktop (largeur d'écran >= 768px)
     const isDesktop = window.innerWidth >= 768;
     if (conversations.length > 0 && !selectedConversationId && isDesktop) {
-      console.log('Sélection automatique de la première conversation (desktop seulement):', conversations[0].id);
       setSelectedConversationId(conversations[0].id);
     }
   }, [conversations, selectedConversationId]);

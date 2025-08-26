@@ -19,7 +19,6 @@ export const ourFileRouter = {
       return { userId: "user123" };
     })
     .onUploadComplete(({ metadata, file }) => {
-      console.log("Upload complet", file);
       
       // Retourner simplement les informations du fichier pour le client
       // Sans essayer d'enregistrer dans Firestore pour l'instant

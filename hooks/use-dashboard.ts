@@ -304,7 +304,7 @@ export function useDashboard() {
                 const driverDoc = await getDoc(doc(db, 'users', t.driverId));
                 if (driverDoc.exists()) {
                   const driverData = driverDoc.data();
-                  driverName = driverData.name || 'Chauffeur assigné';
+                  driverName = driverData.displayName || 'Chauffeur assigné';
                   driverAvatar = driverData.avatar;
                 }
               } catch {}
@@ -727,9 +727,7 @@ export function useDashboard() {
   // Obtenir le prochain trajet
   const getNextTrip = useCallback(() => {
     // Ne retourner qu'un trajet réellement en cours
-    console.log(upcomingTrips);
     const active = upcomingTrips.find(t => t.status === 'in-progress');
-    console.log(active);
     return active || null;
   }, [upcomingTrips]);
 

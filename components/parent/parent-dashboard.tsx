@@ -267,8 +267,12 @@ export function ParentDashboard() {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-base font-semibold">{getNextTrip()?.driverName}</p>
-              <p className="text-sm text-muted-foreground">Chauffeur attitré</p>
+              <p className="text-base font-semibold">
+                <span className="text-red-600">
+                  {getNextTrip()?.driverName?.split(' ')[0]}
+                </span>{' '}
+                {getNextTrip()?.driverName?.split(' ').slice(1).join(' ')}
+              </p>
             </div>
           </motion.div>
           
@@ -381,17 +385,17 @@ export function ParentDashboard() {
             <motion.div variants={itemVariants} className="lg:col-span-2 order-1">
               <Card className="border shadow-md bg-card hover:shadow-lg transition-all duration-300 h-full">
                 <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 justify-between">
+                    <CardTitle className="flex items-center gap-3 min-w-0">
                       <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10">
                         <CalendarRange className="h-5 w-5 text-primary" />
                       </div>
-                      <span className="text-lg font-semibold">Planning Hebdomadaire</span>
+                      <span className="text-lg font-semibold truncate">Planning Hebdomadaire</span>
                     </CardTitle>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="transition-colors"
+                      className="transition-colors shrink-0 w-full sm:w-auto mt-2 sm:mt-0"
                       onClick={() => router.push('/parent/calendar')}
                     >
                       <CalendarRange className="h-4 w-4 mr-2" />

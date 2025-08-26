@@ -40,7 +40,6 @@ export const getFCMToken = async (): Promise<string | null> => {
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
         scope: '/firebase-cloud-messaging-push-scope',
       });
-      console.log('Service Worker enregistré:', registration);
     } catch (swError) {
       console.error('Erreur d\'enregistrement du Service Worker:', swError);
       // Continuer même si l'enregistrement échoue, Firebase peut gérer cela
@@ -59,10 +58,8 @@ export const getFCMToken = async (): Promise<string | null> => {
     });
 
     if (token) {
-      console.log('Token FCM obtenu:', token);
       return token;
     } else {
-      console.log('Aucun token FCM disponible');
       return null;
     }
   } catch (error) {
@@ -83,7 +80,6 @@ export const onMessageListener = async () => {
   const { onMessage } = await import('firebase/messaging');
   return new Promise((resolve) => {
     onMessage(messaging!, (payload) => {
-      console.log('Message reçu en premier plan:', payload);
       resolve(payload);
     });
   });
@@ -96,7 +92,6 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
   }
 
   if (!('Notification' in window)) {
-    console.log('Ce navigateur ne supporte pas les notifications');
     return false;
   }
 
@@ -105,7 +100,6 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
   }
 
   if (Notification.permission === 'denied') {
-    console.log('Notifications refusées par l\'utilisateur');
     return false;
   }
 

@@ -252,7 +252,6 @@ export function useNotifications(): NotificationHook {
     if (!messaging) return;
 
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log('Message reçu en premier plan:', payload);
       // Ici vous pouvez afficher une notification toast ou autre
     });
 

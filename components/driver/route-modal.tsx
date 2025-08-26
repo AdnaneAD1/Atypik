@@ -64,13 +64,7 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
   const initializeMap = useCallback(async () => {
     if (!mapRef.current || !mission || !window.google) return;
 
-    console.log('🗺️ Initialisation de la carte avec mission:', {
-      mission,
-      fromCoords: { lat: mission.from.lat, lng: mission.from.lng },
-      toCoords: { lat: mission.to.lat, lng: mission.to.lng },
-      hasFromCoords: mission.from.lat !== undefined && mission.from.lng !== undefined,
-      hasToCoords: mission.to.lat !== undefined && mission.to.lng !== undefined
-    });
+    
 
     // Vérifier si nous avons les coordonnées ou les adresses
     if ((!mission.from.lat || !mission.from.lng) && !mission.from.address) {
@@ -108,7 +102,6 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
 
       // Calculer et afficher l'itinéraire avec géocodage si nécessaire
       setTimeout(() => {
-        console.log('🚗 Calcul de l\'itinéraire avec géocodage...');
         
         const directionsService = new google.maps.DirectionsService();
         routeRendererRef.current = new google.maps.DirectionsRenderer({
@@ -128,8 +121,6 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
         const destination = mission.to.lat && mission.to.lng 
           ? { lat: mission.to.lat, lng: mission.to.lng }
           : mission.to.address;
-        
-        console.log('📍 Requête d\'itinéraire avec géocodage:', { origin, destination });
 
         directionsService.route(
           {
@@ -138,10 +129,7 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
             travelMode: google.maps.TravelMode.DRIVING,
           },
           (result, status) => {
-            console.log('📊 Réponse DirectionsService:', { status, result });
-            
             if (status === 'OK' && routeRendererRef.current && result && result.routes && result.routes[0]) {
-              console.log('✅ Itinéraire affiché avec succès!');
               routeRendererRef.current.setDirections(result);
               
               // Ajuster la vue pour inclure tout l'itinéraire
