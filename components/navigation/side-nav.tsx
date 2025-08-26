@@ -136,11 +136,6 @@ export function SideNav({ className }: SideNavProps) {
       label: 'Profil',
       href: '/profile',
     },
-    {
-      icon: HelpCircle,
-      label: 'Aide',
-      href: isAdmin ? '/admin/help' : `/${user.role}/help`,
-    },
   ];
   
   const navItems = isAdmin ? adminNavItems : isParent ? parentNavItems : driverNavItems;
