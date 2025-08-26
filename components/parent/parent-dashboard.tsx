@@ -206,7 +206,7 @@ export function ParentDashboard() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200 whitespace-nowrap"
           >
             <motion.div 
               animate={{ scale: [1, 1.2, 1] }}
@@ -307,7 +307,7 @@ export function ParentDashboard() {
                     className="absolute inset-0 rounded-xl bg-green-200"
                   ></motion.div>
                 </div>
-                <div className="flex-1 p-3 bg-white rounded-xl border">
+                <div className="flex-1 p-3 bg-card rounded-xl border">
                   <p className="text-xs font-medium text-green-600 mb-1">DÉPART</p>
                   <p className="text-sm font-medium">{getNextTrip()?.from.address}</p>
                 </div>
@@ -330,7 +330,7 @@ export function ParentDashboard() {
                     className="absolute inset-0 rounded-xl bg-red-200"
                   ></motion.div>
                 </div>
-                <div className="flex-1 p-3 bg-white rounded-xl border">
+                <div className="flex-1 p-3 bg-card rounded-xl border">
                   <p className="text-xs font-medium text-red-600 mb-1">ARRIVÉE</p>
                   <p className="text-sm font-medium">{getNextTrip()?.to.address}</p>
                 </div>
