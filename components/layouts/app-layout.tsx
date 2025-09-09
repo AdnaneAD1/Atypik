@@ -313,8 +313,7 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
                           <span>Paramètres</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="flex items-center gap-2 text-sm">
-                          <HelpCircle className="h-4 w-4" />
-                          <span>Aide</span>
+                          <ModeToggle />
                         </DropdownMenuItem>
                       </>
                     )}
