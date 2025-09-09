@@ -11,6 +11,7 @@ import { auth, db } from "@/firebase/ClientApp";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useRegion } from "@/hooks/use-region";
 import { useToast } from "@/hooks/use-toast";
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { uploadImageToCloudinary, validateFile } from "@/hooks/use-cloudinary";
 
@@ -33,6 +34,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertTriangle, Trash2, Loader2 } from "lucide-react";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -52,15 +55,25 @@ const securitySchema = z
     path: ["confirmPassword"],
   });
 
+const deleteAccountSchema = z.object({
+  password: z.string().min(1, "Mot de passe requis"),
+  confirmation: z.string().refine((val) => val === "SUPPRIMER", {
+    message: "Vous devez taper exactement 'SUPPRIMER'",
+  }),
+});
+
 export function ProfileForm() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const { regions } = useRegion();
+  const { deleteAccount } = useFirebaseAuth();
 
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingSecurity, setSavingSecurity] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const defaults = useMemo(
     () => ({
@@ -80,6 +93,11 @@ export function ProfileForm() {
   const securityForm = useForm<z.infer<typeof securitySchema>>({
     resolver: zodResolver(securitySchema),
     defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
+  });
+
+  const deleteForm = useForm<z.infer<typeof deleteAccountSchema>>({
+    resolver: zodResolver(deleteAccountSchema),
+    defaultValues: { password: "", confirmation: "" } as unknown as z.infer<typeof deleteAccountSchema>,
   });
 
   useEffect(() => {
@@ -176,6 +194,28 @@ export function ProfileForm() {
       toast({ title: "Erreur", description: msg, variant: "destructive" });
     } finally {
       setSavingSecurity(false);
+    }
+  };
+
+  const onDeleteAccount = async (values: z.infer<typeof deleteAccountSchema>) => {
+    if (!user?.id) return;
+    
+    setDeletingAccount(true);
+    try {
+      await deleteAccount(values.password);
+      toast({
+        title: "Compte supprimé",
+        description: "Votre compte et toutes vos données ont été supprimés définitivement.",
+      });
+      setDeleteDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Erreur de suppression",
+        description: error?.message || "Impossible de supprimer le compte. Vérifiez votre mot de passe.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -341,6 +381,129 @@ export function ProfileForm() {
           <p className="text-sm text-muted-foreground">
             Conseil: Modifier l&apo;email ou le mot de passe peut nécessiter une reconnexion récente. En cas d&apo;erreur, reconnectez-vous puis réessayez.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="shadow-sm border-red-200 dark:border-red-800">
+        <CardHeader>
+          <CardTitle className="text-xl text-red-600 dark:text-red-400 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5" />
+            Zone de danger
+          </CardTitle>
+          <CardDescription className="text-red-600/80 dark:text-red-400/80">
+            Actions irréversibles sur votre compte
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <h4 className="font-medium text-red-800 dark:text-red-200 mb-2">
+                Supprimer définitivement mon compte
+              </h4>
+              <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+                Cette action supprimera définitivement votre compte et toutes vos données associées. 
+                Cette action est irréversible.
+              </p>
+              <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Supprimer mon compte
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-red-600 dark:text-red-400 flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5" />
+                      Confirmer la suppression
+                    </DialogTitle>
+                    <DialogDescription asChild>
+                      <div className="text-left space-y-2">
+                        <p className="font-medium">Cette action est irréversible !</p>
+                        <p>Toutes vos données seront définitivement supprimées :</p>
+                        <ul className="list-disc list-inside text-sm space-y-1 ml-4">
+                          <li>Votre profil utilisateur</li>
+                          <li>Vos messages et conversations</li>
+                          <li>Vos transports et missions</li>
+                          <li>Votre historique de position</li>
+                          <li>Vos gains et évaluations</li>
+                          <li>Vos notifications</li>
+                          <li>Les profils de vos enfants (si parent)</li>
+                        </ul>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...deleteForm}>
+                    <form onSubmit={deleteForm.handleSubmit(onDeleteAccount)} className="space-y-4">
+                      <FormField
+                        control={deleteForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Mot de passe actuel</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="Entrez votre mot de passe"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={deleteForm.control}
+                        name="confirmation"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Tapez <span className="font-mono font-bold text-red-600">SUPPRIMER</span> pour confirmer
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="SUPPRIMER"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <DialogFooter className="gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setDeleteDialogOpen(false)}
+                          disabled={deletingAccount}
+                        >
+                          Annuler
+                        </Button>
+                        <Button
+                          type="submit"
+                          variant="destructive"
+                          disabled={deletingAccount}
+                        >
+                          {deletingAccount ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Suppression...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer définitivement
+                            </>
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
