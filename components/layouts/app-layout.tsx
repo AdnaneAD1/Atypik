@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '@/components/logo';
 import { ModeToggle } from '@/components/mode-toggle';
+import { useTheme } from 'next-themes';
 import { AuthGuard } from '@/lib/auth/auth-guard';
 import { UserRole, useAuth } from '@/lib/auth/auth-context';
 import DriverPending from '@/components/driver/driver-pending';
@@ -13,7 +14,10 @@ import {
   UserRound,
   Menu,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Sun,
+  Moon,
+  Monitor
 } from 'lucide-react';
 import {
   Sheet,
@@ -47,6 +51,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
   const { user, logout } = useAuth();
+  const { setTheme } = useTheme();
   const pathname = usePathname();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
@@ -312,8 +317,26 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
                           <Settings className="h-4 w-4" />
                           <span>Paramètres</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-2 text-sm">
-                          <ModeToggle />
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-sm"
+                          onClick={() => setTheme('light')}
+                        >
+                          <Sun className="h-4 w-4" />
+                          <span>Thème clair</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-sm"
+                          onClick={() => setTheme('dark')}
+                        >
+                          <Moon className="h-4 w-4" />
+                          <span>Thème sombre</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-sm"
+                          onClick={() => setTheme('system')}
+                        >
+                          <Monitor className="h-4 w-4" />
+                          <span>Thème système</span>
                         </DropdownMenuItem>
                       </>
                     )}
