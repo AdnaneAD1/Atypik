@@ -4,6 +4,51 @@
  */
 
 /**
+ * Upload une image de profil optimisée sur Cloudinary
+ * @param imageFile Fichier image à uploader
+ * @returns L'URL Cloudinary de l'image optimisée
+ */
+export async function uploadProfileImageToCloudinary(imageFile: File): Promise<string> {
+  const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`;
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET as string;
+  
+  if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || !uploadPreset) {
+    throw new Error("Configuration Cloudinary manquante. Vérifiez vos variables d'environnement.");
+  }
+  
+  const data = new FormData();
+  data.append("file", imageFile);
+  data.append("upload_preset", uploadPreset);
+  data.append("folder", "profile_images");
+  
+  try {
+    const res = await fetch(CLOUDINARY_UPLOAD_URL, {
+      method: "POST",
+      body: data
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Erreur HTTP: ${res.status}`);
+    }
+    
+    const cloudinary = await res.json();
+    
+    if (!cloudinary.secure_url) {
+      throw new Error("Échec de l'upload de l'image - URL manquante");
+    }
+    
+    // Appliquer les transformations à l'URL retournée
+    const baseUrl = cloudinary.secure_url;
+    const transformedUrl = baseUrl.replace('/upload/', '/upload/c_fill,w_400,h_400,q_auto,f_auto/');
+    
+    return transformedUrl;
+  } catch (err) {
+    console.error("Erreur lors de l'upload de l'image de profil:", err);
+    throw new Error("Erreur lors de l'upload de l'image de profil");
+  }
+}
+
+/**
  * Upload une image sur Cloudinary et retourne l'URL sécurisée
  * @param imageFile Fichier image à uploader
  * @returns L'URL Cloudinary de l'image

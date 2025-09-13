@@ -13,7 +13,7 @@ import { useRegion } from "@/hooks/use-region";
 import { useToast } from "@/hooks/use-toast";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { uploadImageToCloudinary, validateFile } from "@/hooks/use-cloudinary";
+import { uploadProfileImageToCloudinary, validateFile } from "@/hooks/use-cloudinary";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -113,7 +113,10 @@ export function ProfileForm() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      validateFile(file, 5 * 1024 * 1024, ['image/']); // 5MB max, uniquement images
+      // Validation simplifiée - uniquement le type de fichier, pas de limite de taille
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Veuillez sélectionner une image valide');
+      }
       setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
     } catch (err: any) {
@@ -133,7 +136,7 @@ export function ProfileForm() {
       // Upload avatar si un nouveau fichier a été choisi
       let avatarUrl: string | undefined;
       if (avatarFile) {
-        avatarUrl = await uploadImageToCloudinary(avatarFile);
+        avatarUrl = await uploadProfileImageToCloudinary(avatarFile);
         await updateProfile(auth.currentUser, {
           photoURL: avatarUrl,
         });
@@ -241,7 +244,7 @@ export function ProfileForm() {
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
                     <label htmlFor="avatar-input">
-                      <input id="avatar-input" type="file" accept="image/*" className="hidden" onChange={onSelectAvatar} />
+                      <input id="avatar-input" type="file" accept="image/*" capture="environment" className="hidden" onChange={onSelectAvatar} />
                       <Button type="button" variant="outline" onClick={() => document.getElementById('avatar-input')?.click()}>
                         Changer la photo
                       </Button>
@@ -250,7 +253,7 @@ export function ProfileForm() {
                       <Button type="button" variant="ghost" onClick={onRemoveAvatar}>Annuler</Button>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">PNG, JPG, max 5MB.</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG. L&apos;image sera automatiquement optimisée.</p>
                 </div>
               </div>
 
@@ -379,7 +382,7 @@ export function ProfileForm() {
           </Form>
           <Separator className="my-4" />
           <p className="text-sm text-muted-foreground">
-            Conseil: Modifier l&apo;email ou le mot de passe peut nécessiter une reconnexion récente. En cas d&apo;erreur, reconnectez-vous puis réessayez.
+            Conseil: Modifier l&apos;email ou le mot de passe peut nécessiter une reconnexion récente. En cas d&apos;erreur, reconnectez-vous puis réessayez.
           </p>
         </CardContent>
       </Card>
