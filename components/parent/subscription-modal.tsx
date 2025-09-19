@@ -38,7 +38,7 @@ export function SubscriptionModal({ isOpen, onClose, onSubscriptionCreated }: Su
   };
 
   const handleSubscribe = (type: 'standard' | 'premium') => {
-    const amount = type === 'standard' ? 149 : 189;
+    const amount = type === 'standard' ? 1 : 1;
     setSelectedPlan(type);
     setPaymentAmount(amount);
     setShowPayPal(true);
