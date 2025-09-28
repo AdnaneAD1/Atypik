@@ -49,6 +49,10 @@ export function AddressSelector({
   useEffect(() => {
     if (window.google && window.google.maps && window.google.maps.places) {
       autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+      // Créer un div temporaire pour initialiser PlacesService
+      const tempDiv = document.createElement('div');
+      const tempMap = new google.maps.Map(tempDiv, {});
+      placesServiceRef.current = new google.maps.places.PlacesService(tempMap);
     }
   }, []);
 
@@ -303,7 +307,7 @@ export function AddressSelector({
           }}
           onBlur={() => {
             // Délai pour permettre le clic sur les suggestions
-            setTimeout(() => setShowSuggestions(false), 300);
+            setTimeout(() => setShowSuggestions(false), 150);
           }}
         />
 
@@ -377,7 +381,14 @@ export function AddressSelector({
                 key={suggestion.place_id}
                 type="button"
                 className="w-full px-3 py-2 text-left hover:bg-muted transition-colors border-b border-border last:border-b-0"
-                onMouseDown={() => handleSuggestionClick(suggestion)}
+                onMouseDown={(e) => {
+                  e.preventDefault(); // Empêche le blur de l'input
+                  handleSuggestionClick(suggestion);
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSuggestionClick(suggestion);
+                }}
               >
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />

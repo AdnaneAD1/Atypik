@@ -140,7 +140,7 @@ export function LoginForm() {
       <div className="space-y-2 text-center">
         <h2 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">Bienvenue</h2>
         <p className="text-muted-foreground text-base">
-          Connectez-vous à votre espace chauffeur
+          Authentifiez vous pour accéder à votre espace Atypik
         </p>
       </div>
 
