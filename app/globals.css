@@ -61,11 +61,18 @@
     -webkit-overflow-scrolling: touch;
     touch-action: manipulation;
   }
-  /* Empêcher la sélection de texte accidentelle type site web sur l'interface */
+  html {
+    min-height: 100dvh;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     letter-spacing: -0.01em;
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
     -webkit-user-select: none;
     user-select: none;
   }
@@ -79,6 +86,7 @@
     -webkit-user-select: none;
     user-select: none;
     touch-action: manipulation;
+  }
   }
   h1, h2, h3, h4, h5, h6 {
     font-weight: 700;

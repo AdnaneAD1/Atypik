@@ -19,6 +19,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'Atypik | Transport sécurisé pour enfants',
   description: 'Service de transport sécurisé pour enfants',
+
 };
 
 export default function RootLayout({
