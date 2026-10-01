@@ -39,6 +39,9 @@ export interface DriverSelectionState {
   error: string | null;
 }
 
+const STATS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes de mise en cache mémoire
+const driverStatsCache = new Map<string, { stats: any; cachedAt: number }>();
+
 export const useDriverSelection = () => {
   const { user, updateUser } = useAuth();
   const { userRegion } = useRegion();
@@ -49,8 +52,13 @@ export const useDriverSelection = () => {
     error: null,
   });
 
-  // Fonction pour récupérer les statistiques d'un chauffeur
+  // Fonction pour récupérer les statistiques d'un chauffeur (avec cache 5min)
   const getDriverStats = async (driverId: string) => {
+    const cached = driverStatsCache.get(driverId);
+    if (cached && Date.now() - cached.cachedAt < STATS_CACHE_TTL) {
+      return cached.stats;
+    }
+
     try {
       // Récupérer les missions du chauffeur
       const missionsQuery = query(
@@ -176,7 +184,7 @@ export const useDriverSelection = () => {
       // Années d'expérience (simulation - à adapter)
       const experienceYears = Math.max(1, Math.floor(totalMissions / 50) + 1);
       
-      return {
+      const computedStats = {
         totalMissions,
         completedMissions,
         averageRating,
@@ -188,6 +196,8 @@ export const useDriverSelection = () => {
         reliabilityScore,
         experienceYears,
       };
+      driverStatsCache.set(driverId, { stats: computedStats, cachedAt: Date.now() });
+      return computedStats;
     } catch (error) {
       console.error('Erreur lors du calcul des statistiques:', error);
       // Retourner des statistiques par défaut en cas d'erreur
@@ -226,14 +236,14 @@ export const useDriverSelection = () => {
       const driversSnapshot = await getDocs(driversQuery);
       const driversData: Driver[] = [];
       
-      // Récupérer les statistiques pour chaque chauffeur
+      // Récupérer les statistiques pour chaque chauffeur (priorité aux stats pré-calculées ou en cache)
       const driversWithStats = await Promise.all(
         driversSnapshot.docs.map(async (driverDoc) => {
           const data = driverDoc.data();
           const driverId = driverDoc.id;
           
           // Récupérer les statistiques du chauffeur
-          const stats = await getDriverStats(driverId);
+          const stats = data.stats || await getDriverStats(driverId);
           
           return {
             id: driverId,

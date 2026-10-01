@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { admin, adminDb } from '@/lib/firebase/admin';
+import { checkRateLimit } from '@/lib/security/rate-limiter';
 
 function generatePassword(length = 12) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*()_+';
@@ -15,6 +16,12 @@ function generatePassword(length = 12) {
 
 export async function POST(req: NextRequest) {
   try {
+    // 0. Protection anti brute-force : max 10 tentatives/min par IP
+    const rateLimit = checkRateLimit(req, { maxRequests: 10, windowMs: 60 * 1000 });
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
     const authHeader = req.headers.get('authorization') || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -40,6 +47,9 @@ export async function POST(req: NextRequest) {
 
     // Create Firebase Auth user
     const userRecord = await admin.auth().createUser({ email, password, displayName });
+
+    // Assign custom claims for role-based security in Firebase Auth
+    await admin.auth().setCustomUserClaims(userRecord.uid, { role: 'admin' });
 
     // Create Firestore profile with role=admin
     await db.collection('users').doc(userRecord.uid).set(

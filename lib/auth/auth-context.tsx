@@ -6,6 +6,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged,
   updateProfile,
@@ -16,6 +18,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/firebase/ClientApp';
+import { authFetch } from '@/lib/api/auth-fetch';
 
 export type UserRole = 'parent' | 'driver' | 'admin';
 
@@ -88,59 +91,95 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Login with Google function
+  // Synchroniser ou créer le profil Firestore pour un utilisateur Google
+  const syncGoogleUserDoc = async (firebaseUser: FirebaseUser, defaultRole: UserRole = 'parent'): Promise<User> => {
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      const loadedUser: User = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        name: userData.displayName || firebaseUser.displayName || 'Utilisateur',
+        role: (userData.role as UserRole) || defaultRole,
+        avatar: userData.avatar || firebaseUser.photoURL || undefined,
+        status: userData.status || undefined,
+        regionId: userData.regionId || undefined,
+        selectedDriverId: userData.selectedDriverId || undefined,
+      };
+      setUser(loadedUser);
+      return loadedUser;
+    } else {
+      // Nouvel utilisateur, créer un profil dans Firestore
+      const displayName = firebaseUser.displayName || 'Utilisateur Google';
+      const email = firebaseUser.email || '';
+      const photoURL = firebaseUser.photoURL || undefined;
+
+      await setDoc(userDocRef, {
+        displayName,
+        email,
+        role: defaultRole,
+        avatar: photoURL,
+        createdAt: serverTimestamp(),
+        authProvider: 'google',
+        status: defaultRole === 'driver' ? 'pending' : 'active',
+      });
+
+      const newUser: User = {
+        id: firebaseUser.uid,
+        email,
+        name: displayName,
+        role: defaultRole,
+        avatar: photoURL,
+        status: defaultRole === 'driver' ? 'pending' : 'active',
+      };
+      setUser(newUser);
+      return newUser;
+    }
+  };
+
+  // Login with Google function (compatible Web Desktop, Mobile Browser et Capacitor)
   const loginWithGoogle = async (role: UserRole) => {
     setLoading(true);
     try {
-      const userCredential = await signInWithPopup(auth, googleProvider);
-      
-      // Vérifier si l'utilisateur existe déjà dans Firestore
-      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-      
-      if (userDoc.exists()) {
-        // L'utilisateur existe déjà, récupérer ses données
-        const userData = userDoc.data();
-        setUser({
-          id: userCredential.user.uid,
-          email: userCredential.user.email || '',
-          name: userData.displayName || userCredential.user.displayName || 'Utilisateur',
-          role: userData.role as UserRole,
-          avatar: userData.avatar || userCredential.user.photoURL || undefined,
-          status: userData.status || undefined,
-          regionId: userData.regionId || undefined,
-          selectedDriverId: userData.selectedDriverId || undefined,
-        });
-        
-        // Rediriger en fonction du rôle existant
-        router.push(userData.role === 'parent' ? '/parent/dashboard' : '/driver/dashboard');
-      } else {
-        // Nouvel utilisateur, créer un profil dans Firestore
-        const displayName = userCredential.user.displayName || 'Utilisateur Google';
-        const email = userCredential.user.email || '';
-        const photoURL = userCredential.user.photoURL || undefined;
-        
-        // Stocker les données dans Firestore
-        await setDoc(doc(db, 'users', userCredential.user.uid), {
-          displayName: displayName,
-          email: email,
-          role: role,
-          avatar: photoURL,
-          createdAt: serverTimestamp(),
-          authProvider: 'google'
-        });
-        
-        // Mettre à jour l'état local
-        setUser({
-          id: userCredential.user.uid,
-          email: email,
-          name: displayName,
-          role: role,
-          avatar: photoURL,
-          status: 'pending', // Par défaut pour un nouveau chauffeur
-        });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pending_google_role', role);
+      }
 
-        // Rediriger en fonction du rôle sélectionné
-        router.push(role === 'parent' ? '/parent/dashboard' : '/driver/dashboard');
+      // Détecter si on est sur mobile ou dans une WebView Capacitor
+      const isMobileOrWebView = typeof window !== 'undefined' && (
+        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+        Boolean((window as any).Capacitor?.isNativePlatform?.())
+      );
+
+      if (isMobileOrWebView) {
+        // Sur mobile/WebView : utiliser la redirection directe pour contourner le blocage des popups
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+
+      // Sur desktop : tenter d'abord la popup, avec bascule automatique sur redirection en cas de blocage
+      let userCredential = null;
+      try {
+        userCredential = await signInWithPopup(auth, googleProvider);
+      } catch (popupErr: any) {
+        if (
+          popupErr.code === 'auth/popup-blocked' ||
+          popupErr.code === 'auth/cancelled-popup-request' ||
+          popupErr.code === 'auth/popup-closed-by-user' ||
+          popupErr.code === 'auth/operation-not-supported-in-this-environment'
+        ) {
+          console.warn('Popup bloquée ou non supportée sur ce navigateur, bascule en redirection...');
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        }
+        throw popupErr;
+      }
+
+      if (userCredential?.user) {
+        const loggedUser = await syncGoogleUserDoc(userCredential.user, role);
+        router.push(loggedUser.role === 'parent' ? '/parent/dashboard' : '/driver/dashboard');
       }
     } catch (error: any) {
       console.error('Échec de connexion avec Google:', error);
@@ -194,9 +233,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             <p style="margin:4px 0;">Votre compte chauffeur a bien été créé.</p>
             <p style="margin:4px 0;">Votre compte est en cours d\'examen par notre équipe. Vous serez contacté dès que votre profil aura été validé.</p>
           `;
-          await fetch('/api/email/send', {
+          await authFetch('/api/email/send', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               to: userData.email,
               subject,
@@ -432,6 +470,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Gestion du retour de redirection Google (getRedirectResult)
+  useEffect(() => {
+    let isCancelled = false;
+
+    const checkRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user && !isCancelled) {
+          setLoading(true);
+          const savedRole = (typeof window !== 'undefined' ? localStorage.getItem('pending_google_role') : null) as UserRole || 'parent';
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('pending_google_role');
+          }
+          const loggedUser = await syncGoogleUserDoc(result.user, savedRole);
+          router.push(loggedUser.role === 'parent' ? '/parent/dashboard' : '/driver/dashboard');
+        }
+      } catch (err: any) {
+        console.error('Erreur getRedirectResult Google Auth:', err);
+      }
+    };
+
+    checkRedirectResult();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [router]);
+
   // Observer for authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -439,10 +505,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         if (firebaseUser) {
           // L'utilisateur est connecté, récupérer ses données depuis Firestore
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          const userData = userDoc.data();
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
           
-          if (userData) {
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
             setUser({
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
@@ -454,9 +521,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               selectedDriverId: userData.selectedDriverId || undefined,
             });
           } else {
-            // L'utilisateur existe dans Auth mais pas dans Firestore
-            console.warn('Utilisateur authentifié mais sans données dans Firestore');
-            setUser(null);
+            // Si l'utilisateur est authentifié avec Google mais que le document Firestore n'est pas encore créé
+            const pendingRole = (typeof window !== 'undefined' ? localStorage.getItem('pending_google_role') : null) as UserRole || 'parent';
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('pending_google_role');
+            }
+            await syncGoogleUserDoc(firebaseUser, pendingRole);
           }
         } else {
           // L'utilisateur n'est pas connecté

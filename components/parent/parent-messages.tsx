@@ -9,6 +9,7 @@ import { useMessages } from '@/hooks/use-messages';
 import { useCall } from '@/hooks/use-call';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useToast } from '@/hooks/use-toast';
+import { authFetch } from '@/lib/api/auth-fetch';
 
 // Import des composants de messagerie
 import { ConversationList } from './conversation-list';
@@ -116,9 +117,8 @@ export function ParentMessages() {
       if (receiverId) {
         const title = `Nouveau message de ${user?.name || 'Utilisateur'}`;
         const body = content?.slice(0, 140) || 'Vous avez reçu un nouveau message';
-        await fetch('/api/notifications/send', {
+        await authFetch('/api/notifications/send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId: receiverId,
             title,

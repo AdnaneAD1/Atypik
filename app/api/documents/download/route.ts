@@ -1,46 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/firebase/ClientApp';
+import { adminDb } from '@/lib/firebase/admin';
+import { verifyAuthToken } from '@/lib/firebase/admin-auth';
 import { getFileContent } from '@/lib/documents/local-storage';
 import path from 'path';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    // Récupérer l'ID du document depuis les paramètres de requête
+    // 1. Vérification de l'authentification obligatoire
+    const authUser = await verifyAuthToken(request);
+    if (!authUser) {
+      return NextResponse.json(
+        { error: 'Non autorisé : jeton Firebase Auth valide requis.' },
+        { status: 401 }
+      );
+    }
+
     const url = new URL(request.url);
     const documentId = url.searchParams.get('id');
-    
+
     if (!documentId) {
       return NextResponse.json({ error: 'ID de document manquant' }, { status: 400 });
     }
-    
-    // Dans une application réelle, nous vérifierions l'authentification ici
-    // Pour simplifier, nous supposons que l'utilisateur est authentifié
-    
-    // Récupérer les informations du document depuis Firestore
-    // Utiliser la référence au document directement
-    const docRef = doc(db, 'documents', documentId);
-    const docSnapshot = await getDoc(docRef);
 
-    if (!docSnapshot.exists) {
+    // Récupérer le document depuis Firestore avec Firebase Admin (côté serveur sécurisé)
+    const docSnap = await adminDb().collection('documents').doc(documentId).get();
+
+    if (!docSnap.exists) {
       return NextResponse.json({ error: 'Document non trouvé' }, { status: 404 });
     }
 
-    const documentData = docSnapshot.data() || {};
+    const documentData = docSnap.data() || {};
 
-    // Pour simplifier, nous ne vérifions pas les autorisations dans cette version
-    // Dans une application réelle, nous vérifierions que l'utilisateur est autorisé à télécharger ce document
+    // Vérifier les permissions (le propriétaire, les utilisateurs partagés ou un admin)
+    const isOwner = documentData.userId === authUser.uid;
+    const isShared = Array.isArray(documentData.sharedWith) && documentData.sharedWith.includes(authUser.uid);
+    const isAdmin = authUser.role === 'admin';
 
-    // Récupérer le contenu du fichier
-    const filePath = documentData.path;
-    const fileContent = getFileContent(filePath);
-
-    if (!fileContent) {
-      return NextResponse.json({ error: 'Fichier introuvable' }, { status: 404 });
+    if (!isOwner && !isShared && !isAdmin) {
+      return NextResponse.json({ error: 'Accès refusé à ce document' }, { status: 403 });
     }
 
-    // Déterminer le type MIME en fonction de l'extension du fichier
-    const fileExtension = path.extname(filePath).toLowerCase();
+    // 2. Si le document est stocké sur Cloudinary (URL distante)
+    const fileUrl: string | undefined = documentData.url || documentData.path;
+    if (fileUrl && (fileUrl.startsWith('http://') || fileUrl.startsWith('https://'))) {
+      return NextResponse.redirect(fileUrl, { status: 302 });
+    }
+
+    // 3. Fallback pour anciens fichiers locaux de développement
+    const filePath = documentData.path;
+    const fileContent = filePath ? getFileContent(filePath) : null;
+
+    if (!fileContent) {
+      return NextResponse.json({ error: 'Fichier physique introuvable' }, { status: 404 });
+    }
+
+    const fileExtension = path.extname(filePath || '').toLowerCase();
     let contentType = 'application/octet-stream';
 
     switch (fileExtension) {
@@ -54,30 +71,26 @@ export async function GET(request: NextRequest) {
       case '.png':
         contentType = 'image/png';
         break;
-      case '.gif':
-        contentType = 'image/gif';
-        break;
       case '.doc':
         contentType = 'application/msword';
         break;
       case '.docx':
         contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
         break;
-      // Ajouter d'autres types selon les besoins
     }
 
-    // Créer la réponse avec le contenu du fichier
-    const response = new NextResponse(fileContent, {
+    return new NextResponse(fileContent as unknown as BodyInit, {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${documentData.name}"`,
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(documentData.name || 'document')}"`,
       },
     });
-
-    return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur lors du téléchargement du document:', error);
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || 'Erreur serveur lors du téléchargement' },
+      { status: 500 }
+    );
   }
 }

@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import { useAuth } from '@/lib/auth/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -33,6 +34,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export function LoginForm() {
+  const { user, loading: isAuthLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
@@ -129,6 +131,18 @@ export function LoginForm() {
       }
     }
   };
+
+  // Si la session est en cours de vérification ou déjà active, éviter le flash du formulaire
+  if (isAuthLoading || user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-4 text-center">
+        <div className="w-10 h-10 border-3 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">
+          {user ? 'Redirection vers votre espace...' : 'Connexion à votre espace...'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <motion.div 

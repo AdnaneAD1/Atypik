@@ -13,13 +13,27 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'images.unsplash.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com'
       }
     ]
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Configuration pour les service workers
+  transpilePackages: [
+    '@capacitor/core',
+    '@capacitor/app',
+    '@capacitor/status-bar',
+    '@capacitor/splash-screen',
+    '@capacitor/keyboard',
+    '@capacitor/haptics',
+    '@capacitor/push-notifications',
+    '@capacitor-community/background-geolocation',
+  ],
+  // Configuration des en-têtes HTTP de sécurité et Service Workers
   async headers() {
     return [
       {
@@ -32,6 +46,35 @@ const nextConfig = {
           {
             key: 'Service-Worker-Allowed',
             value: '/',
+          },
+        ],
+      },
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(self), microphone=(), geolocation=(self)',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
         ],
       },

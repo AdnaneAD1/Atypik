@@ -10,6 +10,7 @@ import {
   where,
   orderBy,
 } from 'firebase/firestore';
+import { authFetch } from '@/lib/api/auth-fetch';
 
 export type AdminUserRole = 'parent' | 'driver' | 'admin';
 
@@ -64,9 +65,8 @@ export function useAdmin() {
         const name: string = data?.displayName || data?.name || 'Chauffeur';
         if (email) {
           const subject = 'Atypik Driver • Votre compte a été validé';
-          await fetch('/api/email/send', {
+          await authFetch('/api/email/send', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               to: email,
               subject,

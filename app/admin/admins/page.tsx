@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAdmin } from '@/hooks/use-admin';
 import { UserPlus, Copy } from 'lucide-react';
-import { auth } from '@/firebase/ClientApp';
+import { authFetch } from '@/lib/api/auth-fetch';
 
 export default function AdminAdminsPage() {
   const { admins, loading, error, loadUsers } = useAdmin();
@@ -23,15 +23,8 @@ export default function AdminAdminsPage() {
     setCreating(true);
     setCreatedInfo(null);
     try {
-      const user = auth.currentUser;
-      const token = user ? await user.getIdToken() : null;
-      if (!token) throw new Error('Token invalide');
-      const res = await fetch('/api/admin/create', {
+      const res = await authFetch('/api/admin/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ email, displayName }),
       });
       const data = await res.json();

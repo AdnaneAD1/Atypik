@@ -33,3 +33,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# mobile & security credentials
+*.keystore
+*.jks
+*.aab
+*.apk
+.env
+.env.production
+.env.staging
+google-services.json
+*serviceAccountKey*.json
+*firebase-adminsdk*.json
+
+# test scripts & automated testing artifacts
+/scripts/*
+!/scripts/generate_mobile_assets.py
+/.playwright-mcp/
+
+

@@ -32,6 +32,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { AddressSelector } from '@/components/ui/address-selector';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/ClientApp';
+import { authFetch } from '@/lib/api/auth-fetch';
 
 // Fonction pour comparer les dates sans tenir compte de l'heure
 const isSameOrAfterToday = (date: Date) => {
@@ -238,9 +239,8 @@ export function TransportEventDialog({
             if (user?.selectedDriverId) {
               const notifTitle = 'Transport programmé';
               const notifBody = `${childName} • ${data.transportType} le ${format(data.date, 'dd/MM/yyyy', { locale: fr })} à ${data.time}`;
-              await fetch('/api/notifications/send', {
+              await authFetch('/api/notifications/send', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   userId: user.selectedDriverId,
                   title: notifTitle,
@@ -281,9 +281,8 @@ export function TransportEventDialog({
                   <p style="margin:4px 0;"><strong>Arrivée:</strong> ${to.address}</p>
                   ${typeof distance === 'number' ? `<p style=\"margin:4px 0;\"><strong>Distance estimée:</strong> ${(distance / 1000).toFixed(2)} km</p>` : ''}
                 `;
-                await fetch('/api/email/send', {
+                await authFetch('/api/email/send', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     to: driverEmail,
                     subject,

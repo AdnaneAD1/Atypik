@@ -11,6 +11,7 @@ import { DriverMessageList } from './driver-message-list';
 import { DriverMessageInput } from './driver-message-input';
 import { useState, useMemo, useEffect } from 'react';
 import { Message } from '@/hooks/use-messages';
+import { authFetch } from '@/lib/api/auth-fetch';
 
 export function DriverMessages() {
   const { user } = useAuth();
@@ -74,9 +75,8 @@ export function DriverMessages() {
         if (receiverId) {
           const title = `Nouveau message de ${user?.name || 'Chauffeur'}`;
           const body = content?.slice(0, 140) || 'Vous avez reçu un nouveau message';
-          await fetch('/api/notifications/send', {
+          await authFetch('/api/notifications/send', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: receiverId,
               title,

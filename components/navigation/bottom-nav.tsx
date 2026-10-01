@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/auth-context';
+import { nativeHaptics } from '@/lib/mobile/haptics';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -119,8 +121,16 @@ export function BottomNav() {
     : isAdmin
     ? adminNavItems
     : [];
-  
+
+  // Précharger toutes les pages en arrière-plan dès l'affichage pour un clic instantané (0 latence)
+  useEffect(() => {
+    navItems.forEach((item) => {
+      router.prefetch(item.href);
+    });
+  }, [navItems, router]);
+
   const handleNavigation = (href: string) => {
+    nativeHaptics.light();
     router.push(href);
   };
 
@@ -133,7 +143,7 @@ export function BottomNav() {
     : 'grid-cols-5';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t safe-bottom shadow-md">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 border-t safe-bottom shadow-lg">
       <div className={cn('grid h-16', gridColsClass)}>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -144,8 +154,8 @@ export function BottomNav() {
               onClick={() => handleNavigation(item.href)}
               className={cn(
                 'relative flex flex-col items-center justify-center',
-                'transition-colors duration-200',
-                isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                'transition-all duration-150 active:scale-90 select-none',
+                isActive ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               <div className="relative">

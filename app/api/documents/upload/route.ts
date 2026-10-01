@@ -1,43 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { verifyAuthToken } from '@/lib/firebase/admin-auth';
 
-// Dossier de stockage des documents
-const DOCUMENTS_DIR = path.join(process.cwd(), 'public', 'documents');
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // S'assurer que la requu00eate est multipart/form-data
+    // 1. Vérification de l'authentification (sécurisation des uploads privés)
+    const authUser = await verifyAuthToken(request);
+    if (!authUser) {
+      return NextResponse.json(
+        { error: 'Non autorisé : jeton Firebase Auth valide requis.' },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get('file') as File | null;
 
     if (!file) {
       return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 });
     }
 
-    // Gu00e9nu00e9rer un nom de fichier unique
-    const fileId = uuidv4();
-    const fileExtension = file.name.split('.').pop() || '';
-    const fileName = `${fileId}.${fileExtension}`;
-    const filePath = path.join(DOCUMENTS_DIR, fileName);
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-    // Convertir le fichier en buffer
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    // Cru00e9er le dossier s'il n'existe pas
-    try {
-      await mkdir(DOCUMENTS_DIR, { recursive: true });
-      await writeFile(filePath, buffer);
-    } catch (error) {
-      console.error('Erreur lors de l\'u00e9criture du fichier:', error);
-      return NextResponse.json({ error: 'Erreur lors de l\'enregistrement du fichier' }, { status: 500 });
+    if (!cloudName || !uploadPreset) {
+      return NextResponse.json(
+        { error: 'Configuration Cloudinary manquante sur le serveur' },
+        { status: 500 }
+      );
     }
 
-    // Construire l'URL publique
-    const fileUrl = `/documents/${fileName}`;
+    // Téléverser directement vers Cloudinary
+    const cloudinaryFormData = new FormData();
+    cloudinaryFormData.append('file', file);
+    cloudinaryFormData.append('upload_preset', uploadPreset);
 
-    // Retourner les informations du fichier
+    const cloudinaryRes = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+      {
+        method: 'POST',
+        body: cloudinaryFormData,
+      }
+    );
+
+    if (!cloudinaryRes.ok) {
+      const errText = await cloudinaryRes.text();
+      console.error('Erreur Cloudinary API:', errText);
+      return NextResponse.json(
+        { error: 'Échec du téléversement vers le stockage distant' },
+        { status: 502 }
+      );
+    }
+
+    const cloudinaryData = await cloudinaryRes.json();
+    const secureUrl = cloudinaryData.secure_url;
+    const fileId = uuidv4();
+    const fileExtension = file.name.split('.').pop() || '';
+
     return NextResponse.json({
       success: true,
       file: {
@@ -45,12 +67,15 @@ export async function POST(request: NextRequest) {
         name: file.name,
         type: fileExtension.toUpperCase(),
         size: file.size,
-        url: fileUrl,
-        path: filePath,
+        url: secureUrl,
+        path: secureUrl,
       },
     });
-  } catch (error) {
-    console.error('Erreur lors de l\'upload:', error);
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Erreur lors de l\'upload du document:', error);
+    return NextResponse.json(
+      { error: error?.message || 'Erreur serveur lors du téléversement' },
+      { status: 500 }
+    );
   }
 }

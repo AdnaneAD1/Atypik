@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { uploadToCloudinary } from '@/hooks/use-cloudinary';
+import { v4 as uuidv4 } from 'uuid';
 
 type FileUploadState = {
   isUploading: boolean;
@@ -35,28 +37,25 @@ export function useFileUpload() {
     });
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Simuler la progression de l'upload
+      // Simuler une progression fluide pendant le transfert Cloudinary
       const progressInterval = setInterval(() => {
         setState((prev) => ({
           ...prev,
-          progress: Math.min(prev.progress + 10, 90),
+          progress: Math.min(prev.progress + 15, 90),
         }));
-      }, 300);
+      }, 200);
 
-      const response = await fetch('/api/documents/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      // Téléversement direct et pérenne vers Cloudinary
+      const secureUrl = await uploadToCloudinary(file);
 
       clearInterval(progressInterval);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de l\'upload');
+      if (!secureUrl) {
+        throw new Error('Échec du téléversement vers Cloudinary');
       }
+
+      const fileExtension = file.name.split('.').pop() || '';
+      const fileId = uuidv4();
 
       setState({
         isUploading: false,
@@ -64,7 +63,17 @@ export function useFileUpload() {
         error: null,
       });
 
-      return await response.json();
+      return {
+        success: true,
+        file: {
+          id: fileId,
+          name: file.name,
+          type: fileExtension.toUpperCase(),
+          size: file.size,
+          url: secureUrl,
+          path: secureUrl,
+        },
+      };
     } catch (error) {
       setState({
         isUploading: false,

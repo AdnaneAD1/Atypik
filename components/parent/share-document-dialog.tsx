@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useMessages } from '@/hooks/use-messages';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Document } from '@/hooks/use-documents';
+import { authFetch } from '@/lib/api/auth-fetch';
 
 // Types pour les méthodes de partage
 type ShareMethod = 'message' | 'link';
@@ -244,9 +245,8 @@ export function ShareDocumentDialog({
             if (receiverId) {
               const title = `Nouveau document de ${user?.name || 'Utilisateur'}`;
               const body = (messageText || `📄 ${document.name}`).slice(0, 140);
-              await fetch('/api/notifications/send', {
+              await authFetch('/api/notifications/send', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   userId: receiverId,
                   title,

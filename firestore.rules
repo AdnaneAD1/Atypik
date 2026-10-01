@@ -1,0 +1,165 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // === FONCTIONS D'AIDE ET VÉRIFICATIONS ===
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'admin' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    // === COLLECTION UTILISATEURS (users) ===
+    match /users/{userId} {
+      // Lecture autorisée pour tout utilisateur authentifié (recherche de chauffeurs, profils)
+      allow read: if isAuthenticated();
+
+      // Création de son propre profil lors de l'inscription (email ou Google)
+      // Blocage anti-hack : interdiction absolue de s'auto-attribuer le rôle 'admin'
+      allow create: if isOwner(userId) && (
+        !('role' in request.resource.data) || request.resource.data.role != 'admin' || isAdmin()
+      );
+
+      // Mise à jour de son propre profil : interdiction d'élever son propre champ 'role' en admin
+      allow update: if (isOwner(userId) && (
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) || isAdmin()
+      )) || isAdmin();
+
+      // Suppression de compte réservée aux administrateurs
+      allow delete: if isAdmin();
+    }
+
+    // === COLLECTION ENFANTS (children) ===
+    match /children/{childId} {
+      // Lecture : parents pour leur gestion, chauffeurs pour les besoins spécifiques des missions
+      allow read: if isAuthenticated();
+      // Création : le parent enregistre son enfant
+      allow create: if isAuthenticated() && (
+        request.resource.data.parentId == request.auth.uid ||
+        request.resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      // Modification / Suppression : réservées au parent propriétaire ou à l'admin
+      allow update, delete: if isAuthenticated() && (
+        resource.data.parentId == request.auth.uid ||
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // === COLLECTION TRANSPORTS (transports) ===
+    match /transports/{transportId} {
+      // Lecture : nécessaire pour les parents, les chauffeurs qui acceptent les missions,
+      // et pour le calcul des statistiques des chauffeurs lors de la sélection par un parent
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // === COLLECTION MISSIONS ACTIVES (activeMissions) ===
+    match /activeMissions/{missionId} {
+      // Les parents et chauffeurs doivent pouvoir lire pour le tracking temps réel
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated();
+    }
+
+    // === COLLECTION POSITIONS GPS (gpsPositions) ===
+    match /gpsPositions/{posId} {
+      allow read, create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // === COLLECTION CONVERSATIONS (conversations) ===
+    match /conversations/{convId} {
+      allow read, create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // === COLLECTION MESSAGES (messages racine) ===
+    match /messages/{messageId} {
+      allow read, create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // === COLLECTION ÉVALUATIONS / AVIS (reviews) ===
+    match /reviews/{reviewId} {
+      allow read, create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // === COLLECTION DOCUMENTS (documents) ===
+    match /documents/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith) ||
+        isAdmin()
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // === COLLECTION GAINS CHAUFFEURS (gains) ===
+    match /gains/{gainId} {
+      // Seul le chauffeur concerné ou l'administrateur peut consulter ses gains
+      allow read: if isAuthenticated() && (
+        resource.data.driverId == request.auth.uid || isAdmin()
+      );
+      // Le chauffeur enregistre son gain à la complétion de sa mission
+      allow create: if isAuthenticated() && (
+        request.resource.data.driverId == request.auth.uid || isAdmin()
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // === NOTIFICATIONS & PARAMÈTRES (notificationSettings & notifications) ===
+    match /notificationSettings/{userId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /notifications/{userId} {
+      allow read, write: if isAuthenticated();
+
+      match /items/{itemId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // === RÉGIONS & ABONNEMENTS (Données publiques de configuration) ===
+    match /regions/{regionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /subscriptions/{subId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Protection par défaut contre toute injection sur collections arbitraires
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

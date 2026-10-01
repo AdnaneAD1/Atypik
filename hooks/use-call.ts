@@ -57,6 +57,16 @@ export function useCall() {
   // Références pour WebRTC
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const callDocRef = useRef<any>(null);
+  const callUnsubscribeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (callUnsubscribeRef.current) {
+        callUnsubscribeRef.current();
+        callUnsubscribeRef.current = null;
+      }
+    };
+  }, []);
 
   // Initialiser un appel audio/vidéo
   const initializeCall = useCallback(async (
@@ -142,7 +152,10 @@ export function useCall() {
       });
       
       // Écouter les changements dans l'appel
-      const unsubscribe = onSnapshot(callDoc, (snapshot) => {
+      if (callUnsubscribeRef.current) {
+        callUnsubscribeRef.current();
+      }
+      callUnsubscribeRef.current = onSnapshot(callDoc, (snapshot) => {
         const data = snapshot.data() as CallData;
         
         if (data?.answer && pc.currentRemoteDescription === null) {
@@ -261,7 +274,10 @@ export function useCall() {
       }
       
       // Écouter les changements dans l'appel
-      onSnapshot(callDoc, (snapshot) => {
+      if (callUnsubscribeRef.current) {
+        callUnsubscribeRef.current();
+      }
+      callUnsubscribeRef.current = onSnapshot(callDoc, (snapshot) => {
         const data = snapshot.data() as CallData;
         
         // Mettre à jour l'état de l'appel
@@ -332,6 +348,12 @@ export function useCall() {
         });
       }
       
+      // Nettoyer l'écouteur Firestore temps réel
+      if (callUnsubscribeRef.current) {
+        callUnsubscribeRef.current();
+        callUnsubscribeRef.current = null;
+      }
+
       // Nettoyer les ressources WebRTC
       if (peerConnection.current) {
         peerConnection.current.close();

@@ -3,6 +3,11 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { useToast } from './use-toast';
 import { addDoc, collection, deleteDoc, doc, getDocs, getDoc, query, updateDoc, where, onSnapshot, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/ClientApp';
+import { authFetch } from '@/lib/api/auth-fetch';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+import type { BackgroundGeolocationPlugin } from '@capacitor-community/background-geolocation';
+
+const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation');
 
 // Type pour les positions GPS
 export type GPSPosition = {
@@ -53,6 +58,7 @@ export function useTracking() {
   const [error, setError] = useState<string | null>(null);
   
   const watchIdRef = useRef<number | null>(null);
+  const backgroundWatcherIdRef = useRef<string | null>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const lastSentAtRef = useRef<number>(0);
   const lastCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
@@ -108,9 +114,8 @@ export function useTracking() {
           const fromAddr = tData?.from?.address as string | undefined;
           const toAddr = tData?.to?.address as string | undefined;
           if (parentUserId) {
-            await fetch('/api/notifications/send', {
+            await authFetch('/api/notifications/send', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 userId: parentUserId,
                 title: childName ? `Le trajet de ${childName} a démarré` : 'Trajet démarré',
@@ -132,35 +137,81 @@ export function useTracking() {
         console.warn('Impossible de mettre à jour le statut du transport (start):', e);
       }
 
-      // Démarrer la géolocalisation
-      if (navigator.geolocation) {
-        // Réinitialiser le throttling au démarrage
-        lastSentAtRef.current = 0;
-        lastCoordsRef.current = null;
+      // Réinitialiser le throttling au démarrage
+      lastSentAtRef.current = 0;
+      lastCoordsRef.current = null;
 
+      const handlePositionUpdate = (lat: number, lng: number) => {
+        const now = Date.now();
+        const coords = { lat, lng };
+        const last = lastCoordsRef.current;
+        const elapsed = now - (lastSentAtRef.current || 0);
+        const moved = last ? distanceMeters(last, coords) : Infinity;
+
+        // Règles de throttling: au moins toutes les 3s ou si déplacement > 15m
+        if (elapsed >= 3000 || moved >= 15) {
+          lastSentAtRef.current = now;
+          lastCoordsRef.current = coords;
+          updateMissionPosition(docRef.id, {
+            lat: coords.lat,
+            lng: coords.lng,
+            timestamp: new Date(),
+          });
+        }
+      };
+
+      // Démarrer la géolocalisation
+      if (Capacitor.isNativePlatform()) {
+        // Mode Natif Mobile Android : Foreground Service persistant avec notification active
+        // Maintient le tracking GPS même si le chauffeur passe sur Waze, Google Maps ou éteint l'écran
+        try {
+          const watcherId = await BackgroundGeolocation.addWatcher(
+            {
+              backgroundTitle: 'Atypik Driver • Trajet en cours',
+              backgroundMessage: missionData.childName
+                ? `Position de ${missionData.childName} partagée en direct avec les parents`
+                : 'Position partagée en direct avec les parents',
+              requestPermissions: true,
+              stale: false,
+              distanceFilter: 10,
+            },
+            (location, error) => {
+              if (error) {
+                console.error('[BackgroundGeolocation] Erreur:', error);
+                return;
+              }
+              if (location) {
+                setCurrentPosition({
+                  coords: {
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    accuracy: location.accuracy,
+                    altitude: location.altitude,
+                    altitudeAccuracy: location.altitudeAccuracy,
+                    heading: location.bearing,
+                    speed: location.speed,
+                  },
+                  timestamp: location.time || Date.now(),
+                } as any);
+
+                handlePositionUpdate(location.latitude, location.longitude);
+              }
+            }
+          );
+          backgroundWatcherIdRef.current = watcherId;
+          setIsTracking(true);
+        } catch (bgErr) {
+          console.error('[BackgroundGeolocation] Échec du démarrage en arrière-plan:', bgErr);
+        }
+      } else if (navigator.geolocation) {
+        // Mode Navigateur Web standard (fallback de développement)
         const watchId = navigator.geolocation.watchPosition(
           (position) => {
             setCurrentPosition(position);
-
-            const now = Date.now();
-            const coords = { lat: position.coords.latitude, lng: position.coords.longitude };
-            const last = lastCoordsRef.current;
-            const elapsed = now - (lastSentAtRef.current || 0);
-            const moved = last ? distanceMeters(last, coords) : Infinity;
-
-            // Règles de throttling: au moins toutes les 3s ou si déplacement > 25m
-            if (elapsed >= 3000 || moved >= 25) {
-              lastSentAtRef.current = now;
-              lastCoordsRef.current = coords;
-              updateMissionPosition(docRef.id, {
-                lat: coords.lat,
-                lng: coords.lng,
-                timestamp: new Date(),
-              });
-            }
+            handlePositionUpdate(position.coords.latitude, position.coords.longitude);
           },
           (error) => {
-            console.error('Erreur de géolocalisation:', error);
+            console.error('Erreur de géolocalisation web:', error);
             toast({
               title: 'Erreur de géolocalisation',
               description: 'Impossible de suivre votre position',
@@ -255,9 +306,8 @@ export function useTracking() {
             const parentUserId = tData?.userId as string | undefined;
             const childName = tData?.childName as string | undefined;
             if (parentUserId) {
-              await fetch('/api/notifications/send', {
+              await authFetch('/api/notifications/send', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   userId: parentUserId,
                   title: childName ? `Trajet terminé pour ${childName}` : 'Trajet terminé',
@@ -295,11 +345,15 @@ export function useTracking() {
       }
 
       // Arrêter la géolocalisation
+      if (backgroundWatcherIdRef.current) {
+        BackgroundGeolocation.removeWatcher({ id: backgroundWatcherIdRef.current }).catch(() => {});
+        backgroundWatcherIdRef.current = null;
+      }
       if (watchIdRef.current) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
-        setIsTracking(false);
       }
+      setIsTracking(false);
 
       toast({
         title: 'Mission terminée',
@@ -396,8 +450,13 @@ export function useTracking() {
   // Nettoyer les listeners lors du démontage
   useEffect(() => {
     return () => {
+      if (backgroundWatcherIdRef.current) {
+        BackgroundGeolocation.removeWatcher({ id: backgroundWatcherIdRef.current }).catch(() => {});
+        backgroundWatcherIdRef.current = null;
+      }
       if (watchIdRef.current) {
         navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
       }
       if (unsubscribeRef.current) {
         unsubscribeRef.current();

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { admin, adminDb, adminMessaging } from '@/lib/firebase/admin';
+import { verifyAuthToken } from '@/lib/firebase/admin-auth';
+import { checkRateLimit } from '@/lib/security/rate-limiter';
 
 export const runtime = 'nodejs'; // Ensure Node runtime (firebase-admin not supported on Edge)
 export const dynamic = 'force-dynamic';
@@ -17,6 +19,18 @@ const BodySchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    // 0. Protection anti-spam push / rate limiting (max 60 requêtes/min par IP)
+    const rateLimit = checkRateLimit(req, { maxRequests: 60, windowMs: 60 * 1000 });
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
+    // 1. Authentification obligatoire : bloque les notifications forgées et le spam
+    const authUser = await verifyAuthToken(req);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Non autorisé : jeton Firebase Auth valide requis.' }, { status: 401 });
+    }
+
     // Validate admin init
     if (!admin.apps.length) {
       return NextResponse.json({ error: 'firebase-admin not initialized. Check FIREBASE_* env vars.' }, { status: 500 });
@@ -32,14 +46,32 @@ export async function POST(req: Request) {
     const settingsRef = db.doc(`notificationSettings/${userId}`);
     const settingsSnap = await settingsRef.get();
     if (!settingsSnap.exists) {
-      return NextResponse.json({ error: 'notificationSettings not found for user' }, { status: 404 });
+      return NextResponse.json({ success: true, delivered: false, message: 'Notification skipped: notificationSettings not found for user' }, { status: 200 });
     }
     const fcmToken = settingsSnap.get('fcmToken') as string | null;
     if (!fcmToken) {
-      return NextResponse.json({ error: 'User has no FCM token' }, { status: 400 });
+      return NextResponse.json({ success: true, delivered: false, message: 'Notification skipped: User has no FCM token' }, { status: 200 });
     }
 
     // 2) Send push via FCM
+    const sanitizedData: Record<string, string> = {
+      title: String(title),
+      body: String(body),
+    };
+
+    if (data) {
+      for (const [k, v] of Object.entries(data)) {
+        if (v !== undefined && v !== null) {
+          sanitizedData[k] = typeof v === 'string' ? v : JSON.stringify(v);
+        }
+      }
+    }
+
+    if (clickAction) {
+      sanitizedData.clickAction = clickAction;
+      sanitizedData.url = clickAction;
+    }
+
     const message = {
       token: fcmToken,
       notification: { title, body },
@@ -47,8 +79,8 @@ export async function POST(req: Request) {
         notification: { icon },
         fcmOptions: clickAction ? { link: clickAction } : undefined,
       },
-      data: data,
-    } as const;
+      data: sanitizedData,
+    };
 
     const responseId = await messaging.send(message);
 

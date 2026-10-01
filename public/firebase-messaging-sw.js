@@ -17,69 +17,84 @@ const messaging = firebase.messaging();
 
 // Gérer les messages en arrière-plan
 messaging.onBackgroundMessage((payload) => {
-  console.log(
-    '[firebase-messaging-sw.js] Received background message ',
-    payload
-  );
-  // Customize notification here
-  const notificationTitle = payload.notification.title;
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+
+  const notificationTitle = payload.notification?.title || payload.data?.title || 'Atypik Driver';
   const notificationOptions = {
-    body: payload.notification.body,
-    icon: payload.notification.image
+    body: payload.notification?.body || payload.data?.body || '',
+    icon: payload.notification?.image || payload.data?.icon || '/icons/icon-192x192.png',
+    badge: '/icons/icon-96x96.png',
+    data: {
+      ...(payload.data || {}),
+      url: payload.data?.url || payload.data?.clickAction || payload.fcmOptions?.link || '',
+    },
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Gérer les clics sur les notifications
-// self.addEventListener('notificationclick', (event) => {
-//   console.log('Clic sur notification:', event);
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
 
-//   event.notification.close();
+  if (event.action === 'dismiss') {
+    return;
+  }
 
-//   if (event.action === 'dismiss') {
-//     return;
-//   }
+  // Déterminer l'URL cible
+  const urlToOpen = getUrlFromNotification(event.notification.data);
 
-//   // Ouvrir l'application ou naviguer vers une page spécifique
-//   const urlToOpen = getUrlFromNotification(event.notification.data);
-  
-//   event.waitUntil(
-//     clients.matchAll({ type: 'window', includeUncontrolled: true })
-//       .then((clientList) => {
-//         // Vérifier si l'application est déjà ouverte
-//         for (const client of clientList) {
-//           if (client.url === urlToOpen && 'focus' in client) {
-//             return client.focus();
-//           }
-//         }
-        
-//         // Ouvrir une nouvelle fenêtre si l'application n'est pas ouverte
-//         if (clients.openWindow) {
-//           return clients.openWindow(urlToOpen);
-//         }
-//       })
-//   );
-// });
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Si un onglet Atypik est déjà ouvert, naviguer dessus et le mettre au premier plan
+      for (const client of clientList) {
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          if ('navigate' in client) {
+            client.navigate(urlToOpen);
+          }
+          return client.focus();
+        }
+      }
 
-// // Fonction pour déterminer l'URL à ouvrir selon le type de notification
-// function getUrlFromNotification(data) {
-//   const baseUrl = self.location.origin;
-  
-//   if (!data) {
-//     return baseUrl;
-//   }
+      // Sinon, ouvrir une nouvelle fenêtre vers l'URL cible
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
 
-//   switch (data.type) {
-//     case 'transport':
-//       return `${baseUrl}/parent/calendar`;
-//     case 'message':
-//       return `${baseUrl}/parent/messages`;
-//     case 'driver_transport':
-//       return `${baseUrl}/driver/calendar`;
-//     case 'driver_message':
-//       return `${baseUrl}/driver/messages`;
-//     default:
-//       return baseUrl;
-//   }
-// }
+// Fonction pour déterminer l'URL à ouvrir selon les données de la notification
+function getUrlFromNotification(data) {
+  const origin = self.location.origin;
+
+  if (!data) {
+    return `${origin}/`;
+  }
+
+  if (data.url) {
+    return data.url.startsWith('http') ? data.url : `${origin}${data.url.startsWith('/') ? '' : '/'}${data.url}`;
+  }
+
+  if (data.clickAction) {
+    return data.clickAction.startsWith('http') ? data.clickAction : `${origin}${data.clickAction.startsWith('/') ? '' : '/'}${data.clickAction}`;
+  }
+
+  switch (data.type) {
+    case 'message':
+    case 'driver_message':
+      if (data.conversationId) {
+        return `${origin}/parent/messages?conversationId=${data.conversationId}`;
+      }
+      return `${origin}/parent/messages`;
+    case 'transport':
+    case 'driver_transport':
+      if (data.transportId) {
+        return `${origin}/parent/tracking?transportId=${data.transportId}`;
+      }
+      return `${origin}/parent/calendar`;
+    default:
+      return `${origin}/`;
+  }
+}
+
