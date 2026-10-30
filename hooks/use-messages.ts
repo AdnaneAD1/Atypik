@@ -92,46 +92,48 @@ export function useMessages() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Référence pour éviter les boucles infinies avec loadConversations
+  // Références pour nettoyer proprement les listeners temps réel Firestore
   const loadConversationsRef = useRef<any>(null);
+  const conversationsUnsubRef = useRef<(() => void) | null>(null);
+  const messagesUnsubRef = useRef<(() => void) | null>(null);
 
   // Charger les conversations de l'utilisateur
   const loadConversations = useCallback(async () => {
-    
     const userId = user?.id;
-    
+
     if (!userId) {
-      console.error('loadConversations: utilisateur non connecté ou ID manquant');
-      return;
+      return () => {};
     }
-    
+
+    if (conversationsUnsubRef.current) {
+      conversationsUnsubRef.current();
+      conversationsUnsubRef.current = null;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Créer une référence à la collection des conversations
       const conversationsRef = collection(db, 'conversations');
-      
-      // Créer une requête pour récupérer les conversations où l'utilisateur est participant
+
+      // Filtrer sur participantIds et trier en mémoire pour éviter toute erreur d'index composite
       const q = query(
         conversationsRef,
-        where('participantIds', 'array-contains', userId),
-        orderBy('lastMessageTime', 'desc')
+        where('participantIds', 'array-contains', userId)
       );
 
-      // Écouter les changements en temps réel
       const unsubscribe = onSnapshot(q, async (snapshot) => {
         const conversationsData: Conversation[] = [];
-        
+
         for (const docSnapshot of snapshot.docs) {
           const data = docSnapshot.data();
-          
-          // Récupérer les informations des participants
           const participantsData: Participant[] = [];
-          
-          for (const participantId of data.participantIds) {
+          const participantIds: string[] = Array.isArray(data.participantIds)
+            ? data.participantIds
+            : [];
+
+          for (const participantId of participantIds) {
             if (participantId === userId && user) {
-              // Ajouter l'utilisateur actuel avec ses vraies infos
               participantsData.push({
                 id: userId,
                 name: user.name,
@@ -140,13 +142,11 @@ export function useMessages() {
                 online: true
               });
             } else {
-              // Récupérer les informations des autres participants de façon simplifiée
               try {
-                // Utiliser une approche plus simple pour éviter les collisions de noms
                 const userRef = collection(db, 'users');
                 const userQuery = query(userRef, where('__name__', '==', participantId));
                 const userSnapshot = await getDocs(userQuery);
-                
+
                 if (!userSnapshot.empty) {
                   const userData = userSnapshot.docs[0].data();
                   participantsData.push({
@@ -157,7 +157,6 @@ export function useMessages() {
                     online: userData.online || false
                   });
                 } else {
-                  // Ajouter un participant par défaut si le document n'existe pas
                   participantsData.push({
                     id: participantId,
                     name: 'Utilisateur',
@@ -171,18 +170,22 @@ export function useMessages() {
               }
             }
           }
-          
+
           conversationsData.push({
             id: docSnapshot.id,
             participants: participantsData,
             lastMessage: data.lastMessage || '',
             lastMessageSender: data.lastMessageSender || '',
-            lastMessageTime: data.lastMessageTime?.toDate() || new Date(),
-            unreadCount: data.unreadCount || {}, // la clé doit être user.id
-            createdAt: data.createdAt?.toDate() || new Date()
+            lastMessageTime: data.lastMessageTime?.toDate?.() || new Date(),
+            unreadCount: data.unreadCount || {},
+            createdAt: data.createdAt?.toDate?.() || new Date()
           });
         }
-        
+
+        conversationsData.sort(
+          (a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime()
+        );
+
         setConversations(conversationsData);
         setLoading(false);
       }, (error) => {
@@ -191,14 +194,12 @@ export function useMessages() {
         setLoading(false);
       });
 
-      // Retourner la fonction de nettoyage
+      conversationsUnsubRef.current = unsubscribe;
       return unsubscribe;
     } catch (error) {
       console.error('Erreur lors du chargement des conversations:', error);
       setError('Erreur lors du chargement des conversations');
       setLoading(false);
-      
-      // Retourner une fonction de nettoyage vide en cas d'erreur
       return () => {};
     }
   }, [user]);
@@ -207,47 +208,50 @@ export function useMessages() {
   const loadMessages = useCallback(async (conversationId: string) => {
     if (!user || !conversationId) return;
 
+    if (messagesUnsubRef.current) {
+      messagesUnsubRef.current();
+      messagesUnsubRef.current = null;
+    }
+
     setLoading(true);
     setError(null);
     setCurrentConversation(conversationId);
 
     try {
-      // Créer une référence à la collection des messages
       const messagesRef = collection(db, 'messages');
-      
-      // Créer une requête pour récupérer les messages de la conversation
+
+      // Requête simple sur conversationId + tri chronologique en mémoire (évite l'index composite)
       const q = query(
         messagesRef,
-        where('conversationId', '==', conversationId),
-        orderBy('timestamp', 'asc')
+        where('conversationId', '==', conversationId)
       );
 
-      // Écouter les changements en temps réel
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const messagesData: Message[] = [];
-        
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data();
+
+        snapshot.docs.forEach((docSnap) => {
+          const data = docSnap.data();
           messagesData.push({
-            id: doc.id,
+            id: docSnap.id,
             conversationId: data.conversationId,
             senderId: data.senderId,
             senderName: data.senderName || 'Utilisateur',
             content: data.content || '',
-            timestamp: data.timestamp?.toDate() || new Date(),
+            timestamp: data.timestamp?.toDate?.() || new Date(),
             status: data.status || 'sent',
             attachments: data.attachments || [],
             replyTo: data.replyTo || undefined
           });
         });
-        
+
+        messagesData.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
         setMessages(messagesData);
-        
-        // Marquer les messages comme lus
+
         if (messagesData.length > 0) {
           markMessagesAsRead(conversationId);
         }
-        
+
         setLoading(false);
       }, (error) => {
         console.error('Erreur lors de la récupération des messages:', error);
@@ -255,7 +259,7 @@ export function useMessages() {
         setLoading(false);
       });
 
-      // Retourner la fonction de nettoyage
+      messagesUnsubRef.current = unsubscribe;
       return unsubscribe;
     } catch (error) {
       console.error('Erreur lors du chargement des messages:', error);
@@ -266,39 +270,31 @@ export function useMessages() {
 
   // Marquer les messages comme lus
   const markMessagesAsRead = useCallback(async (conversationId: string) => {
-    // Récupérer l'ID de l'utilisateur (peut être uid pour FirebaseUser ou id pour notre type User)
     const userId = user?.id;
-    
+
     if (!userId || !conversationId) {
-      console.error('markMessagesAsRead: utilisateur non connecté ou ID de conversation manquant');
       return;
     }
 
     try {
-      // Mettre à jour le compteur de messages non lus
       const conversationRef = doc(db, 'conversations', conversationId);
       await updateDoc(conversationRef, {
         [`unreadCount.${userId}`]: 0
       });
 
-      // Mettre à jour le statut des messages
-      // Firestore ne permet pas d'utiliser plus d'un filtre d'inégalité ('!=')
-      // dans une même requête, donc nous allons filtrer sur un seul champ et filtrer les autres en mémoire
       const messagesRef = collection(db, 'messages');
       const q = query(
         messagesRef,
-        where('conversationId', '==', conversationId),
-        where('status', '!=', 'read')
+        where('conversationId', '==', conversationId)
       );
 
       const snapshot = await getDocs(q);
-      snapshot.docs.forEach(async (doc) => {
-        const data = doc.data();
-        // Ne mettre à jour que les messages qui ne sont pas envoyés par l'utilisateur actuel
-        if (data.senderId !== userId) {
-          await updateDoc(doc.ref, { status: 'read' });
+      for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
+        if (data.senderId !== userId && data.status !== 'read') {
+          await updateDoc(docSnap.ref, { status: 'read' });
         }
-      });
+      }
     } catch (error) {
       console.error('Erreur lors du marquage des messages comme lus:', error);
     }
@@ -508,25 +504,29 @@ export function useMessages() {
             // Si le dernier message de la conversation est celui qu'on supprime,
             // mettre à jour avec le message précédent
             if (conversationData.lastMessage === messageData.content) {
-              // Récupérer le message précédent
               const messagesRef = collection(db, 'messages');
               const q = query(
                 messagesRef,
-                where('conversationId', '==', conversationId),
-                orderBy('timestamp', 'desc'),
-                where('id', '!=', messageId)
+                where('conversationId', '==', conversationId)
               );
-              
+
               const snapshot = await getDocs(q);
-              
-              if (!snapshot.empty) {
-                const lastMessage = snapshot.docs[0].data();
+              const remainingDocs = snapshot.docs
+                .filter((d) => d.id !== messageId)
+                .map((d) => d.data())
+                .sort((a, b) => {
+                  const tA = a.timestamp?.toMillis?.() || 0;
+                  const tB = b.timestamp?.toMillis?.() || 0;
+                  return tB - tA;
+                });
+
+              if (remainingDocs.length > 0) {
+                const lastMessage = remainingDocs[0];
                 await updateDoc(conversationRef, {
                   lastMessage: lastMessage.content || 'Pièce jointe',
                   lastMessageTime: lastMessage.timestamp
                 });
               } else {
-                // Pas d'autres messages, réinitialiser
                 await updateDoc(conversationRef, {
                   lastMessage: '',
                   lastMessageTime: conversationData.createdAt
@@ -590,18 +590,20 @@ export function useMessages() {
 
   // Charger les conversations au chargement du hook
   useEffect(() => {
-    if (user) {
-      // Appeler la fonction loadConversations et stocker la fonction de nettoyage
-      const unsubscribeFunc = loadConversationsRef.current();
-      
-      // Retourner une fonction de nettoyage qui vu00e9rifie si unsubscribeFunc est une fonction
+    if (user?.id) {
+      loadConversationsRef.current?.();
       return () => {
-        if (unsubscribeFunc && typeof unsubscribeFunc === 'function') {
-          unsubscribeFunc();
+        if (conversationsUnsubRef.current) {
+          conversationsUnsubRef.current();
+          conversationsUnsubRef.current = null;
+        }
+        if (messagesUnsubRef.current) {
+          messagesUnsubRef.current();
+          messagesUnsubRef.current = null;
         }
       };
     }
-  }, [user]);
+  }, [user?.id]);
 
   // Fonction optimisée pour partager un document déjà uploadé
   const shareDocument = useCallback(async (

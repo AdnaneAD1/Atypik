@@ -3,10 +3,13 @@ package com.atypik.driver;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.ViewGroup;
+import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
@@ -75,6 +78,22 @@ public class MainActivity extends BridgeActivity {
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
             settings.setJavaScriptEnabled(true);
+            settings.setJavaScriptCanOpenWindowsAutomatically(true);
+
+            // Requis pour le fonctionnement du SDK PayPal dans la WebView Android
+            CookieManager cookieManager = CookieManager.getInstance();
+            cookieManager.setAcceptCookie(true);
+            cookieManager.setAcceptThirdPartyCookies(bridge.getWebView(), true);
+
+            // Gérer le téléchargement de documents (PDF, images, etc.) dans la WebView Android
+            bridge.getWebView().setDownloadListener((url, userAgentStr, contentDisposition, mimetype, contentLength) -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(url));
+                    startActivity(intent);
+                } catch (Exception ignored) {
+                }
+            });
 
             String userAgent = settings.getUserAgentString();
             if (userAgent != null) {

@@ -76,7 +76,7 @@
 
   <div class="offline-box" id="offline-box">
     <p style="color: #ef4444; font-size: 0.85rem;">Aucune connexion Internet détectée.</p>
-    <button class="btn-retry" onclick="window.location.reload()">Réessayer</button>
+    <button class="btn-retry" onclick="window.location.href = 'https://app.atypik-driver.com'">Réessayer</button>
   </div>
 
   <script>
@@ -84,8 +84,14 @@
       document.getElementById('spinner').style.display = 'none';
       document.getElementById('status-text').style.display = 'none';
       document.getElementById('offline-box').classList.add('visible');
+    } else {
+      setTimeout(() => {
+        window.location.href = 'https://app.atypik-driver.com';
+      }, 1500);
     }
-    window.addEventListener('online', () => window.location.reload());
+    window.addEventListener('online', () => {
+      window.location.href = 'https://app.atypik-driver.com';
+    });
   </script>
 </body>
 </html>

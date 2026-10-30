@@ -198,7 +198,11 @@ export function DriverCalendar() {
                   <div className="min-w-0">
                     <p className="font-medium text-sm sm:text-base truncate">{selectedMission.childName}</p>
                     <p className="text-xs sm:text-sm text-muted-foreground">
-                      {selectedMission.transportType === 'aller' ? 'Transport aller (matin)' : 'Transport retour (après-midi)'}
+                      {selectedMission.transportType === 'aller-retour'
+                        ? 'Transport aller-retour'
+                        : selectedMission.transportType === 'aller'
+                        ? 'Transport aller (matin)'
+                        : 'Transport retour (après-midi)'}
                     </p>
                   </div>
                 </div>

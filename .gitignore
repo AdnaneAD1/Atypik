@@ -24,10 +24,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# env files (do NOT commit secrets)
-.env
+# local env files
 .env*.local
-!.env.example
 
 # vercel
 .vercel
@@ -41,6 +39,7 @@ next-env.d.ts
 *.jks
 *.aab
 *.apk
+upload_cert.cer
 .env
 .env.production
 .env.staging

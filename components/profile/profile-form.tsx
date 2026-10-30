@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { updateEmail, updatePassword, updateProfile } from "firebase/auth";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 import { auth, db } from "@/firebase/ClientApp";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -102,7 +102,22 @@ export function ProfileForm() {
 
   useEffect(() => {
     form.reset(defaults);
-  }, [defaults, form]);
+    if (user?.id) {
+      getDoc(doc(db, "users", user.id))
+        .then((snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            form.reset({
+              displayName: data.displayName || user.name || "",
+              email: data.email || user.email || "",
+              phone: data.phone || "",
+              regionId: data.regionId || user.regionId || "",
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [defaults, form, user?.id, user?.name, user?.email, user?.regionId]);
 
   useEffect(() => {
     // Pré-remplir l'aperçu avec l'avatar existant
@@ -160,10 +175,13 @@ export function ProfileForm() {
         ...(avatarUrl ? { avatar: avatarUrl } : {}),
       });
 
-      // Mettre à jour le contexte local immédiatement si avatar changé
-      if (avatarUrl) {
-        await updateUser({ avatar: avatarUrl });
-      }
+      // Mettre à jour le contexte local immédiatement
+      await updateUser({
+        name: values.displayName,
+        email: values.email,
+        regionId: values.regionId || undefined,
+        ...(avatarUrl ? { avatar: avatarUrl } : {}),
+      });
 
       toast({
         title: "Profil mis à jour",
@@ -244,7 +262,7 @@ export function ProfileForm() {
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
                     <label htmlFor="avatar-input">
-                      <input id="avatar-input" type="file" accept="image/*" capture="environment" className="hidden" onChange={onSelectAvatar} />
+                      <input id="avatar-input" type="file" accept="image/*" className="hidden" onChange={onSelectAvatar} />
                       <Button type="button" variant="outline" onClick={() => document.getElementById('avatar-input')?.click()}>
                         Changer la photo
                       </Button>

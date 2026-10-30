@@ -49,15 +49,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(fileUrl, { status: 302 });
     }
 
-    // 3. Fallback pour anciens fichiers locaux de développement
-    const filePath = documentData.path;
-    const fileContent = filePath ? getFileContent(filePath) : null;
+    // 3. Fallback pour anciens fichiers locaux de développement (sécurisé contre Path Traversal)
+    const rawFilePath = documentData.path;
+    const safeFilePath = rawFilePath
+      ? `/documents/${path.basename(String(rawFilePath))}`
+      : null;
+    const fileContent = safeFilePath ? getFileContent(safeFilePath) : null;
 
     if (!fileContent) {
       return NextResponse.json({ error: 'Fichier physique introuvable' }, { status: 404 });
     }
 
-    const fileExtension = path.extname(filePath || '').toLowerCase();
+    const fileExtension = path.extname(safeFilePath || '').toLowerCase();
     let contentType = 'application/octet-stream';
 
     switch (fileExtension) {

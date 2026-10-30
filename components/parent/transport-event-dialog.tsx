@@ -179,8 +179,20 @@ export function TransportEventDialog({
           setDistance(distanceValue);
           form.setValue('distance', distanceValue);
         } else {
-          setDistance(null);
-          form.setValue('distance', 0); // Utiliser 0 au lieu de undefined
+          // Calcul de secours par formule de Haversine (en mètres) pour ne jamais bloquer le parent
+          const R = 6371000;
+          const dLat = ((to.lat - from.lat) * Math.PI) / 180;
+          const dLng = ((to.lng - from.lng) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((from.lat * Math.PI) / 180) *
+              Math.cos((to.lat * Math.PI) / 180) *
+              Math.sin(dLng / 2) *
+              Math.sin(dLng / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const fallbackMeters = Math.round(R * c);
+          setDistance(fallbackMeters);
+          form.setValue('distance', fallbackMeters);
         }
       }
     );
@@ -189,6 +201,9 @@ export function TransportEventDialog({
   // Initialiser le formulaire uniquement lorsque le dialogue s'ouvre
   useEffect(() => {
     if (open) {
+      setFrom(null);
+      setTo(null);
+      setDistance(null);
       // Réinitialiser le formulaire avec les valeurs par défaut mais avec la date sélectionnée
       form.reset({
         childId: '',

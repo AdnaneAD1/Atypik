@@ -184,16 +184,7 @@ export function useDriverDashboard(): UseDriverDashboardResult {
       const { start, end } = getTodayRange();
       const transportsRef = collection(db, 'transports');
       
-      // Missions d'aujourd'hui
-      const todayQuery = query(
-        transportsRef,
-        where('driverId', '==', driverId),
-        where('date', '>=', start),
-        where('date', '<=', end)
-      );
-      const todaySnapshot = await getDocs(todayQuery);
-      
-      // Toutes les missions du chauffeur
+      // Toutes les missions du chauffeur (filtrage en mémoire pour éviter les erreurs d'index composite)
       const allQuery = query(
         transportsRef,
         where('driverId', '==', driverId)
@@ -205,26 +196,30 @@ export function useDriverDashboard(): UseDriverDashboardResult {
       let completedMissions = 0;
       let totalMissions = allSnapshot.size;
       const childrenSet = new Set<string>();
+      const startMs = start.toMillis();
+      const endMs = end.toMillis();
       
-      // Traiter les missions d'aujourd'hui
-      todaySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.status !== 'cancelled') {
-          todayMissions++;
-          if (data.distance) {
-            kmTraveled += data.distance / 1000; // Convertir en km
-          }
-          if (data.childId) {
-            childrenSet.add(data.childId);
-          }
-        }
-      });
-      
-      // Compter les missions terminées (toutes périodes)
+      // Traiter toutes les missions et extraire celles d'aujourd'hui
       allSnapshot.forEach((doc) => {
         const data = doc.data();
         if (data.status === 'completed') {
           completedMissions++;
+        }
+        const rawDate = data.date;
+        const tDate = rawDate && typeof rawDate.toDate === 'function'
+          ? rawDate.toDate()
+          : rawDate instanceof Date
+          ? rawDate
+          : new Date(rawDate);
+        const tMs = tDate.getTime();
+        if (!isNaN(tMs) && tMs >= startMs && tMs <= endMs && data.status !== 'cancelled') {
+          todayMissions++;
+          if (data.distance) {
+            kmTraveled += data.distance > 1000 ? data.distance / 1000 : data.distance;
+          }
+          if (data.childId) {
+            childrenSet.add(data.childId);
+          }
         }
       });
       
@@ -267,7 +262,7 @@ export function useDriverDashboard(): UseDriverDashboardResult {
       const activeMissionQuery = query(
         activeMissionsRef,
         where('driverId', '==', driverId),
-        where('status', '==', 'started')
+        where('status', 'in', ['started', 'in_progress'])
       );
       const activeMissionSnapshot = await getDocs(activeMissionQuery);
       
@@ -334,21 +329,34 @@ export function useDriverDashboard(): UseDriverDashboardResult {
   const getUpcomingMissions = useCallback(async (driverId: string) => {
     try {
       const { start, end } = getTodayRange();
+      const startMs = start.toMillis();
+      const endMs = end.toMillis();
       const transportsRef = collection(db, 'transports');
       
       const upcomingQuery = query(
         transportsRef,
-        where('driverId', '==', driverId),
-        where('date', '>=', start),
-        where('date', '<=', end),
-        orderBy('date', 'asc')
+        where('driverId', '==', driverId)
       );
       
       const snapshot = await getDocs(upcomingQuery);
       const missions: UpcomingMission[] = [];
       
-      for (const doc of snapshot.docs) {
-        const data = doc.data();
+      const todayDocs = snapshot.docs
+        .map((d) => ({ id: d.id, data: d.data() }))
+        .filter(({ data }) => {
+          const rawDate = data.date;
+          const dObj = rawDate && typeof rawDate.toDate === 'function'
+            ? rawDate.toDate()
+            : rawDate instanceof Date
+            ? rawDate
+            : new Date(rawDate);
+          const ms = dObj.getTime();
+          return !isNaN(ms) && ms >= startMs && ms <= endMs;
+        })
+        .sort((a, b) => (a.data.time || '').localeCompare(b.data.time || ''));
+
+      for (const docItem of todayDocs) {
+        const data = docItem.data;
         
         // Exclure les missions annulées, complétées et déjà démarrées/en cours
         if (
@@ -367,7 +375,7 @@ export function useDriverDashboard(): UseDriverDashboardResult {
         const parentInfo = await getParentInfo(data.userId);
         
         missions.push({
-          id: doc.id,
+          id: docItem.id,
           child: {
             name: data.childName || 'Enfant',
             age: childInfo.age || 0,
@@ -435,13 +443,17 @@ export function useDriverDashboard(): UseDriverDashboardResult {
         const recentTransportQuery = query(
           transportsRef,
           where('childId', '==', mostFrequentChildId),
-          where('driverId', '==', driverId),
-          orderBy('date', 'desc')
+          where('driverId', '==', driverId)
         );
         
         const recentSnapshot = await getDocs(recentTransportQuery);
         if (!recentSnapshot.empty) {
-          const recentTransport = recentSnapshot.docs[0].data();
+          const sortedDocs = [...recentSnapshot.docs].sort((a, b) => {
+            const dA = a.data().date?.toMillis?.() || 0;
+            const dB = b.data().date?.toMillis?.() || 0;
+            return dB - dA;
+          });
+          const recentTransport = sortedDocs[0].data();
           const parentInfo = await getParentInfo(recentTransport.userId);
           
           // Calculer la note moyenne pour cet enfant
@@ -472,11 +484,17 @@ export function useDriverDashboard(): UseDriverDashboardResult {
             avatar: childInfo.avatar,
             rating: Math.round(rating * 10) / 10,
             about: childInfo.about || 'Aucune information disponible.',
-            needs: childInfo.needs.map((need: string) => ({
-              type: need,
-              description: `Besoin spécifique: ${need}`,
-              severity: 'medium' as const,
-            })),
+            needs: Array.isArray(childInfo.needs)
+              ? childInfo.needs.map((need: any) =>
+                  typeof need === 'string'
+                    ? {
+                        type: need,
+                        description: `Besoin spécifique: ${need}`,
+                        severity: 'medium' as const,
+                      }
+                    : need
+                )
+              : [],
             parent: {
               name: parentInfo.name,
               phone: parentInfo.phone,

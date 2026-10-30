@@ -1,11 +1,10 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { db } from "@/firebase/ClientApp";
-import { collection, addDoc } from "firebase/firestore";
+import { verifyAuthToken } from "@/lib/firebase/admin-auth";
 
-// Créer une instance d'UploadThing avec une clé d'API publique
+// Créer une instance d'UploadThing
 const f = createUploadthing();
 
-// FileRouter pour les documents des parents
+// FileRouter pour les documents des parents et chauffeurs
 export const ourFileRouter = {
   // Définir le routeur pour les documents
   documentUploader: f({
@@ -16,6 +15,10 @@ export const ourFileRouter = {
     video: { maxFileSize: "64MB" }
   })
     .middleware(async ({ req }) => {
+      const authUser = await verifyAuthToken(req);
+      if (authUser) {
+        return { userId: authUser.uid };
+      }
       const authHeader = req.headers.get("authorization") || "";
       const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
       if (!token) {
@@ -24,9 +27,6 @@ export const ourFileRouter = {
       return { userId: "authenticated_user" };
     })
     .onUploadComplete(({ metadata, file }) => {
-      
-      // Retourner simplement les informations du fichier pour le client
-      // Sans essayer d'enregistrer dans Firestore pour l'instant
       return { uploadedBy: metadata.userId, url: file.url };
     }),
 } satisfies FileRouter;

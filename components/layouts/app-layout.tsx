@@ -68,7 +68,7 @@ function getNotificationTargetUrl(data: any, role?: string): string {
     case 'driver_transport':
       if (data.transportId) {
         return role === 'driver'
-          ? `/driver/transport?id=${data.transportId}`
+          ? `/driver/missions`
           : `/parent/tracking?transportId=${data.transportId}`;
       }
       return role === 'driver' ? '/driver/calendar' : '/parent/calendar';
@@ -184,6 +184,12 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
                 fcmToken: token.value,
                 isEnabled: true,
                 platform: 'android',
+                permissions: {
+                  browser: true,
+                  transport: true,
+                  messages: true,
+                  general: true,
+                },
                 updatedAt: serverTimestamp(),
               },
               { merge: true }

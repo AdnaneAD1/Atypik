@@ -11,8 +11,8 @@ const BodySchema = z.object({
   userId: z.string().min(1),
   title: z.string().min(1),
   body: z.string().min(1),
-  icon: z.string().url().optional(),
-  clickAction: z.string().url().optional(),
+  icon: z.string().optional(),
+  clickAction: z.string().optional(),
   // data must be string:string for FCM
   data: z.record(z.string()).optional(),
 });
@@ -42,18 +42,29 @@ export async function POST(req: Request) {
     const db = adminDb();
     const messaging = adminMessaging();
 
-    // 1) Get user's FCM token
+    // 1) Persist notification item for UI (unread) immediately so in-app notifications always work
+    const userItems = db.collection('notifications').doc(userId).collection('items');
+    await userItems.add({
+      title,
+      message: body,
+      read: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      type: data?.type || 'general',
+      data: data || {},
+    });
+
+    // 2) Get user's FCM token for push notification
     const settingsRef = db.doc(`notificationSettings/${userId}`);
     const settingsSnap = await settingsRef.get();
     if (!settingsSnap.exists) {
-      return NextResponse.json({ success: true, delivered: false, message: 'Notification skipped: notificationSettings not found for user' }, { status: 200 });
+      return NextResponse.json({ ok: true, delivered: false, message: 'In-app saved; push skipped: notificationSettings not found for user' }, { status: 200 });
     }
     const fcmToken = settingsSnap.get('fcmToken') as string | null;
     if (!fcmToken) {
-      return NextResponse.json({ success: true, delivered: false, message: 'Notification skipped: User has no FCM token' }, { status: 200 });
+      return NextResponse.json({ ok: true, delivered: false, message: 'In-app saved; push skipped: User has no FCM token' }, { status: 200 });
     }
 
-    // 2) Send push via FCM
+    // 3) Send push via FCM
     const sanitizedData: Record<string, string> = {
       title: String(title),
       body: String(body),
@@ -67,9 +78,15 @@ export async function POST(req: Request) {
       }
     }
 
-    if (clickAction) {
-      sanitizedData.clickAction = clickAction;
-      sanitizedData.url = clickAction;
+    const resolvedClickAction = clickAction
+      ? clickAction.startsWith('http://') || clickAction.startsWith('https://')
+        ? clickAction
+        : new URL(clickAction, req.url).toString()
+      : undefined;
+
+    if (resolvedClickAction) {
+      sanitizedData.clickAction = resolvedClickAction;
+      sanitizedData.url = resolvedClickAction;
     }
 
     const message = {
@@ -77,22 +94,14 @@ export async function POST(req: Request) {
       notification: { title, body },
       webpush: {
         notification: { icon },
-        fcmOptions: clickAction ? { link: clickAction } : undefined,
+        fcmOptions: resolvedClickAction ? { link: resolvedClickAction } : undefined,
       },
       data: sanitizedData,
     };
 
-    const responseId = await messaging.send(message);
-
-    // 3) Persist notification item for UI (unread)
-    const userItems = db.collection('notifications').doc(userId).collection('items');
-    await userItems.add({
-      title,
-      message: body,
-      read: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      type: 'general',
-      data: data || {},
+    const responseId = await messaging.send(message).catch((pushErr) => {
+      console.warn('[POST]/api/notifications/send FCM push warning:', pushErr?.message || pushErr);
+      return null;
     });
 
     return NextResponse.json({ ok: true, messageId: responseId });

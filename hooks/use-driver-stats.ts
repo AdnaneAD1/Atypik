@@ -129,11 +129,10 @@ export function useDriverStats(): UseDriverStatsResult {
     const transportsRef = collection(db, 'transports');
     const ranges = getDateRanges();
     
-    // Récupérer tous les transports du chauffeur
+    // Récupérer tous les transports du chauffeur (sans orderBy composite pour éviter l'erreur d'index)
     const allTransportsQuery = query(
       transportsRef,
-      where('driverId', '==', driverId),
-      orderBy('date', 'desc')
+      where('driverId', '==', driverId)
     );
     const allTransportsSnapshot = await getDocs(allTransportsQuery);
     
@@ -160,8 +159,14 @@ export function useDriverStats(): UseDriverStatsResult {
     
     allTransportsSnapshot.forEach((doc) => {
       const transport = doc.data();
-      const transportDate = transport.date.toDate();
-      const transportTimestamp = transport.date;
+      const rawDate = transport.date;
+      const transportDate = rawDate && typeof rawDate.toDate === 'function'
+        ? rawDate.toDate()
+        : rawDate instanceof Date
+        ? rawDate
+        : new Date(rawDate);
+      if (isNaN(transportDate.getTime())) return;
+      const transportTimestamp = Timestamp.fromDate(transportDate);
       
       totalMissions++;
       
@@ -279,7 +284,14 @@ export function useDriverStats(): UseDriverStatsResult {
     
     reviewsSnapshot.forEach((doc) => {
       const review = doc.data();
-      const reviewDate = review.createdAt?.toDate();
+      const rawCreatedAt = review.createdAt;
+      const reviewDate = rawCreatedAt
+        ? typeof rawCreatedAt.toDate === 'function'
+          ? rawCreatedAt.toDate()
+          : rawCreatedAt instanceof Date
+          ? rawCreatedAt
+          : new Date(rawCreatedAt)
+        : null;
       const rating = review.rating || 5;
       
       if (rating >= 1 && rating <= 5) {
@@ -287,7 +299,7 @@ export function useDriverStats(): UseDriverStatsResult {
         totalReviews++;
         ratingDistribution[rating as keyof typeof ratingDistribution]++;
         
-        if (reviewDate) {
+        if (reviewDate && !isNaN(reviewDate.getTime())) {
           const reviewTimestamp = Timestamp.fromDate(reviewDate);
           
           // Ce mois-ci

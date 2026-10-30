@@ -15,7 +15,7 @@ import { useDriverSelection, Driver } from '@/hooks/use-driver-selection';
 import { useAuth } from '@/lib/auth/auth-context';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarPlus, Info, Bus, MapPin, Clock, User, MessageSquare, X, Loader2, Star } from 'lucide-react';
+import { CalendarPlus, Info, Bus, MapPin, Clock, User, MessageSquare, X, Loader2, Star, CreditCard, RefreshCw } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -53,6 +53,7 @@ export function ParentCalendar() {
   
   // États pour le modal d'abonnement
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
   
   // États pour le modal de sélection de chauffeur
   const [isDriverSelectionOpen, setIsDriverSelectionOpen] = useState(false);
@@ -75,7 +76,10 @@ export function ParentCalendar() {
     loading: subscriptionLoading, 
     hasActiveSubscription, 
     canCreateTransport,
+    canCreateTransportForDate,
+    getWeeklyTransportCountForDate,
     weeklyTransportCount,
+    cancelSubscription,
     loadSubscription 
   } = useSubscription();
   
@@ -85,17 +89,25 @@ export function ParentCalendar() {
   
   // Fonction pour ajouter un nouvel événement de transport
   const handleAddEvent = async (data: any) => {
-    // Vérifier l'abonnement avant de créer le transport
-    if (!canCreateTransport) {
+    const targetDate = data?.date instanceof Date ? data.date : new Date();
+    const countForTargetWeek = getWeeklyTransportCountForDate(targetDate);
+
+    // Vérifier l'abonnement pour la semaine de la date programmée avant de créer le transport
+    if (!canCreateTransportForDate(targetDate)) {
       // Déterminer le message d'erreur selon la situation
       let message = 'Vous devez souscrire à un abonnement pour programmer un transport.';
       
-      if (hasActiveSubscription && subscription?.type === 'standard' && weeklyTransportCount >= 2) {
-        message = `Limite atteinte : votre abonnement Standard permet jusqu'à 2 transports par semaine. Vous avez déjà programmé ${weeklyTransportCount} transport(s) cette semaine. Passez à l'abonnement Premium pour des transports illimités.`;
+      if (hasActiveSubscription && subscription?.type === 'standard' && countForTargetWeek >= 2) {
+        message = `Limite atteinte : votre abonnement Standard permet jusqu'à 2 transports par semaine. Vous avez déjà programmé ${countForTargetWeek} transport(s) sur cette semaine. Passez à l'abonnement Premium pour des transports illimités.`;
       } else if (!hasActiveSubscription) {
         message = 'Vous devez souscrire à un abonnement pour programmer un transport.';
       }
       
+      toast({
+        title: 'Abonnement requis',
+        description: message,
+        variant: 'destructive',
+      });
       setIsSubscriptionModalOpen(true);
       return {
         success: false,
@@ -176,6 +188,38 @@ export function ParentCalendar() {
     });
   };
 
+  const formatSubscriptionDate = (dateValue: any): string => {
+    if (!dateValue) return '';
+    const d = dateValue instanceof Date
+      ? dateValue
+      : typeof dateValue?.toDate === 'function'
+        ? dateValue.toDate()
+        : new Date(dateValue);
+    return isNaN(d.getTime()) ? '' : format(d, 'dd/MM/yyyy', { locale: fr });
+  };
+
+  const handleCancelAutoRenew = async () => {
+    setIsCancellingSubscription(true);
+    try {
+      await cancelSubscription();
+      const endDateStr = formatSubscriptionDate(subscription?.endDate);
+      toast({
+        title: 'Renouvellement automatique désactivé',
+        description: endDateStr
+          ? `Votre abonnement reste actif jusqu'au ${endDateStr}.`
+          : 'Le renouvellement automatique a bien été arrêté.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de désactiver le renouvellement automatique.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCancellingSubscription(false);
+    }
+  };
+
   // Fonction pour gérer l'ouverture du modal de sélection de chauffeur
   const handleOpenDriverSelection = () => {
     setIsDriverSelectionOpen(true);
@@ -215,7 +259,7 @@ export function ParentCalendar() {
 
   // Fonction pour déterminer si un transport peut recevoir un commentaire
   const canCommentTransport = (transport: TransportEvent) => {
-    if (!transport.date) return false;
+    if (!transport.date || transport.status === 'cancelled') return false;
     const transportDate = transport.date instanceof Date ? transport.date : (transport.date as any).toDate();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -294,67 +338,146 @@ export function ParentCalendar() {
         </Button>
       </div>
       
-      {/* Section chauffeur sélectionné */}
+      {/* Section chauffeur sélectionné & Abonnement */}
       {user?.role === 'parent' && (
-        <Card className="bg-white dark:bg-background mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Chauffeur sélectionné
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedDriver ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                    {selectedDriver.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                  </div>
-                  <div>
-                    <p className="font-medium">{selectedDriver.name}</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      {selectedDriver.rating && selectedDriver.rating > 0 && (
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                          <span>{selectedDriver.rating.toFixed(1)}</span>
-                        </div>
-                      )}
-                      {selectedDriver.totalTrips && selectedDriver.totalTrips > 0 && (
-                        <span>• {selectedDriver.totalTrips} trajets</span>
-                      )}
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 mb-6">
+          <Card className="bg-white dark:bg-background">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Chauffeur sélectionné
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedDriver ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                      {selectedDriver.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </div>
+                    <div>
+                      <p className="font-medium">{selectedDriver.name}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        {selectedDriver.rating && selectedDriver.rating > 0 && (
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <span>{selectedDriver.rating.toFixed(1)}</span>
+                          </div>
+                        )}
+                        {selectedDriver.totalTrips && selectedDriver.totalTrips > 0 && (
+                          <span>• {selectedDriver.totalTrips} trajets</span>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenDriverSelection}
+                  >
+                    Changer
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenDriverSelection}
-                >
-                  Changer
-                </Button>
-              </div>
-            ) : (
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-muted-foreground">Aucun chauffeur sélectionné</p>
+                      <p className="text-sm text-muted-foreground">Choisissez un chauffeur pour programmer des transports</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleOpenDriverSelection}
+                  >
+                    Sélectionner
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-background">
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                    <User className="h-5 w-5 text-muted-foreground" />
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Mon abonnement
+                </CardTitle>
+                {hasActiveSubscription && subscription && (
+                  <Badge variant={subscription.type === 'premium' ? 'default' : 'secondary'}>
+                    {subscription.type === 'premium' ? 'Premium • 189€/mois' : 'Standard • 149€/mois'}
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {subscriptionLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Chargement de votre abonnement...
+                </div>
+              ) : hasActiveSubscription && subscription ? (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">
+                      {subscription.type === 'premium'
+                        ? 'Transports illimités'
+                        : `${weeklyTransportCount}/2 transports programmés cette semaine`}
+                    </p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <RefreshCw className="h-3 w-3" />
+                      {subscription.autoRenew !== false
+                        ? `Renouvellement auto${formatSubscriptionDate(subscription.endDate) ? ` le ${formatSubscriptionDate(subscription.endDate)}` : ''}`
+                        : `Actif${formatSubscriptionDate(subscription.endDate) ? ` jusqu'au ${formatSubscriptionDate(subscription.endDate)}` : ''} (renouvellement désactivé)`}
+                    </p>
                   </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground">Aucun chauffeur sélectionné</p>
-                    <p className="text-sm text-muted-foreground">Choisissez un chauffeur pour programmer des transports</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {subscription.type === 'standard' && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => setIsSubscriptionModalOpen(true)}
+                      >
+                        Passer en Premium
+                      </Button>
+                    )}
+                    {subscription.autoRenew !== false && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancelAutoRenew}
+                        disabled={isCancellingSubscription}
+                      >
+                        {isCancellingSubscription ? 'Arrêt...' : 'Arrêter le renouvellement'}
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleOpenDriverSelection}
-                >
-                  Sélectionner
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-muted-foreground">Aucun abonnement actif</p>
+                    <p className="text-sm text-muted-foreground">
+                      Souscrivez à une formule pour programmer vos transports
+                    </p>
+                  </div>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => setIsSubscriptionModalOpen(true)}
+                  >
+                    Souscrire
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
@@ -489,7 +612,11 @@ export function ParentCalendar() {
                   <div>
                     <p className="font-medium">{selectedTransport.childName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {selectedTransport.transportType === 'aller' ? 'Transport aller (matin)' : 'Transport retour (après-midi)'}
+                      {selectedTransport.transportType === 'aller-retour'
+                        ? 'Transport aller-retour'
+                        : selectedTransport.transportType === 'aller'
+                        ? 'Transport aller (matin)'
+                        : 'Transport retour (après-midi)'}
                     </p>
                   </div>
                 </div>
@@ -557,7 +684,9 @@ export function ParentCalendar() {
                     <p className="font-medium text-sm">Statut</p>
                     <p className="text-sm text-muted-foreground">
                       {selectedTransport.status === 'completed' ? 'Terminé' :
-                       selectedTransport.status === 'cancelled' ? 'Annulé' : 'Programmé'}
+                       selectedTransport.status === 'cancelled' ? 'Annulé' :
+                       (selectedTransport.status as string) === 'in_progress' || (selectedTransport.status as string) === 'started' ? 'En cours' :
+                       'Programmé'}
                     </p>
                   </div>
                 </div>

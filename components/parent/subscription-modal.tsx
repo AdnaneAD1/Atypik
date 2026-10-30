@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Crown, Calendar, CreditCard, Check, X } from 'lucide-react';
+import { Loader2, Crown, Calendar, RefreshCw, Check, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { useSubscription } from '@/hooks/use-subscription';
+import { useAuth } from '@/lib/auth/auth-context';
 import { useToast } from '@/hooks/use-toast';
 
 interface SubscriptionModalProps {
@@ -22,20 +23,39 @@ interface SubscriptionModalProps {
   onSubscriptionCreated: () => void;
 }
 
-export function SubscriptionModal({ isOpen, onClose, onSubscriptionCreated }: SubscriptionModalProps) {
+export function SubscriptionModal({
+  isOpen,
+  onClose,
+  onSubscriptionCreated,
+}: SubscriptionModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<'standard' | 'premium' | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPayPal, setShowPayPal] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
-  const { createSubscription, loading } = useSubscription();
+  const { subscription, createSubscription, loading } = useSubscription();
+  const { user } = useAuth();
   const { toast } = useToast();
 
-  // Configuration PayPal
-  const paypalOptions = {
-    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "test",
-    currency: "EUR",
-    intent: "capture"
-  };
+  // Identifiants de plans récurrents PayPal (si configurés dans .env.local)
+  const standardPlanId = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID_STANDARD;
+  const premiumPlanId = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID_PREMIUM;
+  const activePlanId =
+    selectedPlan === 'standard' ? standardPlanId : premiumPlanId;
+  const useNativePayPalSubscription = Boolean(activePlanId);
+
+  // Configuration PayPal dynamique (Subscription récurrente si Plan ID défini, sinon Capture directe)
+  const paypalOptions = useNativePayPalSubscription
+    ? {
+        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'test',
+        currency: 'EUR',
+        intent: 'subscription',
+        vault: true,
+      }
+    : {
+        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'test',
+        currency: 'EUR',
+        intent: 'capture',
+      };
 
   const handleSubscribe = (type: 'standard' | 'premium') => {
     const amount = type === 'standard' ? 149 : 189;
@@ -44,17 +64,25 @@ export function SubscriptionModal({ isOpen, onClose, onSubscriptionCreated }: Su
     setShowPayPal(true);
   };
 
-  const handlePayPalSuccess = async (details: any) => {
+  const handlePayPalSuccess = async (details: {
+    paypalOrderId?: string;
+    paypalSubscriptionId?: string;
+    payerEmail?: string;
+  }) => {
     if (!selectedPlan) return;
-    
+
     setIsProcessing(true);
     try {
-      await createSubscription(selectedPlan);
+      await createSubscription(selectedPlan, {
+        ...details,
+        autoRenew: true,
+      });
       toast({
-        title: 'Paiement réussi !',
-        description: selectedPlan === 'standard' 
-          ? 'Votre abonnement standard est maintenant actif.' 
-          : 'Votre abonnement premium est maintenant actif.',
+        title: 'Abonnement activé !',
+        description:
+          selectedPlan === 'standard'
+            ? 'Votre abonnement Standard (avec renouvellement automatique mensuel) est maintenant actif.'
+            : 'Votre abonnement Premium (avec renouvellement automatique mensuel) est maintenant actif.',
       });
       onSubscriptionCreated();
       onClose();
@@ -62,7 +90,8 @@ export function SubscriptionModal({ isOpen, onClose, onSubscriptionCreated }: Su
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: 'Une erreur est survenue lors de l\'activation de l\'abonnement.',
+        description:
+          "Une erreur est survenue lors de l'activation de l'abonnement.",
         variant: 'destructive',
       });
     } finally {
@@ -74,10 +103,10 @@ export function SubscriptionModal({ isOpen, onClose, onSubscriptionCreated }: Su
     console.error('Erreur PayPal:', error);
     toast({
       title: 'Erreur de paiement',
-      description: 'Le paiement n\'a pas pu être traité. Veuillez réessayer.',
+      description:
+        "Le paiement n'a pas pu être traité. Veuillez vérifier vos informations et réessayer.",
       variant: 'destructive',
     });
-    setShowPayPal(false);
   };
 
   const handleBackToPlans = () => {
@@ -91,101 +120,138 @@ export function SubscriptionModal({ isOpen, onClose, onSubscriptionCreated }: Su
       title: 'Abonnement Standard',
       price: '149€',
       period: '/mois',
-      description: 'Jusqu\'à 2 rendez-vous par semaine',
+      description: "Jusqu'à 2 rendez-vous par semaine",
       features: [
-        'Jusqu\'à 2 transports/semaine',
+        "Jusqu'à 2 transports/semaine",
+        'Renouvellement automatique mensuel',
         'Suivi en temps réel',
         'Support standard',
-        'Annulation gratuite',
-        'Messagerie avec chauffeurs'
+        'Annulation gratuite à tout moment',
+        'Messagerie avec chauffeurs',
       ],
       badge: 'Idéal pour débuter',
       badgeVariant: 'secondary' as const,
       icon: Calendar,
-      popular: false
+      popular: false,
     },
     {
       id: 'premium' as const,
       title: 'Abonnement Premium',
       price: '189€',
       period: '/mois',
-      description: 'Pour plus de 4 rendez-vous par semaine',
+      description: 'Transports illimités chaque semaine',
       features: [
         'Transports illimités',
         'Plus de 4 transports/semaine',
+        'Renouvellement automatique mensuel',
         'Suivi en temps réel',
         'Support prioritaire',
-        'Annulation gratuite',
-        'Messagerie avec chauffeurs'
+        'Annulation gratuite à tout moment',
+        'Messagerie avec chauffeurs',
       ],
       badge: 'Recommandé',
       badgeVariant: 'default' as const,
       icon: Crown,
-      popular: true
-    }
+      popular: true,
+    },
   ];
 
   return (
-    <PayPalScriptProvider options={paypalOptions}>
+    <PayPalScriptProvider
+      key={useNativePayPalSubscription ? 'sub-mode' : 'capture-mode'}
+      options={paypalOptions}
+    >
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="text-center pb-6">
             <DialogTitle className="text-2xl font-bold flex items-center justify-center gap-2">
               <Calendar className="h-6 w-6 text-primary" />
-              {showPayPal ? 'Finaliser le paiement' : 'Choisissez votre formule'}
+              {showPayPal ? 'Finaliser votre abonnement' : 'Choisissez votre formule'}
             </DialogTitle>
             <DialogDescription className="text-base">
-              {showPayPal 
-                ? `Montant à payer : ${paymentAmount}€ pour ${selectedPlan === 'standard' ? 'l\'abonnement standard' : 'l\'abonnement premium'}`
-                : 'Pour programmer un transport, vous devez souscrire à l\'une de nos formules'
-              }
+              {showPayPal
+                ? `${paymentAmount}€/mois — ${
+                    selectedPlan === 'standard'
+                      ? 'Formule Standard'
+                      : 'Formule Premium'
+                  } (renouvellement automatique mensuel)`
+                : "Pour programmer un transport, souscrivez à l'une de nos formules mensuelles sans engagement"}
             </DialogDescription>
           </DialogHeader>
 
           {showPayPal ? (
-            // Interface PayPal
             <div className="space-y-6">
               <div className="bg-muted/50 rounded-lg p-6 text-center">
                 <h3 className="text-lg font-semibold mb-2">
-                  {selectedPlan === 'standard' ? 'Abonnement Standard' : 'Abonnement Premium'}
+                  {selectedPlan === 'standard'
+                    ? 'Abonnement Standard'
+                    : 'Abonnement Premium'}
                 </h3>
-                <p className="text-2xl font-bold text-primary mb-4">{paymentAmount}€</p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedPlan === 'standard' 
-                    ? 'Abonnement mensuel Standard' 
-                    : 'Abonnement mensuel Premium'}
+                <p className="text-2xl font-bold text-primary mb-2">
+                  {paymentAmount}€ <span className="text-sm font-normal text-muted-foreground">/ mois</span>
                 </p>
+                <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                  <RefreshCw className="h-3.5 w-3.5 text-primary" />
+                  <span>Renouvellement automatique mensuel • Résiliable en 1 clic</span>
+                </div>
               </div>
-              
+
               <div className="space-y-4">
-                <PayPalButtons
-                  style={{ layout: "vertical" }}
-                  createOrder={(data, actions) => {
-                    return actions.order.create({
-                      intent: "CAPTURE",
-                      purchase_units: [{
-                        amount: {
-                          value: paymentAmount.toString(),
-                          currency_code: "EUR"
-                        },
-                        description: selectedPlan === 'standard' 
-                          ? 'Abonnement Standard Atypik' 
-                          : 'Abonnement Premium Atypik'
-                      }]
-                    });
-                  }}
-                  onApprove={(data, actions) => {
-                    return actions.order!.capture().then((details) => {
-                      handlePayPalSuccess(details);
-                    });
-                  }}
-                  onError={handlePayPalError}
-                  disabled={isProcessing}
-                />
-                
+                {useNativePayPalSubscription && activePlanId ? (
+                  <PayPalButtons
+                    style={{ layout: 'vertical', label: 'subscribe' }}
+                    createSubscription={(data, actions) => {
+                      return actions.subscription.create({
+                        plan_id: activePlanId,
+                        custom_id: user?.id || undefined,
+                      });
+                    }}
+                    onApprove={async (data) => {
+                      await handlePayPalSuccess({
+                        paypalSubscriptionId: data.subscriptionID || undefined,
+                        paypalOrderId: data.orderID || undefined,
+                      });
+                    }}
+                    onError={handlePayPalError}
+                    disabled={isProcessing}
+                  />
+                ) : (
+                  <PayPalButtons
+                    style={{ layout: 'vertical' }}
+                    createOrder={(data, actions) => {
+                      return actions.order.create({
+                        intent: 'CAPTURE',
+                        purchase_units: [
+                          {
+                            custom_id: user?.id || undefined,
+                            amount: {
+                              value: paymentAmount.toString(),
+                              currency_code: 'EUR',
+                            },
+                            description:
+                              selectedPlan === 'standard'
+                                ? 'Abonnement Mensuel Standard Atypik'
+                                : 'Abonnement Mensuel Premium Atypik',
+                          },
+                        ],
+                      });
+                    }}
+                    onApprove={(data, actions) => {
+                      return actions.order!.capture().then((details) => {
+                        handlePayPalSuccess({
+                          paypalOrderId: details?.id || data.orderID,
+                          payerEmail: details?.payer?.email_address,
+                        });
+                      });
+                    }}
+                    onError={handlePayPalError}
+                    disabled={isProcessing}
+                  />
+                )}
+
                 <div className="flex justify-center">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     onClick={handleBackToPlans}
                     disabled={isProcessing}
                     className="text-muted-foreground hover:text-foreground"
@@ -196,93 +262,109 @@ export function SubscriptionModal({ isOpen, onClose, onSubscriptionCreated }: Su
               </div>
             </div>
           ) : (
-            // Sélection des plans
             <div className="grid md:grid-cols-2 gap-6">
-          {plans.map((plan) => {
-            const Icon = plan.icon;
-            const isSelected = selectedPlan === plan.id;
-            
-            return (
-              <Card 
-                key={plan.id}
-                className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                  isSelected 
-                    ? 'ring-2 ring-primary border-primary' 
-                    : 'hover:border-primary/50'
-                } ${plan.popular ? 'border-primary/20' : ''}`}
-                onClick={() => setSelectedPlan(plan.id)}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge variant="default" className="px-3 py-1">
-                      {plan.badge}
-                    </Badge>
-                  </div>
-                )}
-                
-                <CardHeader className="text-center pb-4">
-                  <div className="flex justify-center mb-3">
-                    <div className={`p-3 rounded-full ${
-                      plan.popular ? 'bg-primary/10' : 'bg-muted'
-                    }`}>
-                      <Icon className={`h-6 w-6 ${
-                        plan.popular ? 'text-primary' : 'text-muted-foreground'
-                      }`} />
-                    </div>
-                  </div>
-                  
-                  <CardTitle className="text-xl">{plan.title}</CardTitle>
-                  
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-3xl font-bold text-primary">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {plan.description}
-                  </p>
-                </CardHeader>
+              {plans.map((plan) => {
+                const Icon = plan.icon;
+                const isSelected = selectedPlan === plan.id;
+                const isCurrentActivePlan =
+                  subscription?.status === 'active' && subscription?.type === plan.id;
 
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    onClick={() => handleSubscribe(plan.id)}
-                    disabled={isProcessing || loading}
-                    className={`w-full ${
-                      plan.popular 
-                        ? 'bg-primary hover:bg-primary/90' 
-                        : 'bg-secondary hover:bg-secondary/90 text-secondary-foreground'
-                    }`}
+                return (
+                  <Card
+                    key={plan.id}
+                    className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                      isSelected
+                        ? 'ring-2 ring-primary border-primary'
+                        : 'hover:border-primary/50'
+                    } ${plan.popular ? 'border-primary/20' : ''}`}
+                    onClick={() => setSelectedPlan(plan.id)}
                   >
-                    {isProcessing && selectedPlan === plan.id ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Traitement...
-                      </>
-                    ) : (
-                      <>S&apos;abonner</>
+                    {plan.popular && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <Badge variant="default" className="px-3 py-1">
+                          {plan.badge}
+                        </Badge>
+                      </div>
                     )}
-                  </Button>
-                </CardContent>
 
-                {isSelected && (
-                  <div className="absolute top-3 right-3">
-                    <div className="bg-primary text-primary-foreground rounded-full p-1">
-                      <Check className="h-4 w-4" />
-                    </div>
-                  </div>
-                )}
-              </Card>
-            );
-          })}
+                    <CardHeader className="text-center pb-4">
+                      <div className="flex justify-center mb-3">
+                        <div
+                          className={`p-3 rounded-full ${
+                            plan.popular ? 'bg-primary/10' : 'bg-muted'
+                          }`}
+                        >
+                          <Icon
+                            className={`h-6 w-6 ${
+                              plan.popular ? 'text-primary' : 'text-muted-foreground'
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      <CardTitle className="text-xl">{plan.title}</CardTitle>
+
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-3xl font-bold text-primary">
+                          {plan.price}
+                        </span>
+                        <span className="text-muted-foreground">{plan.period}</span>
+                      </div>
+
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {plan.description}
+                      </p>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      <ul className="space-y-2">
+                        {plan.features.map((feature, index) => (
+                          <li key={index} className="flex items-center gap-2 text-sm">
+                            <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSubscribe(plan.id);
+                        }}
+                        disabled={isProcessing || loading || isCurrentActivePlan}
+                        className={`w-full ${
+                          plan.popular
+                            ? 'bg-primary hover:bg-primary/90'
+                            : 'bg-secondary hover:bg-secondary/90 text-secondary-foreground'
+                        }`}
+                      >
+                        {isCurrentActivePlan ? (
+                          'Formule actuelle'
+                        ) : isProcessing && selectedPlan === plan.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Traitement...
+                          </>
+                        ) : subscription?.status === 'active' &&
+                          subscription?.type === 'standard' &&
+                          plan.id === 'premium' ? (
+                          'Passer en Premium'
+                        ) : (
+                          "S'abonner"
+                        )}
+                      </Button>
+                    </CardContent>
+
+                    {isSelected && (
+                      <div className="absolute top-3 right-3">
+                        <div className="bg-primary text-primary-foreground rounded-full p-1">
+                          <Check className="h-4 w-4" />
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           )}
 
@@ -294,18 +376,21 @@ export function SubscriptionModal({ isOpen, onClose, onSubscriptionCreated }: Su
                     <Check className="h-4 w-4" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm font-medium">Paiement sécurisé</p>
+                    <p className="text-sm font-medium">
+                      Paiement sécurisé & renouvellement automatique
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      Vos informations de paiement sont protégées et chiffrées. 
-                      Vous pouvez annuler votre abonnement à tout moment.
+                      Votre abonnement est renouvelé automatiquement chaque mois.
+                      Vous pouvez désactiver le renouvellement automatique à tout moment
+                      depuis votre planning tout en conservant vos droits jusqu&apos;à la fin du mois payé.
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-center pt-4">
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   onClick={onClose}
                   disabled={isProcessing}
                   className="text-muted-foreground hover:text-foreground"

@@ -137,27 +137,38 @@ export function useDashboard() {
       let upcomingTrips = 0;
       let activeTrips = 0;
 
-      transportsSnapshot.forEach((doc) => {
-        const data = doc.data();
-        const tripDate = data.date.toDate();
+      const todayTransportIds: string[] = [];
+
+      transportsSnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const tripDate = data.date?.toDate ? data.date.toDate() : new Date(data.date);
         
         totalTrips++;
         
-        if (tripDate < now) {
+        if (data.status === 'completed' || tripDate < now) {
           completedTrips++;
         } else if (tripDate.toDateString() === now.toDateString()) {
-          // Vérifier si le trajet est actif
-          const activeMissionsRef = collection(db, 'activeMissions');
-          const activeMissionQuery = query(activeMissionsRef, where('transportId', '==', doc.id));
-          getDocs(activeMissionQuery).then((activeSnapshot) => {
-            if (!activeSnapshot.empty) {
-              activeTrips++;
-            }
-          });
+          todayTransportIds.push(docSnap.id);
         } else {
           upcomingTrips++;
         }
       });
+
+      if (todayTransportIds.length > 0) {
+        const activeMissionsRef = collection(db, 'activeMissions');
+        const activeResults = await Promise.all(
+          todayTransportIds.map((transportId) =>
+            getDocs(query(activeMissionsRef, where('transportId', '==', transportId)))
+          )
+        );
+        activeResults.forEach((activeSnapshot) => {
+          if (!activeSnapshot.empty) {
+            activeTrips++;
+          } else {
+            upcomingTrips++;
+          }
+        });
+      }
 
       setStats({
         totalTrips,
@@ -182,13 +193,24 @@ export function useDashboard() {
       startOfDay.setHours(0, 0, 0, 0);
       const upcomingQuery = query(
         transportsRef,
-        where('userId', '==', user.id),
-        where('date', '>=', Timestamp.fromDate(startOfDay)),
-        orderBy('date', 'asc'),
-        limit(5)
+        where('userId', '==', user.id)
       );
 
-      const snapshot = await getDocs(upcomingQuery);
+      const rawSnapshot = await getDocs(upcomingQuery);
+      const filteredDocs = rawSnapshot.docs
+        .filter((d) => {
+          const data = d.data();
+          const dt = data.date?.toDate ? data.date.toDate() : new Date(data.date);
+          return dt >= startOfDay && data.status !== 'completed' && data.status !== 'cancelled';
+        })
+        .sort((a, b) => {
+          const da = a.data().date?.toDate ? a.data().date.toDate().getTime() : 0;
+          const dbTime = b.data().date?.toDate ? b.data().date.toDate().getTime() : 0;
+          return da - dbTime;
+        })
+        .slice(0, 5);
+
+      const snapshot = { docs: filteredDocs };
 
       // Préparer la liste des IDs de transports à vérifier dans activeMissions
       const transportIds = snapshot.docs.map(d => d.id);
@@ -223,7 +245,7 @@ export function useDashboard() {
             const driverDoc = await getDoc(doc(db, 'users', data.driverId));
             if (driverDoc.exists()) {
               const driverData = driverDoc.data();
-              driverName = driverData.name || 'Chauffeur assigné';
+              driverName = driverData.displayName || driverData.name || 'Chauffeur assigné';
               driverAvatar = driverData.avatar;
             }
           } catch (error) {
@@ -365,16 +387,18 @@ export function useDashboard() {
 
       const weekQuery = query(
         transportsRef,
-        where('userId', '==', user.id),
-        where('date', '>=', Timestamp.fromDate(startOfWeek)),
-        where('date', '<=', Timestamp.fromDate(endOfWeek)),
-        orderBy('date', 'asc')
+        where('userId', '==', user.id)
       );
 
       const snapshot = await getDocs(weekQuery);
       const scheduleMap = new Map<string, WeeklySchedule>();
+      const sortedDocs = [...snapshot.docs].sort((a, b) => {
+        const da = a.data().date?.toDate ? a.data().date.toDate().getTime() : 0;
+        const dbTime = b.data().date?.toDate ? b.data().date.toDate().getTime() : 0;
+        return da - dbTime;
+      });
 
-      snapshot.forEach((doc) => {
+      sortedDocs.forEach((doc) => {
         const data = doc.data();
         const date = data.date.toDate();
         const dateKey = date.toDateString();
@@ -555,19 +579,13 @@ export function useDashboard() {
       // Évaluations reçues (en tant que parent)
       const receivedQuery = query(
         reviewsRef,
-        where('parentId', '==', user.id),
-        where('type', '==', 'received'),
-        orderBy('createdAt', 'desc'),
-        limit(10)
+        where('parentId', '==', user.id)
       );
 
       // Évaluations données (par le parent)
       const givenQuery = query(
         reviewsRef,
-        where('userId', '==', user.id),
-        where('type', '==', 'given'),
-        orderBy('createdAt', 'desc'),
-        limit(10)
+        where('userId', '==', user.id)
       );
 
       const [receivedSnapshot, givenSnapshot] = await Promise.all([
@@ -580,6 +598,12 @@ export function useDashboard() {
       // Traiter les évaluations reçues
       receivedSnapshot.forEach((doc) => {
         const data = doc.data();
+        if (data.type && data.type !== 'received') return;
+        const reviewDate = data.createdAt?.toDate
+          ? data.createdAt.toDate()
+          : data.createdAt
+          ? new Date(data.createdAt)
+          : new Date();
         allReviews.push({
           id: doc.id,
           type: 'received',
@@ -588,7 +612,7 @@ export function useDashboard() {
           reviewerRole: data.reviewerRole || 'driver',
           rating: data.rating || 5,
           comment: data.comment || '',
-          date: data.createdAt?.toDate() || new Date(),
+          date: reviewDate,
           tripType: data.tripType || 'aller',
           childName: data.childName,
           canReply: true,
@@ -597,7 +621,8 @@ export function useDashboard() {
       });
 
       // Traiter les évaluations données avec récupération du nom du destinataire
-      const givenReviewsPromises = givenSnapshot.docs.map(async (reviewDoc) => {
+      const givenDocs = givenSnapshot.docs.filter((d) => !d.data().type || d.data().type === 'given');
+      const givenReviewsPromises = givenDocs.map(async (reviewDoc) => {
         const data = reviewDoc.data();
         
         // Récupérer le nom du chauffeur (destinataire)
@@ -606,24 +631,34 @@ export function useDashboard() {
           try {
             const driverDoc = await getDoc(doc(db, 'users', data.driverId));
             if (driverDoc.exists()) {
-              recipientName = driverDoc.data().firstName + ' ' + driverDoc.data().lastName || 'Chauffeur';
+              const driverData = driverDoc.data();
+              recipientName =
+                driverData.displayName ||
+                driverData.name ||
+                (driverData.firstName && driverData.lastName
+                  ? `${driverData.firstName} ${driverData.lastName}`
+                  : 'Chauffeur');
             }
           } catch (error) {
             console.error('Erreur lors de la récupération du nom du chauffeur:', error);
           }
         }
         
+        const reviewDate = data.createdAt?.toDate
+          ? data.createdAt.toDate()
+          : data.createdAt
+          ? new Date(data.createdAt)
+          : new Date();
+
         return {
           id: reviewDoc.id,
           type: 'given' as const,
-          reviewerName: (user as any).firstName && (user as any).lastName 
-            ? (user as any).firstName + ' ' + (user as any).lastName 
-            : (user as any).displayName || 'Vous',
+          reviewerName: user.name || (user as any).displayName || 'Vous',
           reviewerAvatar: user.avatar,
           reviewerRole: 'parent' as const,
           rating: data.rating || 5,
           comment: data.comment || '',
-          date: data.createdAt?.toDate() || new Date(),
+          date: reviewDate,
           tripType: data.tripType || 'aller',
           childName: data.childName,
           canReply: false,
@@ -648,10 +683,9 @@ export function useDashboard() {
     if (!user?.id) return;
 
     try {
-      const notificationsRef = collection(db, 'notifications');
+      const notificationsRef = collection(db, 'notifications', user.id, 'items');
       const notificationsQuery = query(
         notificationsRef,
-        where('userId', '==', user.id),
         orderBy('createdAt', 'desc'),
         limit(20)
       );
@@ -661,14 +695,19 @@ export function useDashboard() {
 
       snapshot.forEach((doc) => {
         const data = doc.data();
+        const createdAtDate = data.createdAt?.toDate
+          ? data.createdAt.toDate()
+          : data.createdAt
+          ? new Date(data.createdAt)
+          : new Date();
         userNotifications.push({
           id: doc.id,
           type: data.type || 'trip_started',
-          title: data.title || 'Notification',
-          message: data.message || '',
-          date: data.createdAt?.toDate() || new Date(),
+          title: data.title || data.data?.title || 'Notification',
+          message: data.message || data.body || '',
+          date: createdAtDate,
           read: data.read || false,
-          actionUrl: data.actionUrl,
+          actionUrl: data.actionUrl || data.data?.url,
           priority: data.priority || 'medium',
         });
       });
@@ -710,8 +749,9 @@ export function useDashboard() {
 
   // Marquer une notification comme lue
   const markNotificationAsRead = useCallback(async (notificationId: string) => {
+    if (!user?.id) return;
     try {
-      const notificationRef = doc(db, 'notifications', notificationId);
+      const notificationRef = doc(db, 'notifications', user.id, 'items', notificationId);
       await updateDoc(notificationRef, { read: true });
       
       setNotifications(prev => 
@@ -722,7 +762,7 @@ export function useDashboard() {
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la notification:', error);
     }
-  }, []);
+  }, [user?.id]);
 
   // Obtenir le prochain trajet
   const getNextTrip = useCallback(() => {

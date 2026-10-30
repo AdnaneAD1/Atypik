@@ -44,14 +44,13 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
       if (
         isAuthenticated &&
         allowedRoles &&
-        user?.role &&
-        !allowedRoles.includes(user.role)
+        (!user?.role || !allowedRoles.includes(user.role))
       ) {
-        const dashboardPath = user?.role === 'parent' 
-          ? '/parent/dashboard' 
-          : user?.role === 'driver' 
+        const dashboardPath = user?.role === 'driver' 
           ? '/driver/dashboard' 
-          : '/admin/dashboard';
+          : user?.role === 'admin' 
+          ? '/admin/dashboard' 
+          : '/parent/dashboard';
         router.push(dashboardPath);
         return;
       }

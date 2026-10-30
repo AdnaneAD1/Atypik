@@ -33,52 +33,20 @@ export function MessageInput({
   const handleSend = async () => {
     if (message.trim() || files.length > 0) {
       try {
-        let uploadedFiles: File[] = [];
-        
-        if (files.length > 0) {
-          setUploadingFiles(true);
-          
-          // Upload chaque fichier vers Cloudinary
-          const uploadPromises = files.map(async (file) => {
-            // Vérifier la taille du fichier (100MB max)
-            const maxSize = 100 * 1024 * 1024; // 100MB
-            if (file.size > maxSize) {
-              toast({
-                title: 'Fichier trop volumineux',
-                description: `${file.name} dépasse la taille maximale de 100MB`,
-                variant: 'destructive',
-              });
-              return null;
-            }
-            
-            try {
-              const fileUrl = await uploadToCloudinary(file);
-              // Retourner le fichier original avec l'URL Cloudinary ajoutée
-              const uploadedFile = file;
-              Object.defineProperty(uploadedFile, 'cloudinaryUrl', {
-                value: fileUrl,
-                writable: false,
-                enumerable: true
-              });
-              return uploadedFile;
-            } catch (error) {
-              console.error(`Erreur upload ${file.name}:`, error);
-              toast({
-                title: 'Erreur d\'upload',
-                description: `Impossible d\'uploader ${file.name}`,
-                variant: 'destructive',
-              });
-              return null;
-            }
-          });
-          
-          const results = await Promise.all(uploadPromises);
-          uploadedFiles = results.filter(file => file !== null) as File[];
-          
-          setUploadingFiles(false);
-        }
-        
-        onSendMessage(message, uploadedFiles);
+        const maxSize = 100 * 1024 * 1024; // 100MB
+        const validFiles = files.filter((file) => {
+          if (file.size > maxSize) {
+            toast({
+              title: 'Fichier trop volumineux',
+              description: `${file.name} dépasse la taille maximale de 100MB`,
+              variant: 'destructive',
+            });
+            return false;
+          }
+          return true;
+        });
+
+        onSendMessage(message, validFiles);
         setMessage('');
         setFiles([]);
       } catch (error) {

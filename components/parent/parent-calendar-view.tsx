@@ -23,7 +23,9 @@ export function ParentCalendarView({ weeklySchedule = [], loading = false }: Par
   // Get current date and week dates
   const today = new Date();
   const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - today.getDay() + 1 + (currentWeek * 7)); // Start from Monday
+  const dayOfWeek = today.getDay();
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  startOfWeek.setDate(today.getDate() + diffToMonday + (currentWeek * 7)); // Start from Monday
   
   const weekDates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(startOfWeek);

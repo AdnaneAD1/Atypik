@@ -165,7 +165,16 @@ export function DriverMissions() {
 
             <TabsContent value="pending" className="space-y-4">
               {missions
-                .filter(m => m.status === 'programmed')
+                .filter(m => m.status === 'programmed' || m.status === 'in_progress')
+                .filter(m => {
+                  if (!searchQuery.trim()) return true;
+                  const q = searchQuery.toLowerCase();
+                  return (
+                    m.child?.name?.toLowerCase().includes(q) ||
+                    m.from?.address?.toLowerCase().includes(q) ||
+                    m.to?.address?.toLowerCase().includes(q)
+                  );
+                })
                 .map(mission => (
                   <div
                     key={mission.id}
@@ -241,7 +250,7 @@ export function DriverMissions() {
                           <Clock className="inline mr-1 h-4 w-4 align-middle" />
                           {mission.date && (typeof mission.date.toDate === 'function'
                             ? mission.date.toDate().toLocaleDateString('fr-FR')
-                            : new Date(mission.date.toDate()).toLocaleDateString('fr-FR'))}
+                            : new Date(mission.date as any).toLocaleDateString('fr-FR'))}
                         </div>
                         <div className="relative">
                           <DropdownMenu>
@@ -288,6 +297,15 @@ export function DriverMissions() {
             <TabsContent value="completed" className="space-y-4">
               {missions
                 .filter(m => m.status === 'completed')
+                .filter(m => {
+                  if (!searchQuery.trim()) return true;
+                  const q = searchQuery.toLowerCase();
+                  return (
+                    m.child?.name?.toLowerCase().includes(q) ||
+                    m.from?.address?.toLowerCase().includes(q) ||
+                    m.to?.address?.toLowerCase().includes(q)
+                  );
+                })
                 .map(mission => (
                   <div
                     key={mission.id}

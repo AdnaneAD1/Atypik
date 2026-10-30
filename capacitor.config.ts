@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 import { KeyboardResize } from '@capacitor/keyboard';
 
 const config: CapacitorConfig = {
-  appId: 'com.atypik.driver',
+  appId: 'com.wnapp.id1756362755516',
   appName: 'Atypik Driver',
   webDir: 'public',
   server: {
@@ -21,6 +21,10 @@ const config: CapacitorConfig = {
       'www.atypik-driver.com',
       'app.atypik-driver.com',
       '*.atypik-driver.com',
+      '*.paypal.com',
+      'www.paypal.com',
+      'www.sandbox.paypal.com',
+      '*.paypalobjects.com',
     ],
   },
   android: {

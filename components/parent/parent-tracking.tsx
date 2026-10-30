@@ -70,6 +70,8 @@ export function ParentTracking() {
     };
 
     try {
+      // Réinitialiser le marqueur chauffeur lors d'un changement de carte
+      driverMarkerRef.current = null;
       // Marquer immédiatement comme chargé pour améliorer l'UX
       setIsMapLoaded(true);
       
@@ -196,9 +198,14 @@ export function ParentTracking() {
       script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
       script.async = true;
       script.defer = true;
+      script.onload = () => {
+        if (selectedTransport) {
+          setTimeout(initializeMap, 50);
+        }
+      };
       document.head.appendChild(script);
     }
-  }, []);
+  }, [selectedTransport]);
 
   // Filtrer les transports d'aujourd'hui (exclure les transports annulés)
   const todayTransports = transportEvents?.filter(transport => {
@@ -211,6 +218,13 @@ export function ParentTracking() {
     );
   }) || [];
   const noTransports = todayTransports.length === 0;
+
+  // Sélectionner automatiquement le premier transport du jour s'il n'y en a pas de sélectionné
+  useEffect(() => {
+    if (todayTransports.length > 0 && !selectedTransportId) {
+      setSelectedTransportId(todayTransports[0].id);
+    }
+  }, [todayTransports, selectedTransportId]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -336,7 +350,7 @@ export function ParentTracking() {
 
               <div className="space-y-2">
                 <p className="text-sm font-medium">Statut</p>
-                {activeMission ? (
+                {watchedMission || activeMission ? (
                   <Badge className="bg-green-100 text-green-800 border-green-200">
                     <Navigation className="h-3 w-3 mr-1" />
                     En cours

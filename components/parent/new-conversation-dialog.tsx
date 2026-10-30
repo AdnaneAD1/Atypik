@@ -124,21 +124,18 @@ export function NewConversationDialog({
     }
   };
 
-  if (loadingRegion || !userRegion) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-        <span>Chargement de votre région...</span>
-      </div>
-    );
-  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Nouvelle conversation</DialogTitle>
         </DialogHeader>
-        
+        {loadingRegion ? (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+            <span>Chargement de votre région...</span>
+          </div>
+        ) : (
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="search">Rechercher des utilisateurs</Label>
@@ -203,6 +200,7 @@ export function NewConversationDialog({
             )}
           </div>
         </div>
+        )}
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>

@@ -295,11 +295,11 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
                   </div>
                   <div className="mt-5">
                     <div className="flex justify-between text-xs mb-1.5">
-                      <span>{mission.distance}</span>
+                      <span>{mission.distance > 1000 ? `${(mission.distance / 1000).toFixed(1)} km` : `${mission.distance} km`}</span>
                     </div>
                     <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden relative">
                       <div 
-                        className={`h-full bg-primary rounded-full transition-all duration-500 ease-in-out absolute top-0 left-0 w-[${mission.progress}%]`}
+                        className="h-full bg-primary rounded-full transition-all duration-500 ease-in-out absolute top-0 left-0" style={{ width: `${mission.progress || 0}%` }}
                       ></div>
                     </div>
                   </div>

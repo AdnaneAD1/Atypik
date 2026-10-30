@@ -44,8 +44,7 @@ export type CallData = {
 
 // Hook pour la gestion des appels audio/vidéo
 export function useCall() {
-  const { user: firebaseUser } = useAuth();
-  const user = firebaseUser as User | null;
+  const { user } = useAuth();
   const { toast } = useToast();
   
   // État pour les appels audio/vidéo
@@ -58,15 +57,38 @@ export function useCall() {
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const callDocRef = useRef<any>(null);
   const callUnsubscribeRef = useRef<(() => void) | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
+
+  const cleanupMediaAndPeer = useCallback(() => {
+    if (callUnsubscribeRef.current) {
+      callUnsubscribeRef.current();
+      callUnsubscribeRef.current = null;
+    }
+    if (peerConnection.current) {
+      peerConnection.current.close();
+      peerConnection.current = null;
+    }
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current = null;
+      setLocalStream(null);
+    }
+    if (remoteStreamRef.current) {
+      remoteStreamRef.current.getTracks().forEach((track) => track.stop());
+      remoteStreamRef.current = null;
+      setRemoteStream(null);
+    }
+    setCurrentCall(null);
+    setCallStatus(null);
+    callDocRef.current = null;
+  }, []);
 
   useEffect(() => {
     return () => {
-      if (callUnsubscribeRef.current) {
-        callUnsubscribeRef.current();
-        callUnsubscribeRef.current = null;
-      }
+      cleanupMediaAndPeer();
     };
-  }, []);
+  }, [cleanupMediaAndPeer]);
 
   // Initialiser un appel audio/vidéo
   const initializeCall = useCallback(async (
@@ -75,7 +97,7 @@ export function useCall() {
     receiverName: string,
     callType: CallType
   ) => {
-    if (!user || !user.uid) return null;
+    if (!user || !user.id) return null;
 
     try {
       // Créer un ID unique pour l'appel
@@ -85,8 +107,8 @@ export function useCall() {
       const callData: CallData = {
         id: callId,
         conversationId,
-        callerId: user.uid,
-        callerName: user.displayName || 'Vous',
+        callerId: user.id,
+        callerName: user.name || 'Vous',
         receiverId,
         receiverName,
         type: callType,
@@ -111,6 +133,7 @@ export function useCall() {
       };
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      localStreamRef.current = stream;
       setLocalStream(stream);
       
       // Initialiser la connexion WebRTC
@@ -126,6 +149,7 @@ export function useCall() {
       
       // Écouter les pistes distantes
       pc.ontrack = (event) => {
+        remoteStreamRef.current = event.streams[0];
         setRemoteStream(event.streams[0]);
       };
       
@@ -169,7 +193,7 @@ export function useCall() {
           setCallStatus(data.status);
           
           if (data.status === 'ended' || data.status === 'rejected') {
-            endCall();
+            cleanupMediaAndPeer();
           }
         }
       });
@@ -184,11 +208,11 @@ export function useCall() {
       });
       return null;
     }
-  }, [user, toast]);
+  }, [user, toast, cleanupMediaAndPeer]);
 
   // Répondre à un appel
   const answerCall = useCallback(async (callId: string) => {
-    if (!user || !user.uid) return false;
+    if (!user || !user.id) return false;
 
     try {
       const callDoc = doc(db, 'calls', callId);
@@ -201,7 +225,7 @@ export function useCall() {
       const callData = callSnapshot.data() as CallData;
       
       // Vérifier que l'utilisateur est bien le destinataire de l'appel
-      if (callData.receiverId !== user.uid) {
+      if (callData.receiverId !== user.id) {
         throw new Error('Vous n\'êtes pas le destinataire de cet appel');
       }
       
@@ -221,6 +245,7 @@ export function useCall() {
       };
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      localStreamRef.current = stream;
       setLocalStream(stream);
       
       // Initialiser la connexion WebRTC
@@ -236,6 +261,7 @@ export function useCall() {
       
       // Écouter les pistes distantes
       pc.ontrack = (event) => {
+        remoteStreamRef.current = event.streams[0];
         setRemoteStream(event.streams[0]);
       };
       
@@ -285,7 +311,7 @@ export function useCall() {
           setCallStatus(data.status);
           
           if (data.status === 'ended') {
-            endCall();
+            cleanupMediaAndPeer();
           }
         }
         
@@ -315,11 +341,11 @@ export function useCall() {
       });
       return false;
     }
-  }, [user, toast]);
+  }, [user, toast, cleanupMediaAndPeer]);
 
   // Rejeter un appel
   const rejectCall = useCallback(async (callId: string) => {
-    if (!user || !user.uid) return false;
+    if (!user || !user.id) return false;
 
     try {
       const callDoc = doc(db, 'calls', callId);
@@ -337,51 +363,20 @@ export function useCall() {
 
   // Terminer un appel
   const endCall = useCallback(async () => {
-    if (!user || !currentCall) return;
-
     try {
-      // Mettre à jour l'état de l'appel dans Firestore
       if (callDocRef.current) {
         await updateDoc(callDocRef.current, {
           status: 'ended',
           endTime: serverTimestamp()
-        });
+        }).catch(() => {});
       }
-      
-      // Nettoyer l'écouteur Firestore temps réel
-      if (callUnsubscribeRef.current) {
-        callUnsubscribeRef.current();
-        callUnsubscribeRef.current = null;
-      }
-
-      // Nettoyer les ressources WebRTC
-      if (peerConnection.current) {
-        peerConnection.current.close();
-        peerConnection.current = null;
-      }
-      
-      // Arrêter les flux média
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-        setLocalStream(null);
-      }
-      
-      if (remoteStream) {
-        remoteStream.getTracks().forEach(track => track.stop());
-        setRemoteStream(null);
-      }
-      
-      // Réinitialiser l'état
-      setCurrentCall(null);
-      setCallStatus(null);
-      callDocRef.current = null;
-      
+      cleanupMediaAndPeer();
       return true;
     } catch (error) {
       console.error('Erreur lors de la fin de l\'appel:', error);
       return false;
     }
-  }, [user, currentCall, localStream, remoteStream]);
+  }, [cleanupMediaAndPeer]);
 
   return {
     currentCall,

@@ -66,7 +66,7 @@ export function DriverUpcomingMissions({ missions }: DriverUpcomingMissionsProps
   };
 
   const handleViewAllMissions = () => {
-    router.push('/driver/calendar');
+    router.push('/driver/missions');
   };
   
   const handleClosePopup = () => {

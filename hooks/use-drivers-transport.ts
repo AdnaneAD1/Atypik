@@ -12,6 +12,9 @@ export type DriverTransportEvent = {
   date: Date;
   time: string;
   transportType: 'aller' | 'retour' | 'aller-retour';
+  status?: string;
+  motif?: string;
+  waitingTime?: number;
   userId: string; // parent
   driverId: string; // chauffeur
   from: {
@@ -46,8 +49,12 @@ export function useDriversTransport(driverId: string | undefined) {
       const q = query(transportRef, where('driverId', '==', driverId));
       const querySnapshot = await getDocs(q);
 
+      const activeDocs = querySnapshot.docs.filter(
+        (d) => d.data().status !== 'cancelled'
+      );
+
       const results: DriverTransportEvent[] = await Promise.all(
-        querySnapshot.docs.map(async (d) => {
+        activeDocs.map(async (d) => {
           const data = d.data();
           let childAvatar: string | null | undefined = null;
           try {
@@ -69,6 +76,9 @@ export function useDriversTransport(driverId: string | undefined) {
             date: data.date instanceof Timestamp ? data.date.toDate() : new Date(data.date),
             time: data.time,
             transportType: data.transportType,
+            status: data.status || 'programmed',
+            motif: data.motif,
+            waitingTime: data.waitingTime,
             userId: data.userId,
             driverId: data.driverId,
             from: data.from,

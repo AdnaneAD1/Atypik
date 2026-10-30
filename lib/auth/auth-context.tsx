@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   createUserWithEmailAndPassword,
@@ -13,6 +13,7 @@ import {
   updateProfile,
   deleteUser,
   reauthenticateWithCredential,
+  reauthenticateWithPopup,
   EmailAuthProvider,
   User as FirebaseUser
 } from 'firebase/auth';
@@ -47,9 +48,23 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function normalizeRole(role: unknown, fallback: UserRole = 'parent'): UserRole {
+  if (role === 'parent' || role === 'driver' || role === 'admin') {
+    return role;
+  }
+  return fallback;
+}
+
+function getDashboardForRole(role: UserRole): string {
+  if (role === 'driver') return '/driver/dashboard';
+  if (role === 'admin') return '/admin/dashboard';
+  return '/parent/dashboard';
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const isRegisteringRef = useRef(false);
   const router = useRouter();
 
   // Login function using Firebase Authentication
@@ -61,11 +76,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = userDoc.data();
       
       if (userData) {
+        const resolvedRole = normalizeRole(userData.role, 'parent');
         setUser({
           id: userCredential.user.uid,
           email: userCredential.user.email || '',
-          name: userData.displayName || 'Utilisateur',
-          role: userData.role as UserRole,
+          name: userData.displayName || userData.name || 'Utilisateur',
+          role: resolvedRole,
           avatar: userData.avatar || undefined,
           status: userData.status || undefined,
           regionId: userData.regionId || undefined,
@@ -73,13 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         
         // Rediriger en fonction du rôle
-        router.push(
-          userData.role === 'parent'
-            ? '/parent/dashboard'
-            : userData.role === 'driver'
-            ? '/driver/dashboard'
-            : '/admin/dashboard'
-        );
+        router.push(getDashboardForRole(resolvedRole));
       } else {
         throw new Error('Données utilisateur non trouvées');
       }
@@ -98,11 +108,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (userDoc.exists()) {
       const userData = userDoc.data();
+      const resolvedRole = normalizeRole(userData.role, defaultRole);
       const loadedUser: User = {
         id: firebaseUser.uid,
         email: firebaseUser.email || '',
-        name: userData.displayName || firebaseUser.displayName || 'Utilisateur',
-        role: (userData.role as UserRole) || defaultRole,
+        name: userData.displayName || userData.name || firebaseUser.displayName || 'Utilisateur',
+        role: resolvedRole,
         avatar: userData.avatar || firebaseUser.photoURL || undefined,
         status: userData.status || undefined,
         regionId: userData.regionId || undefined,
@@ -112,27 +123,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return loadedUser;
     } else {
       // Nouvel utilisateur, créer un profil dans Firestore
+      const resolvedRole = normalizeRole(defaultRole, 'parent');
       const displayName = firebaseUser.displayName || 'Utilisateur Google';
       const email = firebaseUser.email || '';
-      const photoURL = firebaseUser.photoURL || undefined;
+      const photoURL = firebaseUser.photoURL || null;
 
       await setDoc(userDocRef, {
         displayName,
         email,
-        role: defaultRole,
+        role: resolvedRole,
         avatar: photoURL,
         createdAt: serverTimestamp(),
         authProvider: 'google',
-        status: defaultRole === 'driver' ? 'pending' : 'active',
+        status: resolvedRole === 'driver' ? 'pending' : 'active',
       });
 
       const newUser: User = {
         id: firebaseUser.uid,
         email,
         name: displayName,
-        role: defaultRole,
-        avatar: photoURL,
-        status: defaultRole === 'driver' ? 'pending' : 'active',
+        role: resolvedRole,
+        avatar: photoURL || undefined,
+        status: resolvedRole === 'driver' ? 'pending' : 'active',
       };
       setUser(newUser);
       return newUser;
@@ -179,7 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (userCredential?.user) {
         const loggedUser = await syncGoogleUserDoc(userCredential.user, role);
-        router.push(loggedUser.role === 'parent' ? '/parent/dashboard' : '/driver/dashboard');
+        router.push(getDashboardForRole(loggedUser.role));
       }
     } catch (error: any) {
       console.error('Échec de connexion avec Google:', error);
@@ -192,6 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Register function using Firebase Authentication
   const register = async (userData: any, role: UserRole) => {
     setLoading(true);
+    isRegisteringRef.current = true;
     try {
       // Créer l'utilisateur dans Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
@@ -200,29 +213,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userData.password
       );
       
-      // Mettre à jour le profil utilisateur
-      const displayName = `${userData.firstName} ${userData.lastName}`;
-      await updateProfile(userCredential.user, {
-        displayName: displayName
-      });
-      
-      // Stocker les données supplémentaires dans Firestore
+      // Stocker immédiatement les données dans Firestore avant toute résolution concurrente
+      const displayName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'Utilisateur';
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         displayName: displayName,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
         email: userData.email,
-        phone: userData.phone,
-        address: userData.address,
+        phone: userData.phone || '',
+        address: userData.address || null,
         role: role,
         createdAt: serverTimestamp(),
         ...(role === 'driver' && {
-          licenseNumber: userData.licenseNumber,
-          insuranceNumber: userData.insuranceNumber,
-          regionId: userData.regionId, // Ajout de la région choisie
-          status: 'pending' // Les chauffeurs doivent être approuvés
+          licenseNumber: userData.licenseNumber || '',
+          insuranceNumber: userData.insuranceNumber || '',
+          regionId: userData.regionId || '',
+          status: 'pending'
         })
       });
+
+      // Mettre à jour le profil Firebase Auth
+      await updateProfile(userCredential.user, {
+        displayName: displayName
+      }).catch((e) => console.warn('updateProfile warning:', e));
       
       // Envoi email de confirmation si nouveau compte chauffeur (best-effort, template brandé)
       try {
@@ -253,15 +266,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: userCredential.user.email || '',
         name: displayName,
         role: role,
+        regionId: role === 'driver' ? userData.regionId : undefined,
         status: role === 'driver' ? 'pending' : undefined,
       });
       
       // Rediriger en fonction du rôle
-      router.push(role === 'parent' ? '/parent/dashboard' : '/driver/dashboard');
+      router.push(getDashboardForRole(role));
     } catch (error: any) {
       console.error('Échec d\'inscription:', error);
       throw error;
     } finally {
+      isRegisteringRef.current = false;
       setLoading(false);
     }
   };
@@ -282,8 +297,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) throw new Error('Utilisateur non connecté');
     
     try {
+      const firestorePayload: Record<string, any> = { ...data };
+      if (data.name !== undefined) {
+        firestorePayload.displayName = data.name;
+      }
       // Mettre à jour dans Firestore
-      await updateDoc(doc(db, 'users', user.id), data);
+      await updateDoc(doc(db, 'users', user.id), firestorePayload);
       
       // Mettre à jour l'état local
       setUser(prev => prev ? { ...prev, ...data } : null);
@@ -484,7 +503,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.removeItem('pending_google_role');
           }
           const loggedUser = await syncGoogleUserDoc(result.user, savedRole);
-          router.push(loggedUser.role === 'parent' ? '/parent/dashboard' : '/driver/dashboard');
+          router.push(getDashboardForRole(loggedUser.role));
         }
       } catch (err: any) {
         console.error('Erreur getRedirectResult Google Auth:', err);
@@ -501,6 +520,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Observer for authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Si une inscription par email/mot de passe est en cours, laisser register() gérer l'état
+      if (isRegisteringRef.current) {
+        return;
+      }
       setLoading(true);
       try {
         if (firebaseUser) {
@@ -510,23 +533,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (userDoc.exists()) {
             const userData = userDoc.data();
+            const resolvedRole = normalizeRole(userData.role, 'parent');
             setUser({
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
-              name: userData.displayName || firebaseUser.displayName || 'Utilisateur',
-              role: userData.role as UserRole,
+              name: userData.displayName || userData.name || firebaseUser.displayName || 'Utilisateur',
+              role: resolvedRole,
               avatar: userData.avatar || undefined,
               status: userData.status || undefined,
               regionId: userData.regionId || undefined,
               selectedDriverId: userData.selectedDriverId || undefined,
             });
           } else {
-            // Si l'utilisateur est authentifié avec Google mais que le document Firestore n'est pas encore créé
-            const pendingRole = (typeof window !== 'undefined' ? localStorage.getItem('pending_google_role') : null) as UserRole || 'parent';
-            if (typeof window !== 'undefined') {
-              localStorage.removeItem('pending_google_role');
+            // Vérifier si l'utilisateur s'est connecté via Google
+            const isGoogleUser = firebaseUser.providerData.some(
+              (p) => p.providerId === 'google.com'
+            );
+            if (isGoogleUser || !isRegisteringRef.current) {
+              const pendingRole = normalizeRole(
+                typeof window !== 'undefined' ? localStorage.getItem('pending_google_role') : null,
+                'parent'
+              );
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('pending_google_role');
+              }
+              await syncGoogleUserDoc(firebaseUser, pendingRole);
             }
-            await syncGoogleUserDoc(firebaseUser, pendingRole);
           }
         } else {
           // L'utilisateur n'est pas connecté

@@ -17,7 +17,7 @@ export function DriverMessages() {
   const { user } = useAuth();
   const userId = user?.id;
   const userAvatar = user?.avatar;
-  const { conversations, messages, loading, sendMessage, markMessagesAsRead, loadMessages, createConversation } = useMessages();
+  const { conversations, messages, loading, sendMessage, markMessagesAsRead, loadMessages, createConversation, deleteMessage } = useMessages();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -183,7 +183,7 @@ export function DriverMessages() {
                     currentUserAvatar={userAvatar}
                     loading={loading}
                     onReplyToMessage={handleReplyToMessage}
-                    onDeleteMessage={() => {}}
+                    onDeleteMessage={deleteMessage}
                     onDownloadAttachment={handleDownloadAttachment}
                   />
                 </div>

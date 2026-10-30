@@ -379,6 +379,11 @@ export function useTracking() {
   const loadActiveMissions = useCallback(() => {
     if (!user?.id) return;
 
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+    }
+
     const activeMissionsRef = collection(db, 'activeMissions');
     const q = query(
       activeMissionsRef,
@@ -386,22 +391,30 @@ export function useTracking() {
       where('status', 'in', ['started', 'in_progress'])
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const missions: ActiveMission[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        missions.push({
-          id: doc.id,
-          ...data,
-          startTime: data.startTime?.toDate() || new Date(),
-          currentPosition: data.currentPosition ? {
-            ...data.currentPosition,
-            timestamp: data.currentPosition.timestamp?.toDate() || new Date(),
-          } : undefined,
-        } as ActiveMission);
-      });
-      setActiveMissions(missions);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const missions: ActiveMission[] = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          missions.push({
+            id: doc.id,
+            ...data,
+            startTime: data.startTime?.toDate?.() || new Date(),
+            currentPosition: data.currentPosition
+              ? {
+                  ...data.currentPosition,
+                  timestamp: data.currentPosition.timestamp?.toDate?.() || new Date(),
+                }
+              : undefined,
+          } as ActiveMission);
+        });
+        setActiveMissions(missions);
+      },
+      (err) => {
+        console.error('Erreur listener missions actives:', err);
+      }
+    );
 
     unsubscribeRef.current = unsubscribe;
   }, [user?.id]);
@@ -416,22 +429,30 @@ export function useTracking() {
       where('status', 'in', ['started', 'in_progress'])
     );
 
-    const unsub = onSnapshot(q, (snapshot) => {
-      let mission: ActiveMission | undefined;
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        mission = {
-          id: docSnap.id,
-          ...data,
-          startTime: data.startTime?.toDate() || new Date(),
-          currentPosition: data.currentPosition ? {
-            ...data.currentPosition,
-            timestamp: data.currentPosition.timestamp?.toDate() || new Date(),
-          } : undefined,
-        } as ActiveMission;
-      });
-      onChange(mission);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        let mission: ActiveMission | undefined;
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          mission = {
+            id: docSnap.id,
+            ...data,
+            startTime: data.startTime?.toDate?.() || new Date(),
+            currentPosition: data.currentPosition
+              ? {
+                  ...data.currentPosition,
+                  timestamp: data.currentPosition.timestamp?.toDate?.() || new Date(),
+                }
+              : undefined,
+          } as ActiveMission;
+        });
+        onChange(mission);
+      },
+      (err) => {
+        console.error('Erreur listener mission transport:', err);
+      }
+    );
 
     return unsub;
   }, []);

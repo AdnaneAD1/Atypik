@@ -86,14 +86,15 @@ export function useChildren() {
     setError(null);
     
     try {
+      const parsedAge = parseInt(data.age, 10);
       const newChild: Omit<Child, 'id'> = {
         firstName: data.firstName,
         lastName: data.lastName,
         name: `${data.firstName} ${data.lastName}`,
-        age: parseInt(data.age),
+        age: Number.isNaN(parsedAge) ? 0 : parsedAge,
         school: data.school,
         avatar: data.avatarUrl || null,
-        needs: data.specialNeeds ? data.specialNeeds.split(',').map((need: string) => need.trim()) : [],
+        needs: data.specialNeeds ? data.specialNeeds.split(',').map((need: string) => need.trim()).filter(Boolean) : [],
         personality: data.personality || '', // ✅ Ajout de la personnalité
         parentId: user.id
       };

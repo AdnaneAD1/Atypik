@@ -164,6 +164,11 @@ export function ShareDocumentDialog({
   };
 
   const handleShare = async () => {
+    if (shareMethod === 'link') {
+      onOpenChange(false);
+      return;
+    }
+
     if (!document || selectedUsers.length === 0) {
       toast({
         title: 'Erreur',
@@ -178,6 +183,7 @@ export function ShareDocumentDialog({
     try {
       if (shareMethod === 'message') {
         await shareViaMessage();
+        onDocumentShared(document.id, selectedUsers);
       } else {
         // Méthode de partage classique
         onDocumentShared(document.id, selectedUsers);
@@ -211,22 +217,20 @@ export function ShareDocumentDialog({
     for (const userId of selectedUsers) {
       try {
         // Trouver ou créer une conversation avec cet utilisateur
-        let conversation = conversations.find(conv => 
+        const existingConversation = conversations.find(conv => 
           conv.participants.some(p => p.id === userId) && conv.participants.length === 2
         );
 
-        if (!conversation) {
-          const conversationId = await createConversation([userId]);
-          if (conversationId) {
-            // Trouver la conversation créée
-            conversation = conversations.find(conv => conv.id === conversationId);
-          }
+        let targetConversationId: string | null | undefined = existingConversation?.id;
+
+        if (!targetConversationId) {
+          targetConversationId = await createConversation([userId]);
         }
 
-        if (conversation) {
+        if (targetConversationId) {
           // Utiliser la fonction shareDocument optimisée qui utilise directement les infos du document
           await shareDocument(
-            conversation.id,
+            targetConversationId,
             {
               id: document.id,
               name: document.name,
@@ -240,7 +244,7 @@ export function ShareDocumentDialog({
           // Envoyer une notification au correspondant (autre participant)
           try {
             const currentUserId = user?.id;
-            const receiver = conversation.participants?.find((p: any) => p.id !== currentUserId);
+            const receiver = existingConversation?.participants?.find((p: any) => p.id !== currentUserId);
             const receiverId = receiver?.id || userId; // fallback sur l'utilisateur ciblé dans la boucle
             if (receiverId) {
               const title = `Nouveau document de ${user?.name || 'Utilisateur'}`;
@@ -254,7 +258,7 @@ export function ShareDocumentDialog({
                   data: {
                     type: 'message',
                     subtype: 'document',
-                    conversationId: conversation.id,
+                    conversationId: targetConversationId,
                     documentId: document.id,
                   },
                 }),

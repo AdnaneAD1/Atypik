@@ -132,7 +132,7 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
                 type="file"
                 onChange={handleFileChange}
                 className="flex-1"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
               />
             </div>
             {file && (

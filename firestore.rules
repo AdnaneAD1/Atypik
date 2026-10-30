@@ -85,13 +85,28 @@ service cloud.firestore {
     // === COLLECTION CONVERSATIONS (conversations) ===
     match /conversations/{convId} {
       allow read, create, update: if isAuthenticated();
-      allow delete: if isAdmin();
+      allow delete: if isAuthenticated() && (
+        (resource.data.participantIds != null && request.auth.uid in resource.data.participantIds) ||
+        isAdmin()
+      );
     }
 
     // === COLLECTION MESSAGES (messages racine) ===
     match /messages/{messageId} {
       allow read, create, update: if isAuthenticated();
-      allow delete: if isAdmin();
+      allow delete: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // === COLLECTION APPELS AUDIO/VIDÉO (calls) ===
+    match /calls/{callId} {
+      allow read, create, update, delete: if isAuthenticated();
+    }
+
+    // === COLLECTION TOKENS FCM (fcmTokens) ===
+    match /fcmTokens/{tokenId} {
+      allow read, create, update, delete: if isAuthenticated();
     }
 
     // === COLLECTION ÉVALUATIONS / AVIS (reviews) ===
@@ -154,7 +169,7 @@ service cloud.firestore {
 
     match /subscriptions/{subId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow write: if isOwner(subId) || isAdmin();
     }
 
     // Protection par défaut contre toute injection sur collections arbitraires

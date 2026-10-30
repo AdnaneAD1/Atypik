@@ -49,7 +49,7 @@ export async function insertAllFrenchRegions() {
 }
 
 export function useRegion() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [regions, setRegions] = useState<Region[]>([]);
   const [userRegion, setUserRegion] = useState<Region | null>(null);
   const [loading, setLoading] = useState(false);
@@ -63,6 +63,8 @@ export function useRegion() {
       const snapshot = await getDocs(regionsRef);
       const regionsList: Region[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Region);
       setRegions(regionsList);
+    } catch (error) {
+      console.error('Erreur lors du chargement des régions :', error);
     } finally {
       setLoading(false);
     }
@@ -71,29 +73,38 @@ export function useRegion() {
   // Charger la région de l'utilisateur
   const loadUserRegion = useCallback(async () => {
     if (!user?.id) return;
-    const userRef = doc(db, 'users', user.id);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.data();
-    if (userData?.regionId) {
-      const regionRef = doc(db, 'regions', userData.regionId);
-      const regionSnap = await getDoc(regionRef);
-      if (regionSnap.exists()) {
-        setUserRegion({ id: regionSnap.id, ...regionSnap.data() } as Region);
-        setDialogOpen(false);
-        return;
+    try {
+      const userRef = doc(db, 'users', user.id);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+      if (userData?.regionId) {
+        const regionRef = doc(db, 'regions', userData.regionId);
+        const regionSnap = await getDoc(regionRef);
+        if (regionSnap.exists()) {
+          setUserRegion({ id: regionSnap.id, ...regionSnap.data() } as Region);
+          setDialogOpen(false);
+          return;
+        }
       }
+      setUserRegion(null);
+      if (user.role !== 'admin') {
+        setDialogOpen(true); // Ouvre le dialogue si pas de région (sauf admin)
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la région utilisateur :', error);
     }
-    setUserRegion(null);
-    setDialogOpen(true); // Ouvre le dialogue si pas de région
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   // Définir la région de l'utilisateur
   const setRegionForUser = useCallback(async (regionId: string) => {
     if (!user?.id) return;
-    const userRef = doc(db, 'users', user.id);
-    await updateDoc(userRef, { regionId });
-    await loadUserRegion();
-  }, [user?.id, loadUserRegion]);
+    try {
+      await updateUser({ regionId });
+      await loadUserRegion();
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la région :', error);
+    }
+  }, [user?.id, updateUser, loadUserRegion]);
 
   useEffect(() => {
     loadRegions();

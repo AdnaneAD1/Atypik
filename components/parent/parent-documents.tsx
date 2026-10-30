@@ -51,6 +51,7 @@ export function ParentDocuments() {
     documents, 
     loading, 
     error, 
+    loadDocuments,
     searchDocuments,
     downloadDocument,
     addDocument,
@@ -173,7 +174,7 @@ export function ParentDocuments() {
           ) : error ? (
             <div className="text-center py-12">
               <p className="text-sm text-destructive">{error}</p>
-              <Button variant="outline" size="sm" className="mt-4">
+              <Button variant="outline" size="sm" className="mt-4" onClick={loadDocuments}>
                 Réessayer
               </Button>
             </div>

@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, Firestore } from "firebase/firestore";
 import type { Messaging } from "firebase/messaging";
 import { getMessaging, getToken, onMessage, isSupported } from "firebase/messaging";
 
@@ -16,7 +16,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const db = getFirestore(app);
+let db: Firestore;
+try {
+  db = initializeFirestore(app, { ignoreUndefinedProperties: true });
+} catch {
+  db = getFirestore(app);
+}
 const googleProvider = new GoogleAuthProvider();
 
 // Initialize Firebase Messaging only in browser and when supported

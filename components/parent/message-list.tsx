@@ -29,7 +29,10 @@ export function MessageList({
   // Regroupement des messages par date (jour)
   const groupMessagesByDay = (msgs: Message[]) => {
     const groups: { [date: string]: Message[] } = {};
-    msgs.forEach(msg => {
+    const sortedMsgs = [...msgs].sort(
+      (a, b) => new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
+    );
+    sortedMsgs.forEach(msg => {
       const date = msg.timestamp ? new Date(msg.timestamp).toLocaleDateString('fr-FR') : 'Inconnu';
       if (!groups[date]) groups[date] = [];
       groups[date].push(msg);
@@ -37,7 +40,7 @@ export function MessageList({
     return groups;
   };
   const grouped = groupMessagesByDay(messages);
-  const sortedDates = Object.keys(grouped).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  const sortedDates = Object.keys(grouped);
 
   // Scroll auto
   useEffect(() => {
@@ -85,6 +88,7 @@ export function MessageList({
                     <MessageItem
                       message={message}
                       isCurrentUser={message.senderId === currentUserId}
+                      currentUserAvatar={currentUserAvatar}
                       onReply={onReplyToMessage}
                       onDelete={onDeleteMessage}
                       onDownloadAttachment={onDownloadAttachment}

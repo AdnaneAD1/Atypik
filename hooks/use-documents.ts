@@ -61,19 +61,38 @@ export function useDocuments() {
 
     try {
       const documentsRef = collection(db, 'documents');
-      const q = query(documentsRef, where('userId', '==', user.id));
-      const querySnapshot = await getDocs(q);
+      const ownedQuery = query(documentsRef, where('userId', '==', user.id));
+      const sharedQuery = query(documentsRef, where('sharedWith', 'array-contains', user.id));
 
-      const loadedDocuments: Document[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data() as Omit<Document, 'id'>;
-        loadedDocuments.push({
+      const [ownedSnap, sharedSnap] = await Promise.all([
+        getDocs(ownedQuery),
+        getDocs(sharedQuery).catch(() => null),
+      ]);
+
+      const docsMap = new Map<string, Document>();
+      ownedSnap.forEach((docSnap) => {
+        const data = docSnap.data() as Omit<Document, 'id'>;
+        docsMap.set(docSnap.id, {
           ...data,
-          id: doc.id,
+          tags: Array.isArray(data.tags) ? data.tags : [],
+          id: docSnap.id,
         });
       });
 
-      setDocuments(loadedDocuments);
+      if (sharedSnap) {
+        sharedSnap.forEach((docSnap) => {
+          if (!docsMap.has(docSnap.id)) {
+            const data = docSnap.data() as Omit<Document, 'id'>;
+            docsMap.set(docSnap.id, {
+              ...data,
+              tags: Array.isArray(data.tags) ? data.tags : [],
+              id: docSnap.id,
+            });
+          }
+        });
+      }
+
+      setDocuments(Array.from(docsMap.values()));
     } catch (err) {
       console.error('Erreur lors du chargement des documents:', err);
       setError('Impossible de charger les documents');
@@ -283,7 +302,7 @@ export function useDocuments() {
 
   // Filtrer les documents par tag
   const filterDocumentsByTag = useCallback((tag: string) => {
-    return documents.filter((document) => document.tags.includes(tag));
+    return documents.filter((document) => (document.tags || []).includes(tag));
   }, [documents]);
 
   // Rechercher des documents par nom
@@ -292,8 +311,8 @@ export function useDocuments() {
     
     const lowerCaseQuery = query.toLowerCase();
     return documents.filter((document) => 
-      document.name.toLowerCase().includes(lowerCaseQuery) ||
-      document.tags.some(tag => tag.toLowerCase().includes(lowerCaseQuery))
+      (document.name || '').toLowerCase().includes(lowerCaseQuery) ||
+      (document.tags || []).some(tag => tag.toLowerCase().includes(lowerCaseQuery))
     );
   }, [documents]);
 
