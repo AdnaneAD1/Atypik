@@ -56,10 +56,10 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.googleapis.com",
       // Polices de caractères
       "font-src 'self' https://fonts.gstatic.com https://*.gstatic.com data:",
-      // Images : domaines tiers autorisés + data URIs + blob + Google Maps + PayPal
-      "img-src 'self' data: blob: https://images.pexels.com https://img.freepik.com https://images.unsplash.com https://res.cloudinary.com https://*.googleusercontent.com https://*.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://*.google.com https://*.paypal.com https://*.paypalobjects.com",
-      // Connexions réseau : Firebase, Firestore, FCM, Auth Google, Google Maps, PayPal
-      "connect-src 'self' https://*.googleapis.com https://maps.googleapis.com https://*.google.com https://*.gstatic.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebase.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fcm.googleapis.com https://firebaseinstallations.googleapis.com https://accounts.google.com https://www.paypal.com https://*.paypal.com https://*.paypalobjects.com",
+      // Images : domaines tiers autorisés + data URIs + blob + Google Maps + PayPal + Cloudinary
+      "img-src 'self' data: blob: https://images.pexels.com https://img.freepik.com https://images.unsplash.com https://res.cloudinary.com https://*.cloudinary.com https://*.googleusercontent.com https://*.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://*.google.com https://*.paypal.com https://*.paypalobjects.com",
+      // Connexions réseau : Firebase, Firestore, FCM, Auth Google, Google Maps, PayPal, Cloudinary
+      "connect-src 'self' https://*.googleapis.com https://maps.googleapis.com https://*.google.com https://*.gstatic.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebase.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fcm.googleapis.com https://firebaseinstallations.googleapis.com https://accounts.google.com https://www.paypal.com https://*.paypal.com https://*.paypalobjects.com https://api.cloudinary.com https://*.cloudinary.com",
       // Iframes : Google OAuth popup, Firebase Auth, Google Maps, PayPal Modal / Checkout
       "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://www.google.com https://*.google.com https://www.paypal.com https://*.paypal.com",
       // Médias (vidéos, audio) : Cloudinary
@@ -111,7 +111,7 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(self), microphone=(), geolocation=(self)',
+            value: 'camera=(self), microphone=(self), geolocation=(self)',
           },
           {
             key: 'X-XSS-Protection',

@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { verifyAuthToken } from '@/lib/firebase/admin-auth';
+import { checkRateLimit } from '@/lib/security/rate-limiter';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // 0. Protection anti-flood upload (max 30 requêtes / min par IP)
+    const rateLimit = checkRateLimit(request, { maxRequests: 30, windowMs: 60 * 1000 });
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
     // 1. Vérification de l'authentification (sécurisation des uploads privés)
     const authUser = await verifyAuthToken(request);
     if (!authUser) {

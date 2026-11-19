@@ -65,7 +65,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ uid: userRecord.uid, email, password });
   } catch (e: any) {
     console.error('Create admin error:', e);
-    const message = e?.message || 'Erreur serveur';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Une erreur est survenue lors de la création de l'administrateur." },
+      { status: 500 }
+    );
   }
 }

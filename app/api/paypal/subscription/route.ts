@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { admin, adminDb } from '@/lib/firebase/admin';
 import { verifyAuthToken } from '@/lib/firebase/admin-auth';
+import { checkRateLimit } from '@/lib/security/rate-limiter';
 
 const PAYPAL_API_BASE =
   process.env.PAYPAL_ENV === 'sandbox'
@@ -48,6 +49,11 @@ async function cancelPayPalSubscriptionById(subscriptionId: string, reason: stri
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimit = checkRateLimit(req, { maxRequests: 20, windowMs: 60 * 1000 });
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
     if (!admin.apps.length) {
       return NextResponse.json(
         { error: 'Firebase Admin non configuré sur le serveur' },
@@ -158,6 +164,11 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const rateLimit = checkRateLimit(req, { maxRequests: 20, windowMs: 60 * 1000 });
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
     if (!admin.apps.length) {
       return NextResponse.json(
         { error: 'Firebase Admin non configuré sur le serveur' },

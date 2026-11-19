@@ -25,6 +25,9 @@ const config: CapacitorConfig = {
       'www.paypal.com',
       'www.sandbox.paypal.com',
       '*.paypalobjects.com',
+      'api.cloudinary.com',
+      'res.cloudinary.com',
+      '*.cloudinary.com',
     ],
   },
   android: {

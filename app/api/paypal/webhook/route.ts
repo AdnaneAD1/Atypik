@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { admin, adminDb } from '@/lib/firebase/admin';
+import { checkRateLimit } from '@/lib/security/rate-limiter';
 
 /**
  * Webhook PayPal pour gérer le renouvellement automatique mensuel des abonnements,
@@ -8,6 +9,11 @@ import { admin, adminDb } from '@/lib/firebase/admin';
  */
 export async function POST(req: NextRequest) {
   try {
+    const rateLimit = checkRateLimit(req, { maxRequests: 60, windowMs: 60 * 1000 });
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
     if (!admin.apps.length) {
       return NextResponse.json(
         { error: 'Firebase Admin non configuré' },

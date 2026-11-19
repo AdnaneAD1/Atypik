@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { verifyAuthToken } from '@/lib/firebase/admin-auth';
 import { getFileContent } from '@/lib/documents/local-storage';
+import { checkRateLimit } from '@/lib/security/rate-limiter';
 import path from 'path';
 
 export const runtime = 'nodejs';
@@ -9,6 +10,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // 0. Protection anti-flood / rate limiting (max 60 requêtes / min par IP)
+    const rateLimit = checkRateLimit(request, { maxRequests: 60, windowMs: 60 * 1000 });
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
     // 1. Vérification de l'authentification obligatoire
     const authUser = await verifyAuthToken(request);
     if (!authUser) {
@@ -52,7 +59,7 @@ export async function GET(request: NextRequest) {
     // 3. Fallback pour anciens fichiers locaux de développement (sécurisé contre Path Traversal)
     const rawFilePath = documentData.path;
     const safeFilePath = rawFilePath
-      ? `/documents/${path.basename(String(rawFilePath))}`
+      ? path.join(process.cwd(), 'public', 'documents', path.basename(String(rawFilePath)))
       : null;
     const fileContent = safeFilePath ? getFileContent(safeFilePath) : null;
 
