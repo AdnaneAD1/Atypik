@@ -30,6 +30,7 @@ import { UserRole } from '@/lib/auth/auth-context';
 import { useRegion } from '@/hooks/use-region';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { useToast } from '@/hooks/use-toast';
+import { getAuthErrorMessage } from '@/lib/auth/auth-errors';
 import { ChevronLeft, UserRound, Car } from 'lucide-react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/firebase/ClientApp';
@@ -115,7 +116,7 @@ export function RegisterForm() {
     } catch (error) {
       toast({
         title: 'Erreur d\'inscription',
-        description: 'Une erreur est survenue lors de l\'inscription',
+        description: getAuthErrorMessage(error),
         variant: 'destructive',
       });
     }
@@ -140,7 +141,7 @@ export function RegisterForm() {
     } catch (error) {
       toast({
         title: 'Erreur d\'inscription',
-        description: 'Une erreur est survenue lors de l\'inscription',
+        description: getAuthErrorMessage(error),
         variant: 'destructive',
       });
     }
@@ -158,7 +159,7 @@ export function RegisterForm() {
     } catch (error) {
       toast({
         title: 'Erreur de connexion',
-        description: 'Une erreur est survenue lors de la connexion avec Google',
+        description: getAuthErrorMessage(error),
         variant: 'destructive',
       });
     }

@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('[PayPal Subscription POST] Error:', error);
     return NextResponse.json(
-      { error: error?.message || "Erreur lors de la sauvegarde de l'abonnement" },
+      { error: "Erreur lors du traitement de l'abonnement. Veuillez réessayer plus tard." },
       { status: 500 }
     );
   }
@@ -219,7 +219,7 @@ export async function DELETE(req: NextRequest) {
   } catch (error: any) {
     console.error('[PayPal Subscription DELETE] Error:', error);
     return NextResponse.json(
-      { error: error?.message || "Erreur lors de l'annulation de l'abonnement" },
+      { error: "Erreur lors de l'annulation de l'abonnement. Veuillez réessayer plus tard." },
       { status: 500 }
     );
   }

@@ -108,6 +108,10 @@ export async function POST(req: Request) {
   } catch (err: any) {
     console.error('[POST]/api/notifications/send error', err);
     const status = err?.name === 'ZodError' ? 400 : 500;
-    return NextResponse.json({ error: err?.message || 'Unexpected error' }, { status });
+    const message =
+      status === 400
+        ? 'Données de notification invalides.'
+        : 'Erreur lors de l\'envoi de la notification.';
+    return NextResponse.json({ error: message }, { status });
   }
 }

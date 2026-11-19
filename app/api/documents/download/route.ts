@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Erreur lors du téléchargement du document:', error);
     return NextResponse.json(
-      { error: error?.message || 'Erreur serveur lors du téléchargement' },
+      { error: 'Impossible de télécharger ce document. Veuillez réessayer ultérieurement.' },
       { status: 500 }
     );
   }

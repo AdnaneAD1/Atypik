@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Erreur lors de l\'upload du document:', error);
     return NextResponse.json(
-      { error: error?.message || 'Erreur serveur lors du téléversement' },
+      { error: 'Erreur lors du téléversement du fichier. Veuillez réessayer ultérieurement.' },
       { status: 500 }
     );
   }
