@@ -17,6 +17,18 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.paypal.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'apis.google.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'accounts.google.com'
       }
     ]
   },
@@ -36,22 +48,20 @@ const nextConfig = {
   // Configuration des en-têtes HTTP de sécurité et Service Workers
   async headers() {
     // Content-Security-Policy : restreint les sources autorisées pour scripts, styles, images, etc.
-    // next.js requiert 'unsafe-inline' pour ses scripts de hydratation côté client.
-    // 'unsafe-eval' est nécessaire pour Firebase et certains polyfills.
     const ContentSecurityPolicy = [
       "default-src 'self'",
-      // Scripts : Next.js (inline), Google APIs (Firebase, OAuth)
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com",
+      // Scripts : Next.js (inline), Google APIs, PayPal SDK
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://www.paypal.com https://*.paypal.com https://*.paypalobjects.com",
       // Styles : inline (Tailwind/styled), Google Fonts
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Polices de caractères
       "font-src 'self' https://fonts.gstatic.com data:",
-      // Images : domaines tiers autorisés + data URIs + blob
-      "img-src 'self' data: blob: https://images.pexels.com https://img.freepik.com https://images.unsplash.com https://res.cloudinary.com https://*.googleusercontent.com https://*.gstatic.com",
-      // Connexions réseau : Firebase, Firestore, FCM, Auth Google
-      "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebase.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fcm.googleapis.com https://firebaseinstallations.googleapis.com https://accounts.google.com",
-      // Iframes : Google OAuth popup, Firebase Auth
-      "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com",
+      // Images : domaines tiers autorisés + data URIs + blob + PayPal
+      "img-src 'self' data: blob: https://images.pexels.com https://img.freepik.com https://images.unsplash.com https://res.cloudinary.com https://*.googleusercontent.com https://*.gstatic.com https://*.paypal.com https://*.paypalobjects.com",
+      // Connexions réseau : Firebase, Firestore, FCM, Auth Google, PayPal
+      "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebase.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://fcm.googleapis.com https://firebaseinstallations.googleapis.com https://accounts.google.com https://www.paypal.com https://*.paypal.com https://*.paypalobjects.com",
+      // Iframes : Google OAuth popup, Firebase Auth, PayPal Modal / Checkout
+      "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://www.paypal.com https://*.paypal.com",
       // Médias (vidéos, audio) : Cloudinary
       "media-src 'self' blob: data: https://res.cloudinary.com",
       // Service Workers et Web Workers
@@ -63,7 +73,7 @@ const nextConfig = {
       // Interdit les injections d'URL de base
       "base-uri 'self'",
       // Restreint les soumissions de formulaires
-      "form-action 'self' https://accounts.google.com",
+      "form-action 'self' https://accounts.google.com https://www.paypal.com https://*.paypal.com",
     ].join('; ');
 
     return [
