@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Calendar, User, Car } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-// Week days
+
 const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 interface ParentCalendarViewProps {
@@ -17,43 +15,30 @@ export function ParentCalendarView({ weeklySchedule = [], loading = false }: Par
   const [currentWeek, setCurrentWeek] = useState(0);
   const [selectedDay, setSelectedDay] = useState(0);
 
-  const prevWeek = () => setCurrentWeek(currentWeek - 1);
-  const nextWeek = () => setCurrentWeek(currentWeek + 1);
-
-  // Get current date and week dates
   const today = new Date();
   const startOfWeek = new Date(today);
   const dayOfWeek = today.getDay();
   const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  startOfWeek.setDate(today.getDate() + diffToMonday + (currentWeek * 7)); // Start from Monday
-  
+  startOfWeek.setDate(today.getDate() + diffToMonday + (currentWeek * 7));
+
   const weekDates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(startOfWeek);
     date.setDate(startOfWeek.getDate() + i);
     return date;
   });
 
-  // Get events for selected day
   const selectedDate = weekDates[selectedDay];
   const dayEvents: any[] = [];
-  
-  // Parcourir weeklySchedule pour trouver les événements du jour sélectionné
+
   weeklySchedule.forEach((schedule: any) => {
     const scheduleDate = new Date(schedule.date);
     if (scheduleDate.toDateString() === selectedDate.toDateString()) {
-      // Ajouter tous les trips de ce jour
       dayEvents.push(...schedule.trips);
     }
   });
-  
-  // Trier les événements par ordre croissant d'heure
-  dayEvents.sort((a, b) => {
-    const timeA = a.time || '00:00';
-    const timeB = b.time || '00:00';
-    return timeA.localeCompare(timeB);
-  });
 
-  // Check if a day has events
+  dayEvents.sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
+
   const hasEventsOnDay = (dayIndex: number) => {
     const dayDate = weekDates[dayIndex];
     return weeklySchedule.some((schedule: any) => {
@@ -62,99 +47,104 @@ export function ParentCalendarView({ weeklySchedule = [], loading = false }: Par
     });
   };
 
+  const isToday = (dayIndex: number) => weekDates[dayIndex].toDateString() === today.toDateString();
+
   const currentMonth = selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
+  const typeLabel = (type: string) =>
+    type === 'aller-retour' ? 'aller-retour' : type === 'aller' ? 'aller' : 'retour';
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium">{currentMonth}</h3>
-        <div className="flex space-x-1">
-          <Button variant="ghost" size="icon" onClick={prevWeek} className="h-7 w-7">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={nextWeek} className="h-7 w-7">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+    <div className="space-y-5">
+      {/* Mois + navigation semaine */}
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="mr-auto text-sm capitalize text-muted-foreground">{currentMonth}</p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentWeek(currentWeek - 1)}
+          className="h-10 border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+        >
+          Semaine précédente
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentWeek(currentWeek + 1)}
+          className="h-10 border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+        >
+          Semaine suivante
+        </Button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 mb-4">
-        {weekDays.map((day, index) => (
-          <motion.button
-            key={index}
-            whileTap={{ scale: 0.95 }}
-            className={cn(
-              "flex flex-col items-center justify-center py-2 rounded-md transition-colors",
-              selectedDay === index
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-secondary"
-            )}
-            onClick={() => setSelectedDay(index)}
-          >
-            <span className="text-xs">{day}</span>
-            <span className="text-sm font-medium">{weekDates[index].getDate()}</span>
-            {hasEventsOnDay(index) && (
-              <span className="h-1 w-1 rounded-full bg-current mt-1"></span>
-            )}
-          </motion.button>
-        ))}
+      {/* Jours de la semaine */}
+      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+        {weekDays.map((day, index) => {
+          const selected = selectedDay === index;
+          return (
+            <button
+              key={index}
+              onClick={() => setSelectedDay(index)}
+              className={cn(
+                'relative flex flex-col items-center justify-center rounded-lg border py-2.5 transition-colors',
+                selected
+                  ? 'border-brand-yellow bg-brand-yellow text-slate-900'
+                  : 'border-slate-200 text-slate-900 hover:border-brand-yellow/60'
+              )}
+            >
+              {isToday(index) && (
+                <span className="absolute -top-2.5 rounded-full bg-brand-yellow px-1.5 py-px text-[9px] font-bold uppercase text-slate-900">
+                  Auj.
+                </span>
+              )}
+              <span className={cn('text-[11px]', selected ? 'text-white/70' : 'text-muted-foreground')}>
+                {day}
+              </span>
+              <span className="text-base font-bold">{weekDates[index].getDate()}</span>
+              {hasEventsOnDay(index) && (
+                <span className={cn('mt-1 h-1.5 w-1.5 rounded-full', selected ? 'bg-slate-900' : 'bg-brand-yellow')} />
+              )}
+            </button>
+          );
+        })}
       </div>
 
+      {/* Filet marine */}
+      <div className="border-t-2 border-brand-yellow" />
+
+      {/* Transports du jour */}
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
         </div>
       ) : dayEvents.length > 0 ? (
-        <div className="space-y-3">
+        <div className="divide-y">
           {dayEvents.map((event, index) => (
-            <motion.div
-              key={event.id || `event-${index}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="flex items-start p-3 bg-secondary/50 rounded-lg"
-            >
-              <div className={cn(
-                "flex flex-col items-center justify-center mr-3 min-w-[40px]",
-                event.type === 'aller' ? "text-green-600" : event.type === 'retour' ? "text-blue-600" : "text-purple-600"
-              )}>
-                <span className="text-xs font-medium">
-                  {event.type === 'aller' ? 'Aller' : event.type === 'retour' ? 'Retour' : 'A/R'}
+            <div key={event.id || `event-${index}`} className="flex items-baseline gap-4 py-3.5 first:pt-0">
+              <span className="w-12 shrink-0 text-lg font-bold text-slate-900">{event.time}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-bold text-slate-900">{event.childName}</p>
+                <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                  {event.from?.address || 'Adresse de départ'} · {typeLabel(event.type)}
+                </p>
+              </div>
+              {(event.status === 'completed' || event.status === 'cancelled') && (
+                <span className={cn(
+                  'shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium',
+                  event.status === 'completed'
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-red-200 bg-red-50 text-red-600'
+                )}>
+                  {event.status === 'completed' ? 'Terminé' : 'Annulé'}
                 </span>
-                <span className="font-medium">{event.time}</span>
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <User className="h-3 w-3 mr-1" />
-                    <span className="font-medium">{event.childName}</span>
-                  </div>
-                  <span className={cn(
-                    "px-2 py-0.5 rounded-full text-[10px] font-medium",
-                    event.status === 'completed' ? "bg-green-100 text-green-700" :
-                    event.status === 'cancelled' ? "bg-red-100 text-red-700" :
-                    "bg-blue-100 text-blue-700"
-                  )}>
-                    {event.status === 'completed' ? 'Terminé' :
-                     event.status === 'cancelled' ? 'Annulé' : 'Programmé'}
-                  </span>
-                </div>
-                <p className="text-sm font-medium mb-1">
-                  {event.from?.address || 'Adresse de départ'} → {event.to?.address || 'Adresse d\'arrivée'}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Transport {event.type === 'aller' ? 'aller' : event.type === 'retour' ? 'retour' : 'aller-retour'}
-                </p>
-              </div>
-            </motion.div>
+              )}
+            </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-6 text-muted-foreground">
-          <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Aucun transport prévu pour ce jour</p>
-        </div>
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          Aucun transport prévu pour ce jour
+        </p>
       )}
     </div>
   );

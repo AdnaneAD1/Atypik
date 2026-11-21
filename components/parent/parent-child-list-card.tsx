@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { User, Plus, Heart, Book, Pill, AlarmClock, AlertTriangle } from 'lucide-react';
+import { Heart, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -66,77 +66,82 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
-            <span className="text-sm sm:text-base">Mes enfants</span>
+    <Card className="rounded-xl border shadow-none">
+      <CardHeader className="pb-0">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-lg font-bold">Mes enfants</CardTitle>
+            <CardDescription className="mt-1">Profils et besoins spécifiques</CardDescription>
           </div>
-          <Button 
-            variant="outline" 
+          <Button
             size="sm"
-            className="h-8 gap-1 text-xs"
+            className="h-10 shrink-0 bg-primary px-4 text-white hover:bg-primary/90"
             onClick={handleAddChild}
           >
-            <Plus className="h-3 w-3" />
-            <span>Ajouter</span>
+            Ajouter un enfant
           </Button>
-        </CardTitle>
-        <CardDescription>
-          Profils et besoins spécifiques
-        </CardDescription>
+        </div>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-5 pt-4">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-muted border-t-primary"></div>
           </div>
         ) : childrenData.length > 0 ? (
-          <div className="space-y-4">
+          <div className="divide-y">
             <AnimatePresence>
-              {childrenData.map((child) => (
+              {childrenData.map((child, index) => (
                 <motion.div
                   key={child.id}
-                  whileHover={{ scale: 1.01 }}
-                  className="flex items-center p-3 bg-secondary/50 rounded-lg cursor-pointer"
+                  className="group -mx-2 flex cursor-pointer items-center gap-3.5 rounded-lg px-2 py-4 transition-colors active:bg-slate-50"
                   onClick={() => handleShowDetails(child)}
                 >
-                  <Avatar className="h-10 w-10 mr-3">
+                  <Avatar className="h-11 w-11 shrink-0">
                     <AvatarImage src={child.avatar || undefined} alt={child.name} />
-                    <AvatarFallback className="bg-primary/10 text-primary">
-                      {child.name.split(' ').map(n => n[0]).join('')}
+                    <AvatarFallback className={[
+                      'bg-brand-yellow font-bold text-slate-900',
+                      'bg-primary font-bold text-white',
+                      'bg-brand-teal font-bold text-white',
+                    ][index % 3]}>
+                      {child.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  
-                  <div className="flex-1">
-                    <h4 className="font-medium">{child.name}</h4>
-                    <div className="flex flex-wrap items-center gap-1 mt-1">
-                      <span className="text-xs text-muted-foreground">
-                        {child.age} ans
-                      </span>
-                      <span className="text-xs text-muted-foreground mx-1">•</span>
-                      <span className="text-xs text-muted-foreground">
-                        {child.school}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {child.tags?.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-[10px] py-0 h-5">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
+
+                  <div className="min-w-0 flex-1">
+                    <h4 className="truncate font-bold text-slate-900">{child.name}</h4>
+                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                      {child.age} ans, {child.school}
+                    </p>
+                    {child.tags && child.tags.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {child.tags.map((tag, tagIndex) => (
+                          <Badge key={tagIndex} variant="outline" className="h-5 py-0 text-[10px]">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
+
+                  <span className="shrink-0 text-sm font-semibold text-slate-900 underline underline-offset-4">
+                    Voir le profil
+                  </span>
                 </motion.div>
               ))}
             </AnimatePresence>
           </div>
         ) : (
-          <div className="text-center py-8">
-            <User className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Aucun enfant ajouté</p>
-            <p className="text-xs text-muted-foreground mt-1">Cliquez sur &quot;Ajouter&quot; pour aller à la page de gestion</p>
+          <div className="flex flex-col items-center gap-5 py-8 text-center sm:flex-row sm:text-left">
+            <div className="h-28 w-[102px] shrink-0 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-horizontal.png" alt="" className="h-full w-full object-cover object-left" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Aucun enfant ajouté</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Cliquez sur &quot;Ajouter&quot; pour créer un profil
+              </p>
+            </div>
           </div>
         )}
 
@@ -149,10 +154,10 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
             {selectedChild && (
               <div className="space-y-4">
                 <div className="flex items-center space-x-4">
-                  <Avatar className="h-16 w-16">
+                  <Avatar className="h-16 w-16 border-2 border-brand-yellow">
                     <AvatarImage src={selectedChild.avatar || undefined} alt={selectedChild.name} />
-                    <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                      {selectedChild.name.split(' ').map(n => n[0]).join('')}
+                    <AvatarFallback className="bg-brand-yellow text-lg font-bold text-slate-900">
+                      {selectedChild.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   

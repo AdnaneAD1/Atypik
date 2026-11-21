@@ -5,12 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Plus, User, AlertTriangle, Pencil, Trash2 } from 'lucide-react';
+import { Plus, AlertTriangle, Pencil, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AddChildDialog } from './add-child-dialog';
 import { EditChildDialog } from './edit-child-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useChildren, AddChildData, Child } from '@/hooks/use-children';
+
+// Rotation des teintes de marque pour les cartes enfants
+const CARD_TINTS = [
+  { card: 'bg-brand-yellow/15', avatar: 'bg-brand-yellow text-slate-900' },
+  { card: 'bg-brand-teal/10', avatar: 'bg-brand-teal text-white' },
+  { card: 'bg-primary/10', avatar: 'bg-primary text-white' },
+  { card: 'bg-brand-pink/15', avatar: 'bg-brand-pink text-white' },
+];
 
 export function ParentChildren() {
   const { toast } = useToast();
@@ -55,19 +63,18 @@ export function ParentChildren() {
 
   return (
     <div className="space-y-6 sm:space-y-8 px-2 sm:px-4 md:px-6 max-w-7xl mx-auto">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Mes enfants</h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
-          Gérez les profils de vos enfants
-        </p>
-      </div>
-      
-      <div className="flex justify-end">
-        <Button 
-          className="bg-primary hover:bg-primary/90 h-9 sm:h-10 text-xs sm:text-sm w-full sm:w-auto max-w-[200px]"
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Mes enfants</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Gérez les profils de vos enfants
+          </p>
+        </div>
+        <Button
+          className="h-10 w-full bg-primary hover:bg-primary/90 sm:w-auto"
           onClick={() => setIsAddDialogOpen(true)}
         >
-          <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+          <Plus className="mr-1.5 h-4 w-4" />
           Ajouter un enfant
         </Button>
       </div>
@@ -111,118 +118,116 @@ export function ParentChildren() {
           </div>
         </div>
       ) : children.length === 0 ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="flex flex-col items-center text-center">
-            <User className="h-12 w-12 text-muted-foreground" />
-            <p className="mt-4 text-sm text-muted-foreground">Vous n&apos;avez pas encore ajouté d&apos;enfant</p>
+        <div className="flex flex-col items-center gap-5 py-12 text-center sm:flex-row sm:text-left">
+          <div className="h-28 w-[102px] shrink-0 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-horizontal.png" alt="" className="h-full w-full object-cover object-left" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Vous n&apos;avez pas encore ajouté d&apos;enfant</p>
+            <p className="mt-1 text-sm text-muted-foreground">Créez un premier profil pour programmer un transport</p>
             <Button
-              className="mt-4 bg-primary hover:bg-primary/90"
+              className="mt-3 bg-primary hover:bg-primary/90"
               onClick={() => setIsAddDialogOpen(true)}
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Ajouter un enfant
             </Button>
           </div>
         </div>
       ) : (
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-          {children.map((child) => (
+          {children.map((child, index) => {
+            const tint = CARD_TINTS[index % CARD_TINTS.length];
+            return (
             <motion.div
               key={child.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="overflow-hidden">
-                <div className="relative h-32 sm:h-40 bg-gradient-to-r from-primary/20 to-primary/10">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <User className="h-16 w-16 sm:h-20 sm:w-20 text-primary/40" />
-                  </div>
-                  <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 sm:h-8 sm:w-8 bg-background/80 hover:bg-background/90"
-                      onClick={() => handleEditClick(child)}
-                    >
-                      <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 sm:h-8 sm:w-8 bg-destructive/10 hover:bg-destructive/20 text-destructive"
-                      onClick={async () => {
-                        if (child.id && confirm(`Êtes-vous sûr de vouloir supprimer ${child.name} ?`)) {
-                          await deleteChild(child.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </Button>
-                  </div>
-                </div>
-  
-                <CardContent className="p-4 sm:p-6">
+              <Card className={`rounded-2xl border-0 shadow-none ${tint.card}`}>
+                <CardContent className="p-4 sm:p-5">
                   <div className="flex flex-row items-start gap-3 sm:gap-4">
-                    <Avatar className="h-14 w-14 sm:h-16 sm:w-16 border-2 border-primary">
+                    <Avatar className="h-14 w-14 sm:h-16 sm:w-16">
                       <AvatarImage src={child.avatar || undefined} alt={child.name} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-lg sm:text-xl">
+                      <AvatarFallback className={`text-lg sm:text-xl font-bold ${tint.avatar}`}>
                         {child.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-  
-                    <div className="flex-1 w-full">
+
+                    <div className="flex-1 w-full min-w-0">
                       <div className="flex flex-row items-start justify-between gap-2">
-                        <div>
-                          <h3 className="text-base sm:text-lg font-semibold">{child.name}</h3>
-                          <p className="text-xs sm:text-sm text-muted-foreground">
-                            {child.age} ans • {child.school}
+                        <div className="min-w-0">
+                          <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">{child.name}</h3>
+                          <p className="text-xs sm:text-sm text-slate-600">
+                            {child.age} ans, {child.school}
                           </p>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs h-7 sm:h-8 w-auto"
-                          onClick={() => handleEditClick(child)}
-                        >
-                          Modifier
-                        </Button>
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-full bg-white/70 text-slate-700 hover:bg-white"
+                            onClick={() => handleEditClick(child)}
+                            aria-label={`Modifier ${child.name}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-full bg-white/70 text-primary hover:bg-white"
+                            onClick={async () => {
+                              if (child.id && confirm(`Êtes-vous sûr de vouloir supprimer ${child.name} ?`)) {
+                                await deleteChild(child.id);
+                              }
+                            }}
+                            aria-label={`Supprimer ${child.name}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-  
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-3">
+
+                      {/* Besoins — bloc blanc façon référence */}
+                      <div className="mt-3 rounded-xl bg-white/70 px-3.5 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                          Besoins spécifiques
+                        </p>
                         {child.needs && child.needs.length > 0 ? (
-                          child.needs.map((need, index) => (
-                            <Badge
-                              key={index}
-                              variant="outline"
-                              className="text-[10px] sm:text-xs py-0 h-5 bg-primary/5 text-primary border-primary/20"
-                            >
-                              {need}
-                            </Badge>
-                          ))
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {child.needs.map((need, needIndex) => (
+                              <Badge
+                                key={needIndex}
+                                variant="outline"
+                                className="h-6 border-slate-200 bg-white py-0 text-xs font-medium text-slate-700"
+                              >
+                                {need}
+                              </Badge>
+                            ))}
+                          </div>
                         ) : (
-                          <p className="text-xs text-muted-foreground">Aucun besoin spécifique</p>
+                          <p className="mt-1 text-xs text-slate-500">Aucun besoin renseigné</p>
                         )}
                       </div>
 
-                      {/* Affichage de la personnalité */}
-                      {child.personality && (
-                        <div className="mt-3 p-2 sm:p-3 bg-secondary/30 rounded-lg border border-secondary/50">
-                          <div className="flex items-center gap-2 mb-1">
-                            <User className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs font-medium text-muted-foreground">Personnalité</span>
-                          </div>
-                          <p className="text-xs sm:text-sm text-foreground leading-relaxed">
-                            {child.personality}
-                          </p>
-                        </div>
-                      )}
+                      {/* Personnalité — sous filet */}
+                      <div className="mt-3 border-t border-slate-900/10 pt-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                          Personnalité
+                        </p>
+                        <p className="mt-1 text-xs sm:text-sm font-medium text-slate-900 leading-relaxed">
+                          {child.personality || 'Non renseignée'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+          );
+          })}
         </div>
       )}
     </div>

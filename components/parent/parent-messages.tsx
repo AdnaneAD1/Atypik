@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 
 // Import des hooks personnalisés
 import { useMessages } from '@/hooks/use-messages';
@@ -15,7 +15,6 @@ import { authFetch } from '@/lib/api/auth-fetch';
 import { ConversationList } from './conversation-list';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
-import { NewConversationDialog } from './new-conversation-dialog';
 import { CallDialog } from './call-dialog';
 import { ChatHeader } from './chat-header';
 
@@ -29,8 +28,7 @@ export function ParentMessages() {
     loading, 
     isUploading,
     uploadProgress,
-    sendMessage, 
-    createConversation, 
+    sendMessage,
     deleteMessage,
     deleteConversation,
     markMessagesAsRead,
@@ -50,11 +48,9 @@ export function ParentMessages() {
 
 
 // États locaux pour la gestion des dialogues et des réponses
-  const [isNewConversationDialogOpen, setNewConversationDialogOpen] = useState(false);
   const [isCallDialogOpen, setCallDialogOpen] = useState(false);
   const [replyingTo, setReplyingTo] = useState<any>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Marquer la conversation comme lue à chaque sélection
   useEffect(() => {
@@ -135,38 +131,6 @@ export function ParentMessages() {
     }
   };
 
-  const handleNewConversation = () => {
-    setNewConversationDialogOpen(true);
-  };
-
-  const handleCreateConversation = async (participants: string[]) => {
-    if (!user) {
-      console.error('Erreur: utilisateur non connecté');
-      toast({
-        title: 'Erreur',
-        description: 'Vous devez être connecté pour créer une conversation',
-        variant: 'destructive'
-      });
-      setLoadingUsers(false);
-      return;
-    }
-    
-    setLoadingUsers(true);
-    const conversationId = await createConversation(participants);
-    setLoadingUsers(false);
-    setNewConversationDialogOpen(false);
-    if (conversationId) {
-      setSelectedConversationId(conversationId);
-    } else {
-      console.error('Impossible de créer la conversation: conversationId est null');
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de créer la conversation',
-        variant: 'destructive'
-      });
-    }
-  };
-
   const handleReplyToMessage = (message: any) => {
     setReplyingTo(message);
   };
@@ -208,114 +172,84 @@ export function ParentMessages() {
     endCall();
   };
 
-  const handleDownloadAttachment = (attachment: any) => {
-    window.open(attachment.url, '_blank');
+  const handleDownloadAttachment = (url: string, filename: string) => {
+    window.open(url, '_blank');
   };
 
   // Vérifier si l'utilisateur actuel est l'appelant
   const isCurrentUserCaller = currentCall ? currentCall.callerId === user?.id : false;
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
-      {/* Layout mobile : une seule vue à la fois, desktop : grid horizontal */}
-      <div className="flex flex-col md:grid md:grid-cols-3 h-full gap-4 md:gap-6">
-        {/* Mobile : Liste des conversations OU zone de chat (jamais les deux) */}
-        {/* Desktop : Toujours les deux côte à côte */}
-        
-        {/* Liste des conversations - Visible sur desktop OU sur mobile quand aucune conversation n'est sélectionnée */}
-        <div className={`${selectedConversationId ? 'hidden md:block' : 'block'} h-full md:col-span-1`}>
-          <Card className="h-full flex flex-col">
-            <ConversationList
-              conversations={conversations}
-              selectedConversationId={selectedConversationId}
-              onSelectConversation={setSelectedConversationId}
-              onNewConversation={handleNewConversation}
-              currentUserId={user?.id || ''}
-            />
-          </Card>
+    <div className="h-[calc(100vh-8rem)]">
+      {/* Une seule surface, filet vertical entre les colonnes */}
+      <Card className="grid h-full overflow-hidden rounded-xl border p-0 shadow-none md:grid-cols-[320px_1fr] md:divide-x">
+
+        {/* Liste des conversations */}
+        <div className={`${selectedConversationId ? 'hidden md:flex' : 'flex'} h-full min-h-0 flex-col`}>
+          <ConversationList
+            conversations={conversations}
+            selectedConversationId={selectedConversationId}
+            onSelectConversation={setSelectedConversationId}
+            currentUserId={user?.id || ''}
+          />
         </div>
 
-        {/* Zone de chat - Visible sur desktop OU sur mobile quand une conversation est sélectionnée */}
-        <div className={`${selectedConversationId ? 'block' : 'hidden md:block'} flex-1 md:col-span-2 min-h-0`}>
-          <Card className="h-full p-0 flex flex-col">
-            {selectedConversationId ? (
-              (() => {
-                const selectedConversation = conversations.find(c => c.id === selectedConversationId);
-                // Trouver le correspondant (différent de l'utilisateur connecté)
-                const correspondent = selectedConversation?.participants.find((p: any) => p.id !== user?.id);
-                return (
-                  <div className="flex flex-col h-full">
-                    {/* Bannière en haut avec bouton retour sur mobile */}
-                    <div className="flex-shrink-0">
-                      <div className="flex items-center md:hidden px-4 py-2 border-b bg-white dark:bg-gray-900">
-                        <button
-                          onClick={() => setSelectedConversationId(null)}
-                          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition mr-2"
-                        >
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                          </svg>
-                        </button>
-                        <span className="text-sm font-medium">Retour aux conversations</span>
-                      </div>
-                      <ChatHeader
-                        avatarUrl={correspondent?.avatar || ''}
-                        name={correspondent?.name || ''}
-                        role={correspondent?.role || ''}
-                        onCallVoice={() => handleInitiateCall('audio')}
-                        onCallVideo={() => handleInitiateCall('video')}
-                      />
-                    </div>
-                    {/* Liste des messages avec scroll indépendant */}
-                    <div className="flex-1 min-h-0 overflow-hidden">
-                      <MessageList
-                        messages={messages}
-                        currentUserId={user?.id || ''}
-                        currentUserAvatar={user?.avatar || ''}
-                        loading={loading}
-                        onReplyToMessage={handleReplyToMessage}
-                        onDeleteMessage={handleDeleteMessage}
-                        onDownloadAttachment={handleDownloadAttachment}
-                      />
-                    </div>
-                    {/* Input toujours en bas */}
-                    <div className="flex-shrink-0 border-t bg-white dark:bg-gray-900 px-2 py-2">
-                      <MessageInput
-                        onSendMessage={handleSendMessage}
-                        replyingTo={replyingTo}
-                        onCancelReply={handleCancelReply}
-                        isUploading={isUploading}
-                        uploadProgress={uploadProgress}
-                      />
-                    </div>
+        {/* Zone de chat */}
+        <div className={`${selectedConversationId ? 'flex' : 'hidden md:flex'} h-full min-h-0 flex-col`}>
+          {selectedConversationId ? (
+            (() => {
+              const selectedConversation = conversations.find(c => c.id === selectedConversationId);
+              // Trouver le correspondant (différent de l'utilisateur connecté)
+              const correspondent = selectedConversation?.participants.find((p: any) => p.id !== user?.id);
+              return (
+                <>
+                  <ChatHeader
+                    avatarUrl={correspondent?.avatar || ''}
+                    name={correspondent?.name || ''}
+                    role={correspondent?.role || ''}
+                    online={correspondent?.online}
+                    onBack={() => setSelectedConversationId(null)}
+                    onCallVoice={() => handleInitiateCall('audio')}
+                    onCallVideo={() => handleInitiateCall('video')}
+                  />
+                  <div className="min-h-0 flex-1 overflow-hidden">
+                    <MessageList
+                      messages={messages}
+                      currentUserId={user?.id || ''}
+                      currentUserAvatar={user?.avatar || ''}
+                      loading={loading}
+                      onReplyToMessage={handleReplyToMessage}
+                      onDeleteMessage={handleDeleteMessage}
+                      onDownloadAttachment={handleDownloadAttachment}
+                    />
                   </div>
-                );
-              })()
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center text-muted-foreground">
-                  <p className="text-sm sm:text-base">Sélectionnez une conversation ou créez-en une nouvelle</p>
-                  <button
-                    onClick={handleNewConversation}
-                    className="mt-4 flex items-center mx-auto gap-2 text-primary hover:underline text-sm sm:text-base"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Nouvelle conversation
-                  </button>
+                  <div className="flex-shrink-0 border-t">
+                    <MessageInput
+                      onSendMessage={handleSendMessage}
+                      replyingTo={replyingTo}
+                      onCancelReply={handleCancelReply}
+                      isUploading={isUploading}
+                      uploadProgress={uploadProgress}
+                    />
+                  </div>
+                </>
+              );
+            })()
+          ) : (
+            <div className="flex h-full items-center justify-center p-6">
+              <div className="text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <MessageSquare className="h-5 w-5 text-primary" />
                 </div>
+                <p className="font-medium">Vos conversations</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Sélectionnez une conversation pour afficher les messages
+                </p>
               </div>
-            )}
-          </Card>
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Dialogues */}
-      <NewConversationDialog
-        open={isNewConversationDialogOpen}
-        onOpenChange={setNewConversationDialogOpen}
-        onCreateConversation={handleCreateConversation}
-        loading={loadingUsers}
-      />
+      </Card>
 
       <CallDialog
         open={isCallDialogOpen}

@@ -1,34 +1,42 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Clock, User, Navigation, RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { useAuth } from '@/lib/auth/auth-context';
 import { useTransport } from '@/hooks/use-transport';
 import { useTracking } from '@/hooks/use-tracking';
-import { Badge } from '@/components/ui/badge';
+import { useChildren } from '@/hooks/use-children';
+import { cn } from '@/lib/utils';
 
 export function ParentTracking() {
   const { user } = useAuth();
   const { transportEvents, loadTransports } = useTransport();
+  const { children: childrenProfiles } = useChildren();
   const { getActiveMissionByTransport, getMissionPosition, listenMissionByTransport } = useTracking();
   const [watchedMission, setWatchedMission] = useState<any | null>(null);
   const [watchedPosition, setWatchedPosition] = useState<{ lat: number; lng: number; timestamp: number } | null>(null);
   
   const [selectedTransportId, setSelectedTransportId] = useState<string>('');
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const routeRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
   // Charger les transports au montage
+  const refresh = () => {
+    loadTransports();
+    setLastUpdated(new Date());
+  };
+
   useEffect(() => {
     if (user?.id) {
-      loadTransports();
+      refresh();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, loadTransports]);
 
   // Obtenir le transport sélectionné et sa mission active
@@ -50,6 +58,7 @@ export function ParentTracking() {
             lng: mission.currentPosition.lng,
             timestamp: mission.currentPosition.timestamp?.getTime?.() || new Date().getTime(),
           });
+          setLastUpdated(new Date());
         } else {
           setWatchedPosition(null);
         }
@@ -61,7 +70,7 @@ export function ParentTracking() {
   }, [selectedTransportId, listenMissionByTransport]);
 
   // Initialiser Google Maps
-  const initializeMap = () => {
+  const initializeMap = useCallback(() => {
     if (!mapRef.current || !window.google || !selectedTransport) return;
 
     const defaultCenter = {
@@ -86,6 +95,25 @@ export function ParentTracking() {
         gestureHandling: 'cooperative',
         disableDefaultUI: false,
         clickableIcons: false,
+        // Style nuit — assorti au panneau de suivi sombre
+        styles: [
+          { elementType: 'geometry', stylers: [{ color: '#1d2c4d' }] },
+          { elementType: 'labels.text.fill', stylers: [{ color: '#8ec3b9' }] },
+          { elementType: 'labels.text.stroke', stylers: [{ color: '#1a3646' }] },
+          { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#4b6878' }] },
+          { featureType: 'administrative.province', elementType: 'geometry.stroke', stylers: [{ color: '#4b6878' }] },
+          { featureType: 'landscape.man_made', elementType: 'geometry.stroke', stylers: [{ color: '#334e87' }] },
+          { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#023e58' }] },
+          { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#283d6a' }] },
+          { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#6f9ba5' }] },
+          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304a7d' }] },
+          { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#98a5be' }] },
+          { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2c6675' }] },
+          { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#255763' }] },
+          { featureType: 'transit', elementType: 'labels.text.fill', stylers: [{ color: '#98a5be' }] },
+          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e1626' }] },
+          { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4e6d70' }] },
+        ],
       });
 
       // Ajouter les marqueurs de départ et d'arrivée
@@ -125,7 +153,7 @@ export function ParentTracking() {
         routeRendererRef.current = new google.maps.DirectionsRenderer({
           suppressMarkers: true,
           polylineOptions: {
-            strokeColor: '#3B82F6',
+            strokeColor: '#fcb50d',
             strokeWeight: 4,
           },
         });
@@ -147,7 +175,7 @@ export function ParentTracking() {
     } catch (error) {
       console.error('Erreur lors de l\'initialisation de la carte:', error);
     }
-  };
+  }, [selectedTransport]);
 
   // Mettre à jour la position du chauffeur
   useEffect(() => {
@@ -166,7 +194,7 @@ export function ParentTracking() {
         icon: {
           url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" fill="#3B82F6"/>
+              <circle cx="12" cy="12" r="10" fill="#fcb50d"/>
               <path d="M8 12l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           `),
@@ -189,7 +217,7 @@ export function ParentTracking() {
       // Réduire le délai pour un chargement plus rapide
       setTimeout(initializeMap, 50);
     }
-  }, [selectedTransport]);
+  }, [selectedTransport, initializeMap]);
 
   // Précharger Google Maps si pas encore fait
   useEffect(() => {
@@ -205,10 +233,10 @@ export function ParentTracking() {
       };
       document.head.appendChild(script);
     }
-  }, [selectedTransport]);
+  }, [selectedTransport, initializeMap]);
 
   // Filtrer les transports d'aujourd'hui (exclure les transports annulés)
-  const todayTransports = transportEvents?.filter(transport => {
+  const todayTransports = useMemo(() => transportEvents?.filter(transport => {
     const today = new Date();
     const transportDate = transport.date;
     return (
@@ -216,7 +244,7 @@ export function ParentTracking() {
       transport.status !== 'cancelled' &&
       transport.status !== 'completed'
     );
-  }) || [];
+  }) || [], [transportEvents]);
   const noTransports = todayTransports.length === 0;
 
   // Sélectionner automatiquement le premier transport du jour s'il n'y en a pas de sélectionné
@@ -226,171 +254,241 @@ export function ParentTracking() {
     }
   }, [todayTransports, selectedTransportId]);
 
+  const isEnRoute = !!(watchedMission || activeMission);
+  const stepIndex = isEnRoute ? 1 : 0; // 0 = En attente, 1 = En route, 2 = Arrivé
+  const STEPS = ['En attente', 'En route', 'Arrivé'];
+  const AVATAR_TINTS = [
+    'bg-brand-yellow text-slate-900',
+    'bg-brand-teal text-white',
+    'bg-primary text-white',
+    'bg-brand-pink text-white',
+  ];
+  const shortAddr = (addr?: string) => (addr || '').split(',')[0];
+  const firstName = (selectedTransport?.childName || '').split(' ')[0];
+  const childPhoto = (name?: string) =>
+    childrenProfiles.find((c: any) => c.name === name)?.avatar || undefined;
+  const childInitials = (name?: string) =>
+    (name || 'E').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Suivi en temps réel</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => loadTransports()}
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Actualiser
-        </Button>
+    <div className="container mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
+      {/* En-tête */}
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight">Suivi en temps réel</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Position de votre enfant en direct
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          {lastUpdated && (
+            <span className="hidden text-xs text-muted-foreground sm:inline" aria-live="polite">
+              Mis à jour à {lastUpdated.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+          <Button
+            className="h-10 bg-primary px-4 font-bold text-white hover:bg-primary/90 sm:h-12 sm:px-5"
+            onClick={refresh}
+          >
+            Actualiser
+          </Button>
+        </div>
       </div>
 
-      {/* Sélection du transport */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <span className="text-sm sm:text-base">Sélectionner un transport</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select value={selectedTransportId} onValueChange={setSelectedTransportId}>
-            <SelectTrigger disabled={noTransports}>
-              <SelectValue placeholder={noTransports ? "Aucun transport disponible" : "Choisissez un transport d'aujourd'hui"} />
-            </SelectTrigger>
-            <SelectContent>
-              {noTransports ? (
-                <SelectItem value="none" disabled>
-                  Aucun transport disponible
-                </SelectItem>
-              ) : (
-                todayTransports.map(transport => (
-                  <SelectItem key={transport.id} value={transport.id}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{transport.childName} - {transport.time}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {transport.from.address} → {transport.to.address}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
-      {selectedTransport && (
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Carte en temps réel */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Position en temps réel
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative">
-                <div 
-                  ref={mapRef} 
-                  className="w-full h-96 rounded-lg border"
-                  style={{ minHeight: '384px' }}
-                />
-                {!isMapLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted/30 rounded-lg backdrop-blur-sm">
-                    <div className="flex flex-col items-center gap-2 bg-white/90 p-4 rounded-lg shadow-sm">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      <p className="text-sm text-muted-foreground">Initialisation...</p>
-                    </div>
-                  </div>
+      {/* Sélection du transport — pilules enfant */}
+      {todayTransports.length > 0 && (
+        <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:gap-3" role="radiogroup" aria-label="Choisir un transport">
+          {todayTransports.map((transport, index) => {
+            const selected = transport.id === selectedTransportId;
+            const photo = childPhoto(transport.childName);
+            return (
+              <button
+                key={transport.id}
+                onClick={() => setSelectedTransportId(transport.id)}
+                aria-pressed={selected}
+                className={cn(
+                  'flex min-w-0 items-center gap-2.5 rounded-full py-2 pl-2 pr-3 text-left transition-colors sm:gap-3 sm:pr-5',
+                  selected
+                    ? 'bg-primary text-white'
+                    : 'bg-white text-slate-900 hover:bg-slate-50'
                 )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Détails du trajet */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Détails du trajet</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Enfant</p>
-                <p className="text-sm text-muted-foreground">{selectedTransport.childName}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Type de transport</p>
-                <Badge variant="outline">{selectedTransport.transportType}</Badge>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Heure prévue</p>
-                <p className="text-sm text-muted-foreground">{selectedTransport.time}</p>
-              </div>
-
-              {selectedTransport.motif && selectedTransport.motif.trim() !== '' && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Motif</p>
-                  <p className="text-sm text-muted-foreground break-words">{selectedTransport.motif}</p>
-                </div>
-              )}
-
-              {typeof (selectedTransport as any).waitingTime === 'number' && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Temps d&apos;attente</p>
-                  <p className="text-sm text-muted-foreground">{(selectedTransport as any).waitingTime} min</p>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Départ</p>
-                <p className="text-sm text-muted-foreground">{selectedTransport.from.address}</p>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Arrivée</p>
-                <p className="text-sm text-muted-foreground">{selectedTransport.to.address}</p>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Statut</p>
-                {watchedMission || activeMission ? (
-                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                    <Navigation className="h-3 w-3 mr-1" />
-                    En cours
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">
-                    <Clock className="h-3 w-3 mr-1" />
-                    En attente
-                  </Badge>
-                )}
-              </div>
-
-              {currentPosition && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Dernière position</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(currentPosition.timestamp).toLocaleTimeString('fr-FR')}
-                  </p>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Distance</p>
-                <p className="text-sm text-muted-foreground">
-                  {(selectedTransport.distance / 1000).toFixed(2)} km
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              >
+                <span className={cn(
+                  'flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold sm:h-11 sm:w-11 sm:text-sm',
+                  !photo && AVATAR_TINTS[index % AVATAR_TINTS.length]
+                )}>
+                  {photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photo} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    childInitials(transport.childName)
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <span className={cn('block truncate text-sm font-bold', selected ? 'text-white' : 'text-slate-900')}>
+                    {transport.childName}, {transport.time}
+                  </span>
+                  <span className={cn('block truncate text-xs', selected ? 'text-white/75' : 'text-muted-foreground')}>
+                    {shortAddr(transport.from?.address)} vers {shortAddr(transport.to?.address)}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {!selectedTransport && todayTransports.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Aucun transport aujourd&apos;hui</h3>
-            <p className="text-muted-foreground text-center">
-              Vous n&apos;avez aucun transport programmé pour aujourd&apos;hui.
+      {selectedTransport ? (
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
+          {/* Carte — fond nuit comme la référence */}
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[6px_28px_6px_28px] bg-slate-900 sm:aspect-[800/560]">
+            <div ref={mapRef} className="absolute inset-0" />
+            {!isMapLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin text-brand-yellow" />
+                  <p className="text-sm text-white/60">Initialisation...</p>
+                </div>
+              </div>
+            )}
+            <span className={cn(
+              'absolute left-5 top-5 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold',
+              isEnRoute ? 'bg-emerald-400 text-slate-900' : 'bg-primary text-white'
+            )}>
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-900" />
+              {isEnRoute ? 'En route' : 'En attente'}
+            </span>
+            <span className="absolute bottom-4 right-4 rounded-md bg-slate-900 px-3.5 py-1.5 font-brand text-base font-bold text-white">
+              {(selectedTransport.distance / 1000).toFixed(2).replace('.', ',')} km
+            </span>
+            <span className="absolute bottom-4 left-5 text-sm text-white/70">
+              Itinéraire prévu
+            </span>
+          </div>
+
+          {/* Panneau info — carte claire à liseré jaune */}
+          <div className="rounded-[6px_28px_6px_28px] bg-white p-6 shadow-sm sm:p-7">
+            <h2 className="font-brand text-2xl font-bold leading-tight text-slate-900">
+              {isEnRoute
+                ? `${firstName} est en route.`
+                : `${firstName} n'est pas encore parti.`}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {isEnRoute
+                ? 'Sa position est mise à jour en temps réel.'
+                : "Le transport n'a pas commencé. Sa position apparaîtra ici dès le départ."}
             </p>
+
+            {/* Étapes — filets comme la référence */}
+            <ol className="mt-6 grid grid-cols-3 gap-1.5">
+              {STEPS.map((step, i) => (
+                <li
+                  key={step}
+                  aria-current={i === stepIndex ? 'step' : undefined}
+                  className={cn(
+                    'border-t-[6px] pt-2.5 text-sm',
+                    i === stepIndex
+                      ? 'border-primary font-bold text-slate-900'
+                      : 'border-slate-200 text-muted-foreground'
+                  )}
+                >
+                  {step}
+                </li>
+              ))}
+            </ol>
+
+            {/* Heure */}
+            <div className="mt-7 flex items-baseline gap-3.5">
+              <span className="font-brand text-6xl font-bold leading-none tracking-tight text-slate-900">
+                {selectedTransport.time}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {isEnRoute ? 'Heure de départ' : 'Heure prévue'}
+              </span>
+            </div>
+
+            {/* Itinéraire — pointillés + points vert/corail */}
+            <ul className="relative mt-6 space-y-5">
+              <span className="absolute bottom-7 left-[7px] top-3.5 w-0 border-l-2 border-dotted border-slate-300" aria-hidden="true" />
+              <li className="relative pl-8">
+                <span className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full bg-emerald-600" />
+                <p className="truncate text-sm font-bold text-slate-900">
+                  {shortAddr(selectedTransport.from?.address) || 'Départ'}
+                </p>
+                <p className="mt-0.5 break-words text-xs text-muted-foreground">
+                  {selectedTransport.from?.address}
+                </p>
+              </li>
+              <li className="relative pl-8">
+                <span className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full bg-primary" />
+                <p className="truncate text-sm font-bold text-slate-900">
+                  {shortAddr(selectedTransport.to?.address) || 'Arrivée'}
+                </p>
+                <p className="mt-0.5 break-words text-xs text-muted-foreground">
+                  {selectedTransport.to?.address}
+                </p>
+              </li>
+            </ul>
+
+            {/* Faits — grille dt/dd comme la référence */}
+            <dl className="mt-7 grid grid-cols-2 gap-x-4 gap-y-5 border-t border-slate-200 pt-6">
+              <div>
+                <dt className="text-sm text-muted-foreground">Enfant</dt>
+                <dd className="mt-0.5 flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-[10px] font-bold text-slate-900">
+                    {childPhoto(selectedTransport.childName) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={childPhoto(selectedTransport.childName)} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      childInitials(selectedTransport.childName)
+                    )}
+                  </span>
+                  <span className="truncate text-base font-bold text-slate-900">{selectedTransport.childName}</span>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm text-muted-foreground">Type</dt>
+                <dd className="mt-1">
+                  <span className="inline-block rounded-full bg-primary/10 px-3 py-0.5 text-sm font-bold text-primary">
+                    {selectedTransport.transportType === 'aller-retour' ? 'Aller-retour'
+                      : selectedTransport.transportType === 'aller' ? 'Aller' : 'Retour'}
+                  </span>
+                </dd>
+              </div>
+              {selectedTransport.motif && selectedTransport.motif.trim() !== '' && (
+                <div>
+                  <dt className="text-sm text-muted-foreground">Motif</dt>
+                  <dd className="mt-0.5 break-words text-base font-bold text-slate-900">{selectedTransport.motif}</dd>
+                </div>
+              )}
+              {typeof (selectedTransport as any).waitingTime === 'number' && (
+                <div>
+                  <dt className="text-sm text-muted-foreground">Temps d&apos;attente</dt>
+                  <dd className="mt-0.5 text-base font-bold text-slate-900">{(selectedTransport as any).waitingTime} min</dd>
+                </div>
+              )}
+              <div>
+                <dt className="text-sm text-muted-foreground">Distance</dt>
+                <dd className="mt-0.5 text-base font-bold text-slate-900">
+                  {(selectedTransport.distance / 1000).toFixed(2).replace('.', ',')} km
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      ) : (
+        <Card className="rounded-xl border shadow-none">
+          <CardContent className="flex flex-col items-center gap-5 py-10 text-center sm:flex-row sm:text-left">
+            <div className="h-28 w-[102px] shrink-0 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-horizontal.png" alt="" className="h-full w-full object-cover object-left" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Aucun transport aujourd&apos;hui</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Vous n&apos;avez aucun transport programmé pour aujourd&apos;hui.
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}

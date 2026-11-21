@@ -1,24 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  CalendarRange, 
-  Map, 
-  Clock, 
-  Plus,
-  Bell,
-  UserRound,
-  AlertTriangle,
+import { useState, useEffect } from 'react';
+import {
+  CalendarRange,
+  Clock,
   Star,
-  ChevronRight,
   MessageSquare,
-  Award,
   Navigation,
-  Route
+  Route,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -27,18 +20,20 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ParentCalendarView } from '@/components/parent/parent-calendar-view';
 import { ParentChildListCard } from '@/components/parent/parent-child-list-card';
-import { ParentUpcomingTrip } from '@/components/parent/parent-upcoming-trip';
 import { FeaturedChildProfile } from '@/components/parent/featured-child-profile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 import { useRegion } from '@/hooks/use-region';
 import { useDashboard } from '@/hooks/use-dashboard';
+import { useTracking } from '@/hooks/use-tracking';
+import { cn } from '@/lib/utils';
 
 export function ParentDashboard() {
   const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   // Hook pour les données du dashboard
   const {
     stats,
@@ -54,7 +49,7 @@ export function ParentDashboard() {
     getFeaturedChild,
     getUnreadNotifications,
   } = useDashboard();
-  
+
   // États pour les dialogues
   const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
   const [isThankDialogOpen, setIsThankDialogOpen] = useState(false);
@@ -79,18 +74,18 @@ export function ParentDashboard() {
       transition: { duration: 0.3 }
     }
   };
-  
+
   // Gestionnaires d'événements
   const handleReply = (id: string, name: string) => {
     setSelectedReview({id, name});
     setIsReplyDialogOpen(true);
   };
-  
+
   const handleThank = (id: string, name: string) => {
     setSelectedReview({id, name});
     setIsThankDialogOpen(true);
   };
-  
+
   const handleSendReply = () => {
     toast({
       title: 'Réponse envoyée',
@@ -98,7 +93,7 @@ export function ParentDashboard() {
     });
     setIsReplyDialogOpen(false);
   };
-  
+
   const handleSendThanks = () => {
     toast({
       title: 'Remerciement envoyé',
@@ -106,7 +101,7 @@ export function ParentDashboard() {
     });
     setIsThankDialogOpen(false);
   };
-  
+
   const handleViewChildProfile = () => {
     router.push('/parent/children/1');
   };
@@ -120,21 +115,63 @@ export function ParentDashboard() {
   } = useRegion();
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
+  const nextTrip = getNextTrip();
+
+  // Position GPS live du chauffeur pour la barre de progression réelle
+  const { listenMissionByTransport } = useTracking();
+  const [livePosition, setLivePosition] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    setLivePosition(null);
+    if (!nextTrip?.id) return;
+    const unsubscribe = listenMissionByTransport(nextTrip.id, (mission) => {
+      if (mission?.currentPosition) {
+        setLivePosition({
+          lat: mission.currentPosition.lat,
+          lng: mission.currentPosition.lng,
+        });
+      } else {
+        setLivePosition(null);
+      }
+    });
+    return () => unsubscribe?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nextTrip?.id, listenMissionByTransport]);
+
+  // Progression réelle du trajet : distance parcourue / distance totale (orthodromique)
+  const tripProgress = (() => {
+    if (!nextTrip) return 0;
+    const R = 6371000;
+    const rad = (d: number) => (d * Math.PI) / 180;
+    const hav = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+      const dLat = rad(b.lat - a.lat);
+      const dLng = rad(b.lng - a.lng);
+      const h =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(h));
+    };
+    const total = hav(nextTrip.from, nextTrip.to) || nextTrip.distance || 1;
+    const done = livePosition ? hav(nextTrip.from, livePosition) : 0;
+    // Le marqueur reste légèrement visible au départ et se fige à l'arrivée
+    return Math.min(1, Math.max(livePosition ? 0.03 : 0, done / total));
+  })();
+
   return (
     <>
       {/* Dialog de choix de région obligatoire */}
       <Dialog open={dialogOpen} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md border-0 bg-white/95 backdrop-blur-lg shadow-2xl">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+            <DialogTitle className="text-lg font-semibold">
               Choisissez votre région
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-3">
-              <label className="text-sm font-medium text-slate-700">Région</label>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Région</label>
               <select
-                className="w-full border-0 bg-slate-50 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
+                className="w-full rounded-lg border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 value={selectedRegion || ''}
                 onChange={e => setSelectedRegion(e.target.value)}
               >
@@ -150,7 +187,7 @@ export function ParentDashboard() {
               type="button"
               disabled={!selectedRegion}
               onClick={() => selectedRegion && setRegionForUser(selectedRegion)}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-primary hover:bg-primary/90"
             >
               Valider
             </Button>
@@ -158,255 +195,214 @@ export function ParentDashboard() {
         </DialogContent>
       </Dialog>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       <div className="min-h-screen bg-background">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="space-y-6 sm:space-y-8 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto pt-8 pb-16"
+          className="mx-auto max-w-7xl space-y-6 px-4 pb-16 pt-8 md:px-6 lg:px-8"
         >
-          {/* Header moderne */}
-          <div className="space-y-2">
-            <motion.h1 
+          {/* Header — style standard */}
+          <div className="space-y-1">
+            <motion.h1
               variants={itemVariants}
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground"
+              className="text-2xl font-bold tracking-tight"
             >
-              Bonjour, {user?.name?.split(' ')[0]} 👋
+              Bonjour, {user?.name?.split(' ')[0]}
             </motion.h1>
-            <motion.p 
+            <motion.p
               variants={itemVariants}
-              className="text-muted-foreground text-sm sm:text-base lg:text-lg max-w-2xl"
+              className="text-sm text-muted-foreground"
             >
               Gérez le transport sécurisé de vos enfants en toute sérénité
             </motion.p>
           </div>
 
-{/* Mission en cours - Redesign avec couleurs d'origine */}
-<motion.div variants={itemVariants}>
-  <Card className="border shadow-lg bg-card hover:shadow-xl transition-all duration-300 overflow-hidden">
-    <CardHeader className="pb-4">
-      <div className="flex items-center justify-between">
-        <CardTitle className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10">
-            <Navigation className="h-5 w-5 text-primary" />
-            {/* Animation subtile de pulsation */}
-            <motion.span 
-              animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute -inset-1 rounded-xl bg-primary/20"
-            ></motion.span>
-          </div>
-          <div>
-            <span className="text-lg font-semibold">Mission Active</span>
-            <p className="text-sm text-muted-foreground font-normal mt-0.5">Suivi en temps réel</p>
-          </div>
-        </CardTitle>
-        {getNextTrip() && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-medium border border-green-200 whitespace-nowrap"
-          >
-            <motion.div 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-2 h-2 bg-emerald-500 rounded-full"
-            ></motion.div>
-            En cours
-          </motion.div>
-        )}
-      </div>
-    </CardHeader>
-    
-    <CardContent className="pb-6">
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="rounded-full h-8 w-8 border-2 border-muted border-t-primary"
-          ></motion.div>
-        </div>
-      ) : getNextTrip() ? (
-        <div className="space-y-6">
-          {/* Carte enfant et chauffeur */}
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border"
-          >
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Avatar className="h-12 w-12 rounded-xl border">
-                  <AvatarImage 
-                    src={(children.find(c => c.name === getNextTrip()?.childName)?.avatar) || ''}
-                    alt={getNextTrip()?.childName || 'Enfant'} 
-                  />
-                  <AvatarFallback className="rounded-xl text-sm font-semibold">
-                    {(getNextTrip()?.childName || 'EN')
-                      .split(' ')
-                      .map(n => n[0])
-                      .join('')
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border border-white"></div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">{getNextTrip()?.childName}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {getNextTrip()?.scheduledTime.toLocaleDateString('fr-FR', { 
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long'
-                  })} à {getNextTrip()?.scheduledTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-base font-semibold">
-                <span className="text-red-600">
-                  {getNextTrip()?.driverName?.split(' ')[0]}
-                </span>{' '}
-                {getNextTrip()?.driverName?.split(' ').slice(1).join(' ')}
-              </p>
-            </div>
-          </motion.div>
-          
-          {/* Trajet avec animation */}
-          <div className="relative">
-            {/* Ligne de connexion animée */}
-            <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-green-400/30 to-red-400/30 rounded-full">
-              <motion.div 
-                animate={{ 
-                  translateY: ["0%", "100%", "0%"]
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="w-full h-4 bg-gradient-to-b from-primary/50 to-primary rounded-full"
-              ></motion.div>
-            </div>
-            
-            <div className="space-y-4 relative">
-              {/* Point de départ */}
-              <motion.div 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex items-center gap-4 pl-0"
-              >
-                <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center border border-green-200">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          {/* Trajet en cours — carte signature couleur de marque */}
+          <motion.div variants={itemVariants}>
+            <Card className={cn(
+              'overflow-hidden rounded-2xl shadow-none',
+              nextTrip ? 'border-0 bg-primary' : 'border bg-card'
+            )}>
+              <CardContent className="p-5 sm:p-6">
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
                   </div>
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0, 0.7] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="absolute inset-0 rounded-xl bg-green-200"
-                  ></motion.div>
-                </div>
-                <div className="flex-1 p-3 bg-card rounded-xl border">
-                  <p className="text-xs font-medium text-green-600 mb-1">DÉPART</p>
-                  <p className="text-sm font-medium">{getNextTrip()?.from.address}</p>
-                </div>
-              </motion.div>
-              
-              {/* Point d'arrivée */}
-              <motion.div 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex items-center gap-4 pl-0"
-              >
-                <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center border border-red-200">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                ) : nextTrip ? (
+                  <div className="space-y-5 text-white">
+                    {/* Enfant + statut */}
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3.5">
+                        <Avatar className="h-14 w-14 shrink-0 border-2 border-white/60">
+                          <AvatarImage
+                            src={children.find(c => c.name === nextTrip.childName)?.avatar || ''}
+                            alt={nextTrip.childName || 'Enfant'}
+                          />
+                          <AvatarFallback className="bg-white text-sm font-bold text-primary">
+                            {(nextTrip.childName || 'EN')
+                              .split(' ')
+                              .map(n => n[0])
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-white/75">Transport en cours</p>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                            <h3 className="truncate font-brand text-2xl font-bold leading-none">
+                              {nextTrip.childName}
+                            </h3>
+                            <Badge variant="outline" className="rounded-full border-white/60 bg-transparent px-2.5 text-[11px] font-semibold text-white">
+                              {nextTrip.transportType === 'aller-retour' ? 'Aller-retour'
+                                : nextTrip.transportType === 'aller' ? 'Aller' : 'Retour'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Segments de statut — style image de référence */}
+                      <div className="flex shrink-0 rounded-full border border-white/60 p-0.5 text-[11px] font-semibold">
+                        <span className={cn(
+                          'rounded-full px-2.5 py-1',
+                          nextTrip.status === 'programmed' ? 'bg-white text-primary' : 'text-white/75'
+                        )}>
+                          En préparation
+                        </span>
+                        <span className={cn(
+                          'rounded-full px-2.5 py-1',
+                          nextTrip.status === 'in-progress' ? 'bg-white text-primary' : 'text-white/75'
+                        )}>
+                          En route
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Ligne de progression — pilotée par la position GPS réelle du chauffeur */}
+                    <div className="pt-9">
+                      <div className="flex items-center">
+                        <span className="h-3 w-3 shrink-0 rounded-full bg-emerald-500 ring-2 ring-white/60" />
+                        <div className="relative h-4 flex-1">
+                          <div className="absolute inset-x-0 top-1/2 h-0 -translate-y-1/2 border-t-2 border-dashed border-white/60" />
+                          <div
+                            className="absolute left-0 top-1/2 h-0.5 -translate-y-1/2 bg-white transition-[width] duration-700"
+                            style={{ width: `${tripProgress * 100}%` }}
+                          />
+                          <span
+                            className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white bg-primary transition-[left] duration-700"
+                            style={{ left: `${tripProgress * 100}%` }}
+                          >
+                            <span
+                              className={cn(
+                                'absolute bottom-[26px] whitespace-nowrap rounded-md bg-brand-teal px-3 py-1 font-brand text-sm font-bold text-white',
+                                tripProgress < 0.15
+                                  ? 'left-0'
+                                  : tripProgress > 0.85
+                                    ? 'right-0'
+                                    : 'left-1/2 -translate-x-1/2'
+                              )}
+                            >
+                              {(Math.max(0, 1 - tripProgress) * (nextTrip.distance || 0) / 1000).toFixed(1).replace('.', ',')} km restant
+                            </span>
+                            <span
+                              className={cn(
+                                'absolute bottom-[18px] border-[6px] border-transparent border-t-brand-teal',
+                                tripProgress < 0.15
+                                  ? 'left-0.5'
+                                  : tripProgress > 0.85
+                                    ? 'right-0.5'
+                                    : 'left-1/2 -ml-1.5'
+                              )}
+                            />
+                          </span>
+                        </div>
+                        <span className="h-3 w-3 shrink-0 rounded-full bg-white" />
+                      </div>
+                      <div className="mt-3 flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold">{nextTrip.from.address}</p>
+                          <p className="mt-0.5 text-xs text-white/75">
+                            Départ prévu à {nextTrip.scheduledTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        <div className="min-w-0 shrink-0 text-right">
+                          <p className="truncate text-sm font-bold">{nextTrip.to.address}</p>
+                          <p className="mt-0.5 text-xs text-white/75">
+                            {livePosition
+                              ? `Reste ${(Math.max(0, 1 - tripProgress) * (nextTrip.distance || 0) / 1000).toFixed(1)} km`
+                              : `Destination · ${((nextTrip.distance || 0) / 1000).toFixed(1)} km`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chauffeur + actions */}
+                    <div className="flex flex-col gap-3 border-t border-white/25 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-sm font-medium">
+                        Chauffeur : <span className="font-semibold">{nextTrip.driverName}</span>
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1 border-white/60 bg-transparent text-white hover:bg-white/10 hover:text-white sm:flex-none"
+                          onClick={() => router.push('/parent/messages')}
+                        >
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Message
+                        </Button>
+                        <Button
+                          onClick={() => router.push('/parent/tracking')}
+                          className="flex-1 bg-white text-primary hover:bg-white/90 sm:flex-none"
+                        >
+                          <Navigation className="mr-2 h-4 w-4" />
+                          Suivre en temps réel
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0, 0.7] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-                    className="absolute inset-0 rounded-xl bg-red-200"
-                  ></motion.div>
-                </div>
-                <div className="flex-1 p-3 bg-card rounded-xl border">
-                  <p className="text-xs font-medium text-red-600 mb-1">ARRIVÉE</p>
-                  <p className="text-sm font-medium">{getNextTrip()?.to.address}</p>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-          
-          {/* Informations supplémentaires et bouton */}
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex items-center justify-between pt-2"
-          >
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Route className="h-4 w-4" />
-                <span>{((getNextTrip()?.distance || 0) / 1000).toFixed(1)} km</span>
-              </div>
-            </div>
-            
-              <Button 
-                onClick={() => router.push('/parent/tracking')}
-                className="px-6 bg-primary hover:bg-primary/90"
-              >
-                <Navigation className="h-4 w-4 mr-2" />
-                Suivre en temps réel
-              </Button>
-            
-              </motion.div>
-        </div>
-      ) : (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-12"
-        >
-          <div className="w-16 h-16 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-            <Clock className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="font-semibold mb-2">Aucun trajet en cours</h3>
-          <p className="text-muted-foreground">Vous serez notifié dès qu&apos;une mission démarre</p>
-        </motion.div>
-      )}
-    </CardContent>
-  </Card>
-</motion.div>
+                ) : (
+                  <div className="flex flex-col items-center gap-5 py-8 text-center sm:flex-row sm:text-left">
+                    <div className="h-28 w-[102px] shrink-0 overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/logo-horizontal.png" alt="" className="h-full w-full object-cover object-left" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Aucun trajet en cours</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Vous serez notifié dès qu&apos;un trajet démarre
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Grille principale */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Planning - Plus large */}
-            <motion.div variants={itemVariants} className="lg:col-span-2 order-1">
-              <Card className="border shadow-md bg-card hover:shadow-lg transition-all duration-300 h-full">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {/* Planning */}
+            <motion.div variants={itemVariants} className="order-1 lg:col-span-2">
+              <Card className="h-full rounded-xl border shadow-none">
                 <CardHeader className="pb-4">
-                  <div className="flex flex-wrap items-center gap-2 justify-between">
-                    <CardTitle className="flex items-center gap-3 min-w-0">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10">
-                        <CalendarRange className="h-5 w-5 text-primary" />
-                      </div>
-                      <span className="text-lg font-semibold truncate">Planning Hebdomadaire</span>
-                    </CardTitle>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="transition-colors shrink-0 w-full sm:w-auto mt-2 sm:mt-0"
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-lg font-bold">Planning de la semaine</CardTitle>
+                      <p className="mt-0.5 text-sm text-muted-foreground">Vos transports programmés</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-10 shrink-0 border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                       onClick={() => router.push('/parent/calendar')}
                     >
-                      <CalendarRange className="h-4 w-4 mr-2" />
                       Voir plus
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ParentCalendarView 
-                    weeklySchedule={weeklySchedule} 
-                    loading={loading} 
+                  <ParentCalendarView
+                    weeklySchedule={weeklySchedule}
+                    loading={loading}
                   />
                 </CardContent>
               </Card>
@@ -414,225 +410,209 @@ export function ParentDashboard() {
 
             {/* Profil enfant */}
             <motion.div variants={itemVariants} className="order-2">
-              <FeaturedChildProfile 
-                child={getFeaturedChild()} 
-                loading={loading} 
+              <FeaturedChildProfile
+                child={getFeaturedChild()}
+                loading={loading}
               />
             </motion.div>
           </div>
 
-          {/* Liste des enfants */}
-          <motion.div variants={itemVariants}>
-            <ParentChildListCard 
-              childrenData={children} 
-              loading={loading} 
-            />
-          </motion.div>
+          {/* Enfants + Évaluations côte à côte */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <motion.div variants={itemVariants}>
+              <ParentChildListCard
+                childrenData={children}
+                loading={loading}
+              />
+            </motion.div>
 
-          {/* Évaluations - Redesignées */}
-          <motion.div variants={itemVariants}>
-            <Card className="border shadow-md bg-card hover:shadow-lg transition-all duration-300 overflow-hidden">
+            {/* Évaluations */}
+            <motion.div variants={itemVariants}>
+            <Card className="h-full rounded-xl border shadow-none">
               <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-3">
-                  <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-amber-100">
-                    <Star className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <span className="text-lg font-semibold">Évaluations</span>
-                    <p className="text-sm text-muted-foreground font-normal mt-0.5">Vos retours et avis</p>
-                  </div>
-                </CardTitle>
+                <CardTitle className="text-lg font-bold">Évaluations</CardTitle>
+                <p className="mt-0.5 text-sm text-muted-foreground">Vos retours et avis</p>
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="received" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="received">
+                  <TabsList className="mb-5 w-full justify-start gap-2 bg-transparent p-0">
+                    <TabsTrigger
+                      value="received"
+                      className="min-h-[40px] rounded-full border border-slate-200 bg-transparent px-4 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"
+                    >
                       Reçues
                     </TabsTrigger>
-                    <TabsTrigger value="given">
+                    <TabsTrigger
+                      value="given"
+                      className="min-h-[40px] rounded-full border border-slate-200 bg-transparent px-4 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"
+                    >
                       Données
                     </TabsTrigger>
                   </TabsList>
-                  
-                  <TabsContent value="received" className="space-y-4">
-                    <div className="space-y-4">
+
+                  <TabsContent value="received">
+                    <div className="divide-y">
                       {loading ? (
                         <div className="flex items-center justify-center py-12">
-                          <div className="animate-spin rounded-full h-8 w-8 border-2 border-muted border-t-primary"></div>
+                          <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
                         </div>
                       ) : reviews.filter(r => r.type === 'received' && r.rating).length > 0 ? (
                         reviews.filter(r => r.type === 'received' && r.rating).map((review) => (
-                          <div key={review.id} className="group relative overflow-hidden rounded-xl border bg-card/50 shadow-sm hover:shadow-md transition-all duration-300">
-                            <div className="p-6">
-                              <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0">
-                                  <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center">
-                                    {review.reviewerAvatar ? (
-                                      <img src={review.reviewerAvatar} alt={review.reviewerName} className="h-12 w-12 rounded-xl object-cover" />
-                                    ) : (
-                                      <span className="text-sm font-semibold text-foreground">
-                                        {review.reviewerName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-start justify-between mb-3">
-                                    <div>
-                                      <h4 className="font-semibold text-base">{review.reviewerName}</h4>
-                                      <div className="flex items-center gap-3 mt-1">
-                                        <p className="text-xs text-muted-foreground">
-                                          {review.date.toLocaleDateString('fr-FR')} · {review.reviewerRole === 'driver' ? 'Chauffeur' : 'Parent'}
-                                        </p>
-                                        <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-2.5 py-0.5 text-xs font-medium border border-green-200">
-                                          {review.tripType === 'aller' ? 'Aller' : 'Retour'}
-                                        </span>
-                                        {review.childName && (
-                                          <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2.5 py-0.5 text-xs font-medium border border-blue-200">
-                                            {review.childName}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-0.5">
-                                      {[1, 2, 3, 4, 5].map((star) => (
-                                        <Star 
-                                          key={star} 
-                                          className={`h-4 w-4 ${star <= review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"}`} 
-                                        />
-                                      ))}
+                          <div key={review.id} className="py-4 first:pt-0">
+                            <div className="flex items-start gap-3.5">
+                              <Avatar className="h-11 w-11 shrink-0 border">
+                                {review.reviewerAvatar && (
+                                  <AvatarImage src={review.reviewerAvatar} alt={review.reviewerName} />
+                                )}
+                                <AvatarFallback className="bg-brand-yellow text-xs font-bold text-slate-900">
+                                  {review.reviewerName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <h4 className="font-semibold">{review.reviewerName}</h4>
+                                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                                      <p className="text-xs text-muted-foreground">
+                                        {review.date.toLocaleDateString('fr-FR')} · {review.reviewerRole === 'driver' ? 'Chauffeur' : 'Parent'}
+                                      </p>
+                                      <Badge variant="outline" className={cn(
+                                        'h-5 px-2 py-0 text-[10px]',
+                                        review.tripType === 'aller'
+                                          ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+                                          : 'border-amber-200 bg-amber-50 text-amber-700'
+                                      )}>
+                                        {review.tripType === 'aller' ? 'Aller' : 'Retour'}
+                                      </Badge>
+                                      {review.childName && (
+                                        <Badge variant="outline" className="h-5 px-2 py-0 text-[10px]">
+                                          {review.childName}
+                                        </Badge>
+                                      )}
                                     </div>
                                   </div>
-                                  
-                                  {review.comment && (
-                                    <div className="mb-4">
-                                      <div className="p-4 bg-muted/20 rounded-xl border">
-                                        <p className="text-sm italic leading-relaxed">
-                                          &quot;{review.comment}&quot;
-                                        </p>
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {review.canReply && (
-                                    <div className="flex items-center gap-2">
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        className="bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 transition-colors dark:bg-amber-950 dark:hover:bg-amber-900 dark:text-amber-300 dark:border-amber-800"
-                                        onClick={() => handleThank(review.id, review.reviewerName)}
-                                      >
-                                        <Star className="h-3.5 w-3.5 mr-2 fill-amber-400 text-amber-400" />
-                                        Remercier
-                                      </Button>
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        className="transition-colors"
-                                        onClick={() => handleReply(review.id, review.reviewerName)}
-                                      >
-                                        <MessageSquare className="h-3.5 w-3.5 mr-2" />
-                                        Répondre
-                                      </Button>
-                                    </div>
-                                  )}
+
+                                  <div className="flex shrink-0 items-center gap-0.5">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <Star
+                                        key={star}
+                                        className={`h-4 w-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"}`}
+                                      />
+                                    ))}
+                                  </div>
                                 </div>
+
+                                {review.comment && (
+                                  <p className="mt-2.5 border-l-2 border-slate-200 pl-3 text-sm italic leading-relaxed text-muted-foreground">
+                                    &quot;{review.comment}&quot;
+                                  </p>
+                                )}
+
+                                {review.canReply && (
+                                  <div className="mt-3 flex items-center gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-10 border-brand-yellow/60 bg-brand-yellow/10 text-xs font-medium text-slate-900 hover:bg-brand-yellow/20 sm:h-9"
+                                      onClick={() => handleThank(review.id, review.reviewerName)}
+                                    >
+                                      <Star className="mr-1.5 h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                      Remercier
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-10 text-xs sm:h-9"
+                                      onClick={() => handleReply(review.id, review.reviewerName)}
+                                    >
+                                      <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+                                      Répondre
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 rounded-xl bg-amber-100 dark:bg-amber-950 flex items-center justify-center mx-auto mb-4">
-                            <Star className="h-8 w-8 text-amber-500 dark:text-amber-400" />
-                          </div>
-                          <h3 className="font-semibold mb-2">Aucune évaluation reçue</h3>
-                          <p className="text-muted-foreground">Les évaluations apparaîtront ici</p>
+                        <div className="py-10">
+                          <p className="text-sm font-bold text-slate-900">Aucune évaluation reçue</p>
+                          <p className="mt-1 text-sm text-muted-foreground">Les évaluations apparaîtront ici</p>
                         </div>
                       )}
                     </div>
                   </TabsContent>
-                  
-                  <TabsContent value="given" className="space-y-4">
-                    <div className="space-y-4">
+
+                  <TabsContent value="given">
+                    <div className="divide-y">
                       {loading ? (
                         <div className="flex items-center justify-center py-12">
-                          <div className="animate-spin rounded-full h-8 w-8 border-2 border-muted border-t-primary"></div>
+                          <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
                         </div>
                       ) : reviews.filter(r => r.type === 'given').length > 0 ? (
                         reviews.filter(r => r.type === 'given').map((review) => (
-                          <div key={review.id} className="group relative overflow-hidden rounded-xl border bg-card/50 shadow-sm hover:shadow-md transition-all duration-300">
-                            <div className="p-6">
-                              <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0">
-                                  <div className="h-12 w-12 rounded-xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
-                                    {user?.avatar ? (
-                                      <img src={user.avatar} alt={user.name || 'Vous'} className="h-12 w-12 rounded-xl object-cover" />
-                                    ) : (
-                                      <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                                        {(user?.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase()}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-start justify-between mb-3">
-                                    <div>
-                                      <h4 className="font-semibold text-base">Vous</h4>
-                                      <div className="flex items-center gap-3 mt-1">
-                                        <p className="text-xs text-muted-foreground">
-                                          {review.date.toLocaleDateString('fr-FR')} · Parent
-                                          {review.recipientName && (
-                                            <span> · à {review.recipientName}</span>
-                                          )}
-                                        </p>
-                                        <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 px-2.5 py-0.5 text-xs font-medium border border-green-200">
-                                          {review.tripType === 'aller' ? 'Aller' : 'Retour'}
-                                        </span>
-                                        {review.childName && (
-                                          <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2.5 py-0.5 text-xs font-medium border border-blue-200">
-                                            {review.childName}
-                                          </span>
+                          <div key={review.id} className="py-4 first:pt-0">
+                            <div className="flex items-start gap-3.5">
+                              <Avatar className="h-11 w-11 shrink-0 border">
+                                {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || 'Vous'} />}
+                                <AvatarFallback className="bg-brand-teal text-xs font-bold text-white">
+                                  {(user?.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <h4 className="font-semibold">Vous</h4>
+                                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                                      <p className="text-xs text-muted-foreground">
+                                        {review.date.toLocaleDateString('fr-FR')} · Parent
+                                        {review.recipientName && (
+                                          <span> · à {review.recipientName}</span>
                                         )}
-                                      </div>
+                                      </p>
+                                      <Badge variant="outline" className={cn(
+                                        'h-5 px-2 py-0 text-[10px]',
+                                        review.tripType === 'aller'
+                                          ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+                                          : 'border-amber-200 bg-amber-50 text-amber-700'
+                                      )}>
+                                        {review.tripType === 'aller' ? 'Aller' : 'Retour'}
+                                      </Badge>
+                                      {review.childName && (
+                                        <Badge variant="outline" className="h-5 px-2 py-0 text-[10px]">
+                                          {review.childName}
+                                        </Badge>
+                                      )}
                                     </div>
-                                    
-                                    {review.rating && (
-                                      <div className="flex items-center gap-0.5">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                          <Star 
-                                            key={star} 
-                                            className={`h-4 w-4 ${star <= review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"}`} 
-                                          />
-                                        ))}
-                                      </div>
-                                    )}
                                   </div>
-                                  
-                                  {review.comment && (
-                                    <div className="p-4 bg-muted/30 rounded-xl border">
-                                      <div className="p-4 bg-muted/20 rounded-xl border">
-                                        <p className="text-sm italic leading-relaxed">
-                                          &quot;{review.comment}&quot;
-                                        </p>
-                                      </div>
+
+                                  {review.rating && (
+                                    <div className="flex shrink-0 items-center gap-0.5">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                          key={star}
+                                          className={`h-4 w-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"}`}
+                                        />
+                                      ))}
                                     </div>
                                   )}
                                 </div>
+
+                                {review.comment && (
+                                  <p className="mt-2.5 border-l-2 border-slate-200 pl-3 text-sm italic leading-relaxed text-muted-foreground">
+                                    &quot;{review.comment}&quot;
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 rounded-xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center mx-auto mb-4">
-                            <Award className="h-8 w-8 text-blue-500 dark:text-blue-400" />
-                          </div>
-                          <h3 className="font-semibold mb-2">Aucune évaluation donnée</h3>
-                          <p className="text-muted-foreground">Vos évaluations apparaîtront ici</p>
+                        <div className="py-10">
+                          <p className="text-sm font-bold text-slate-900">Aucune évaluation donnée</p>
+                          <p className="mt-1 text-sm text-muted-foreground">Vos évaluations apparaîtront ici</p>
                         </div>
                       )}
                     </div>
@@ -640,32 +620,32 @@ export function ParentDashboard() {
                 </Tabs>
               </CardContent>
             </Card>
-          </motion.div>
+            </motion.div>
+          </div>
         </motion.div>
       </div>
-      </div>
-      
-      {/* Dialogues modernisés */}
+
+      {/* Dialogues */}
       <Dialog open={isReplyDialogOpen} onOpenChange={setIsReplyDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-card">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
+            <DialogTitle className="text-lg font-semibold">
               Répondre à {selectedReview?.name}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-3">
+            <div className="grid gap-2">
               <label htmlFor="message" className="text-sm font-medium">
                 Votre message
               </label>
               <textarea
                 id="message"
-                className="flex h-28 w-full rounded-xl border bg-card px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all resize-none"
+                className="flex h-28 w-full resize-none rounded-lg border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 placeholder="Merci pour votre évaluation..."
               />
             </div>
           </div>
-          <DialogFooter className="sm:justify-end gap-2">
+          <DialogFooter className="gap-2 sm:justify-end">
             <Button
               type="button"
               variant="outline"
@@ -673,8 +653,9 @@ export function ParentDashboard() {
             >
               Annuler
             </Button>
-            <Button 
-              type="button" 
+            <Button
+              type="button"
+              className="bg-primary hover:bg-primary/90"
               onClick={handleSendReply}
             >
               Envoyer
@@ -684,25 +665,25 @@ export function ParentDashboard() {
       </Dialog>
 
       <Dialog open={isThankDialogOpen} onOpenChange={setIsThankDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-card">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
+            <DialogTitle className="text-lg font-semibold">
               Remercier {selectedReview?.name}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-3">
+            <div className="grid gap-2">
               <label htmlFor="thank-message" className="text-sm font-medium">
                 Message de remerciement
               </label>
               <textarea
                 id="thank-message"
-                className="flex h-28 w-full rounded-xl border bg-card px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all resize-none"
+                className="flex h-28 w-full resize-none rounded-lg border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 placeholder="Merci beaucoup pour votre service exceptionnel..."
               />
             </div>
           </div>
-          <DialogFooter className="sm:justify-end gap-2">
+          <DialogFooter className="gap-2 sm:justify-end">
             <Button
               type="button"
               variant="outline"
@@ -710,12 +691,12 @@ export function ParentDashboard() {
             >
               Annuler
             </Button>
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               onClick={handleSendThanks}
-              className="bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-600 dark:hover:bg-amber-700"
+              className="bg-primary hover:bg-primary/90"
             >
-              <Star className="h-4 w-4 mr-2 fill-white" />
+              <Star className="mr-1.5 h-4 w-4 fill-amber-400 text-amber-400" />
               Envoyer un remerciement
             </Button>
           </DialogFooter>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { FormDialogShell } from '@/components/ui/form-dialog-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -281,7 +282,13 @@ export function ShareDocumentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[92dvh] gap-0 overflow-hidden p-0 sm:max-w-[800px]">
+        <FormDialogShell
+          image="/pas-de-mission.png"
+          caption="Partagez en toute confiance"
+          imageClassName="object-contain p-6"
+          panelClassName="bg-brand-pink/15"
+        >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5" />
@@ -405,18 +412,19 @@ export function ShareDocumentDialog({
           </div>
         )}
         
-        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           {selectedUsers.length > 0 && (
-            <div className="flex-1 text-sm text-muted-foreground">
+            <div className="flex-1 self-center text-sm text-muted-foreground">
               {selectedUsers.length} utilisateur(s) sélectionné(s)
             </div>
           )}
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSharing}>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button variant="outline" className="h-10 w-full sm:w-auto" onClick={() => onOpenChange(false)} disabled={isSharing}>
               Annuler
             </Button>
-            <Button 
-              onClick={handleShare} 
+            <Button
+              onClick={handleShare}
+              className="h-10 w-full bg-primary text-white hover:bg-primary/90 sm:w-auto"
               disabled={isSharing || (shareMethod === 'message' && selectedUsers.length === 0)}
             >
               {isSharing ? (
@@ -436,6 +444,7 @@ export function ShareDocumentDialog({
             </Button>
           </div>
         </DialogFooter>
+        </FormDialogShell>
       </DialogContent>
     </Dialog>
   );

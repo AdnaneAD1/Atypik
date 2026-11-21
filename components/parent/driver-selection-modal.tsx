@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, MapPin, Phone, Clock, Check, Car, Users, Award, TrendingUp, Shield, Zap } from 'lucide-react';
+import { X, Star, Phone, Check, AlertTriangle, Award, Loader2 } from 'lucide-react';
 import { useDriverSelection, Driver } from '@/hooks/use-driver-selection';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 interface DriverSelectionModalProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export const DriverSelectionModal = ({
 
   const handleSelectDriver = async (driver: Driver) => {
     setIsSelecting(true);
-    
+
     try {
       const success = await selectDriver(driver);
       if (success) {
@@ -39,285 +40,222 @@ export const DriverSelectionModal = ({
     }
   };
 
-  const getDriverInitials = (name: string) => {
-    return name
+  const getDriverInitials = (name: string) =>
+    name
       .split(' ')
       .map(n => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60"
             onClick={onClose}
           />
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-2xl max-h-[80vh] mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.18 }}
+            className="relative flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border bg-background shadow-xl"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            {/* En-tête plat */}
+            <div className="flex items-start justify-between gap-4 border-b px-5 py-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Choisir un chauffeur
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
+                <h2 className="text-lg font-bold tracking-tight">Choisir un chauffeur</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
                   Sélectionnez un chauffeur de votre région pour programmer un transport
                 </p>
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={onClose}
-                className="rounded-full h-10 w-10 p-0"
+                className="h-9 w-9 shrink-0"
+                aria-label="Fermer"
               >
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
-            {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
+            {/* Contenu */}
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
               {loading && (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-3 text-gray-600">Chargement des chauffeurs...</span>
+                <div className="flex items-center justify-center gap-3 py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Chargement des chauffeurs...</span>
                 </div>
               )}
 
               {error && (
-                <div className="text-center py-12">
-                  <div className="text-red-500 mb-2">⚠️</div>
-                  <p className="text-red-600 font-medium">{error}</p>
+                <div className="flex flex-col items-center gap-2 py-12 text-center">
+                  <AlertTriangle className="h-8 w-8 text-destructive" />
+                  <p className="text-sm font-medium text-destructive">{error}</p>
                 </div>
               )}
 
               {!loading && !error && drivers.length === 0 && (
-                <div className="text-center py-12">
-                  <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Aucun chauffeur disponible
-                  </h3>
-                  <p className="text-gray-600">
-                    Aucun chauffeur n&apos;est actuellement disponible dans votre région.
-                  </p>
+                <div className="flex flex-col items-center gap-5 py-10 text-center sm:flex-row sm:text-left">
+                  <div className="h-28 w-[102px] shrink-0 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo-horizontal.png" alt="" className="h-full w-full object-cover object-left" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Aucun chauffeur disponible</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Aucun chauffeur n&apos;est actuellement disponible dans votre région.
+                    </p>
+                  </div>
                 </div>
               )}
 
               {!loading && !error && drivers.length > 0 && (
-                <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-                  {drivers.map((driver) => (
-                    <motion.div
-                      key={driver.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      whileHover={{ y: -5 }}
-                      className={`
-                        relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300
-                        ${selectedDriver?.id === driver.id
-                          ? 'ring-4 ring-blue-500 shadow-2xl bg-gradient-to-br from-blue-50 to-indigo-100'
-                          : 'shadow-lg hover:shadow-xl bg-gradient-to-br from-white to-gray-50 hover:from-gray-50 hover:to-gray-100'
-                        }
-                      `}
-                      onClick={() => handleSelectDriver(driver)}
-                    >
-                      {/* Header avec avatar et sélection */}
-                      <div className="relative p-6 pb-4">
-                        {/* Badge de sélection */}
-                        {selectedDriver?.id === driver.id && (
-                          <div className="absolute top-4 right-4 z-10">
-                            <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                              <Check className="h-5 w-5 text-white" />
-                            </div>
-                          </div>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  {drivers.map((driver) => {
+                    const selected = selectedDriver?.id === driver.id;
+                    return (
+                      <button
+                        key={driver.id}
+                        type="button"
+                        onClick={() => handleSelectDriver(driver)}
+                        className={cn(
+                          'relative rounded-xl border p-4 text-left transition-colors',
+                          selected
+                            ? 'border-primary bg-primary/5'
+                            : 'hover:border-slate-300 hover:bg-muted/30'
+                        )}
+                      >
+                        {/* Coche de sélection */}
+                        {selected && (
+                          <span className="absolute right-3.5 top-3.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <Check className="h-3.5 w-3.5" />
+                          </span>
                         )}
 
-                        {/* Avatar et informations principales */}
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="relative">
-                            <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
-                              <AvatarImage src={driver.avatar} alt={driver.name} />
-                              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-lg">
-                                {getDriverInitials(driver.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            {/* Badge d'expérience */}
-                            {driver.stats?.experienceYears && (
-                              <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                {driver.stats.experienceYears}Y
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 mb-1">
-                              {driver.name}
-                            </h3>
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Badge 
-                                variant={driver.status === 'verified' ? 'outline' : 'secondary'}
-                                className={`text-xs ${
-                                  driver.status === 'verified' 
-                                    ? 'bg-green-50 border-green-200 text-green-700' 
-                                    : ''
-                                }`}
+                        {/* Identité */}
+                        <div className="flex items-center gap-3.5">
+                          <Avatar className={cn('h-14 w-14 border-2 border-white', selected && 'ring-2 ring-primary/40')}>
+                            <AvatarImage src={driver.avatar} alt={driver.name} />
+                            <AvatarFallback className="bg-primary/10 font-semibold text-primary">
+                              {getDriverInitials(driver.name)}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate font-semibold">{driver.name}</h3>
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  'h-5 px-2 py-0 text-[10px]',
+                                  driver.status === 'verified'
+                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                    : 'border-amber-200 bg-amber-50 text-amber-700'
+                                )}
                               >
-                                {driver.status === 'verified' ? 'Vérifié' : 'Non vérifié'}
+                                {driver.status === 'verified' ? 'Vérifié' : 'En attente'}
                               </Badge>
                               {driver.stats?.averageRating && driver.stats.averageRating > 4.5 && (
-                                <Badge variant="outline" className="text-xs bg-yellow-50 border-yellow-200">
-                                  <Award className="h-3 w-3 mr-1" />
+                                <Badge variant="outline" className="h-5 border-amber-200 bg-amber-50 px-2 py-0 text-[10px] text-amber-700">
+                                  <Award className="mr-1 h-3 w-3" />
                                   Expert
                                 </Badge>
                               )}
                             </div>
-                            
-                            {/* Note globale */}
-                            {driver.stats?.averageRating && driver.stats.averageRating > 0 && (
-                              <div className="flex items-center space-x-2">
-                                <div className="flex items-center space-x-1">
-                                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                  <span className="text-lg font-bold text-gray-900">
-                                    {driver.stats.averageRating.toFixed(1)}
-                                  </span>
-                                  <span className="text-sm text-gray-500">
-                                    ({driver.stats.totalReviews} avis)
-                                  </span>
-                                </div>
+                            {(driver.stats?.averageRating ?? 0) > 0 && (
+                              <div className="mt-1.5 flex items-center gap-1 text-xs">
+                                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                <span className="font-semibold">{driver.stats!.averageRating.toFixed(1)}</span>
+                                <span className="text-muted-foreground">
+                                  ({driver.stats!.totalReviews} avis)
+                                </span>
                               </div>
                             )}
                           </div>
                         </div>
-                      </div>
 
-                      {/* Statistiques FIFA-style */}
-                      {driver.stats && (
-                        <div className="px-6 pb-6">
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            {/* Missions totales */}
-                            <div className="bg-white/70 rounded-lg p-3 text-center">
-                              <Car className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-                              <div className="text-2xl font-bold text-gray-900">
-                                {driver.stats.totalMissions}
-                              </div>
-                              <div className="text-xs text-gray-600">Missions</div>
-                            </div>
-                            
-                            {/* Enfants transportés */}
-                            <div className="bg-white/70 rounded-lg p-3 text-center">
-                              <Users className="h-5 w-5 text-green-600 mx-auto mb-1" />
-                              <div className="text-2xl font-bold text-gray-900">
-                                {driver.stats.uniqueChildrenTransported}
-                              </div>
-                              <div className="text-xs text-gray-600">Enfants</div>
-                            </div>
-                            
-                            {/* Distance parcourue */}
-                            <div className="bg-white/70 rounded-lg p-3 text-center">
-                              <MapPin className="h-5 w-5 text-purple-600 mx-auto mb-1" />
-                              <div className="text-2xl font-bold text-gray-900">
-                                {Math.round(driver.stats.totalKmTraveled)}
-                              </div>
-                              <div className="text-xs text-gray-600">km</div>
-                            </div>
-                            
-                            {/* Missions ce mois */}
-                            <div className="bg-white/70 rounded-lg p-3 text-center">
-                              <TrendingUp className="h-5 w-5 text-orange-600 mx-auto mb-1" />
-                              <div className="text-2xl font-bold text-gray-900">
-                                {driver.stats.thisMonthMissions}
-                              </div>
-                              <div className="text-xs text-gray-600">Ce mois</div>
-                            </div>
-                          </div>
-                          
-                          {/* Barres de progression pour les scores */}
-                          <div className="space-y-3">
-                            {/* Ponctualité */}
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center space-x-2">
-                                  <Clock className="h-4 w-4 text-blue-600" />
-                                  <span className="text-sm font-medium text-gray-700">Ponctualité</span>
+                        {/* Statistiques — bandeau plat */}
+                        {driver.stats && (
+                          <>
+                            <div className="mt-3.5 grid grid-cols-4 divide-x rounded-lg border bg-muted/30">
+                              {[
+                                { value: driver.stats.totalMissions, label: 'Missions' },
+                                { value: driver.stats.uniqueChildrenTransported, label: 'Enfants' },
+                                { value: Math.round(driver.stats.totalKmTraveled), label: 'km' },
+                                { value: driver.stats.thisMonthMissions, label: 'Ce mois' },
+                              ].map((s) => (
+                                <div key={s.label} className="py-2 text-center">
+                                  <p className="text-sm font-bold leading-none">{s.value}</p>
+                                  <p className="mt-1 text-[10px] leading-none text-muted-foreground">{s.label}</p>
                                 </div>
-                                <span className="text-sm font-bold text-gray-900">
-                                  {Math.round(driver.stats.punctualityRate)}%
-                                </span>
-                              </div>
-                              <Progress 
-                                value={driver.stats.punctualityRate} 
-                                className="h-2"
-                              />
+                              ))}
                             </div>
-                            
-                            {/* Fiabilité */}
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center space-x-2">
-                                  <Shield className="h-4 w-4 text-green-600" />
-                                  <span className="text-sm font-medium text-gray-700">Fiabilité</span>
+
+                            {/* Indicateurs */}
+                            <div className="mt-3 space-y-2.5">
+                              <div>
+                                <div className="mb-1 flex items-center justify-between text-xs">
+                                  <span className="text-muted-foreground">Ponctualité</span>
+                                  <span className="font-semibold">{Math.round(driver.stats.punctualityRate)}%</span>
                                 </div>
-                                <span className="text-sm font-bold text-gray-900">
-                                  {Math.round(driver.stats.reliabilityScore)}/100
-                                </span>
+                                <Progress value={driver.stats.punctualityRate} className="h-1.5" />
                               </div>
-                              <Progress 
-                                value={driver.stats.reliabilityScore} 
-                                className="h-2"
-                              />
+                              <div>
+                                <div className="mb-1 flex items-center justify-between text-xs">
+                                  <span className="text-muted-foreground">Fiabilité</span>
+                                  <span className="font-semibold">{Math.round(driver.stats.reliabilityScore)}/100</span>
+                                </div>
+                                <Progress value={driver.stats.reliabilityScore} className="h-1.5" />
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Footer avec contact */}
-                      {driver.phone && (
-                        <div className="px-6 py-3 bg-gray-50/80 border-t">
-                          <div className="flex items-center space-x-2 text-sm text-gray-600">
-                            <Phone className="h-4 w-4" />
-                            <span>{driver.phone}</span>
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
+                          </>
+                        )}
+
+                        {/* Contact */}
+                        {driver.phone && (
+                          <p className="mt-3.5 flex items-center gap-2 border-t pt-3 text-xs text-muted-foreground">
+                            <Phone className="h-3.5 w-3.5" />
+                            {driver.phone}
+                          </p>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {/* Footer */}
+            {/* Pied */}
             {!loading && !error && drivers.length > 0 && (
-              <div className="flex items-center justify-between p-6 border-t border-gray-100 bg-gray-50">
-                <p className="text-sm text-gray-600">
-                  {selectedDriver 
-                    ? `${selectedDriver.name} sélectionné` 
+              <div className="flex items-center justify-between gap-3 border-t px-5 py-3.5">
+                <p className="truncate text-sm text-muted-foreground">
+                  {selectedDriver
+                    ? <><span className="font-medium text-foreground">{selectedDriver.name}</span> sélectionné</>
                     : 'Sélectionnez un chauffeur pour continuer'
                   }
                 </p>
-                
-                <div className="flex space-x-3">
+                <div className="flex shrink-0 items-center gap-2">
                   <Button variant="outline" onClick={onClose}>
                     Annuler
                   </Button>
                   <Button
+                    className="bg-primary hover:bg-primary/90"
                     disabled={!selectedDriver || isSelecting}
                     onClick={() => selectedDriver && handleSelectDriver(selectedDriver)}
                   >
                     {isSelecting ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                         Sélection...
                       </>
                     ) : (

@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Child } from '@/hooks/use-children';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { uploadImageToCloudinary, validateFile } from '@/hooks/use-cloudinary';
+import { FormDialogShell } from '@/components/ui/form-dialog-shell';
 
 const formSchema = z.object({
   firstName: z.string().min(2, 'Le prénom doit comporter au moins 2 caractères'),
@@ -146,7 +147,8 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-h-[92dvh] gap-0 overflow-hidden p-0 sm:max-w-[760px]">
+        <FormDialogShell image="/auth-side.jpg" caption="Pour des enfants exceptionnels">
         <DialogHeader>
           <DialogTitle>Modifier un enfant</DialogTitle>
           <DialogDescription>
@@ -155,33 +157,35 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 space-y-4">
             {/* Avatar uploader */}
             <div className="flex items-center gap-4">
-              <Avatar className="h-14 w-14 border">
+              <Avatar className="h-14 w-14 border-2 border-brand-yellow">
                 {avatarPreview ? (
                   <AvatarImage src={avatarPreview} alt={`Photo de ${child?.name || 'enfant'}`} />
                 ) : (
-                  <AvatarFallback>ENF</AvatarFallback>
+                  <AvatarFallback className="bg-brand-yellow font-bold text-slate-900">
+                    {(child?.name || 'E').charAt(0).toUpperCase()}
+                  </AvatarFallback>
                 )}
               </Avatar>
               <div className="flex flex-col gap-2">
                 <div className="flex gap-2">
                   <label htmlFor="child-edit-avatar-input">
                     <input id="child-edit-avatar-input" type="file" accept="image/*" className="hidden" onChange={onSelectAvatar} />
-                    <Button type="button" variant="outline" onClick={() => document.getElementById('child-edit-avatar-input')?.click()}>
+                    <Button type="button" variant="outline" className="h-9" onClick={() => document.getElementById('child-edit-avatar-input')?.click()}>
                       Changer la photo
                     </Button>
                   </label>
                   {avatarFile && (
-                    <Button type="button" variant="ghost" onClick={onRemoveAvatar}>Annuler</Button>
+                    <Button type="button" variant="ghost" className="h-9" onClick={onRemoveAvatar}>Annuler</Button>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">PNG, JPG, max 5MB (optionnel).</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="firstName"
@@ -210,7 +214,7 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="age"
@@ -275,16 +279,21 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
               )}
             />
 
-            <DialogFooter>
+            <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
+                className="h-10 w-full sm:w-auto"
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
               >
                 Annuler
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                className="h-10 w-full bg-primary text-white hover:bg-primary/90 sm:w-auto"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader size="sm" className="mr-2" />
@@ -297,6 +306,7 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
             </DialogFooter>
           </form>
         </Form>
+        </FormDialogShell>
       </DialogContent>
     </Dialog>
   );

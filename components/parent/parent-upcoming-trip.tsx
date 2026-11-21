@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Car, Clock, MapPin, Navigation, User, CheckCircle2, Phone, MessageSquare, AlertCircle, X, Star } from 'lucide-react';
+import { CarFront, Clock, MapPin, Navigation, User, CheckCircle2, Phone, MessageSquare, AlertCircle, X, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -96,7 +96,7 @@ export function ParentUpcomingTrip() {
           <div className="bg-primary/5 border-b border-primary/10 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3 w-full">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Car className="h-5 w-5 text-primary" />
+                <CarFront className="h-5 w-5 text-primary" />
               </div>
               
               <div className="min-w-0 flex-1">

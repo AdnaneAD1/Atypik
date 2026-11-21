@@ -1,138 +1,81 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Heart, School, Calendar, Award, ChevronRight, User } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useToast } from '@/hooks/use-toast';
+import { UserRound } from 'lucide-react';
 
 interface FeaturedChildProfileProps {
   child?: any;
   loading?: boolean;
 }
 
+const initials = (name?: string) =>
+  (name || 'E')
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
 export function FeaturedChildProfile({ child, loading = false }: FeaturedChildProfileProps) {
-  const { toast } = useToast();
-  const [isLiked, setIsLiked] = useState(false);
-  
-  const handleLike = () => {
-    if (!child) return;
-    
-    setIsLiked(!isLiked);
-    
-    toast({
-      title: isLiked ? 'Retiré des favoris' : 'Ajouté aux favoris',
-      description: isLiked ? `${child.name} a été retiré de vos favoris` : `${child.name} a été ajouté à vos favoris`,
-    });
-  };
-
-  if (loading) {
-    return (
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              <span className="text-sm sm:text-base">Enfant du jour</span>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!child) {
-    return (
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              <span className="text-sm sm:text-base">Enfant du jour</span>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <User className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Aucun enfant sélectionné</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
-            <span className="text-sm sm:text-base">Enfant du jour</span>
+    <Card className="h-full overflow-hidden rounded-2xl border-0 bg-brand-teal text-white shadow-none">
+      <CardContent className="flex h-full flex-col p-5 sm:p-6">
+        <p className="text-xs font-medium text-white/60">Enfant du jour</p>
+
+        {loading ? (
+          <div className="flex flex-1 items-center justify-center py-10">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/25 border-t-brand-yellow" />
           </div>
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        <div className="flex items-start gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={child.avatar || undefined} alt={child.name} />
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-              {child.name?.split(' ').map((n: string) => n[0]).join('') || 'E'}
-            </AvatarFallback>
-          </Avatar>
-          
-          <div className="flex-1 space-y-1">
-            <h3 className="font-semibold">{child.name}</h3>
-            <p className="text-sm text-muted-foreground">
-              {child.age} ans • {child.school}
+        ) : child ? (
+          <>
+            <Avatar className="mt-5 h-16 w-16 border-2 border-brand-yellow">
+              <AvatarImage src={child.avatar || undefined} alt={child.name} />
+              <AvatarFallback className="bg-brand-yellow text-lg font-bold text-slate-900">
+                {initials(child.name)}
+              </AvatarFallback>
+            </Avatar>
+
+            <h3 className="mt-4 font-brand text-xl font-bold leading-tight">{child.name}</h3>
+            <p className="mt-1.5 text-sm text-white/70">
+              {child.age} ans, {child.school}
             </p>
-            
+
             {child.nextTransport && (
-              <div className="flex items-center gap-2 pt-2">
-                <Badge variant="secondary" className="text-xs">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  {child.nextTransport.date}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {child.nextTransport.time}
-                </Badge>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-white/25 px-3 py-1 text-xs font-medium text-white">
+                  {child.nextTransport.date} · {child.nextTransport.time}
+                </span>
               </div>
             )}
-          </div>
-        </div>
-        
-        {child.stats && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium flex items-center gap-2">
-                <Award className="h-4 w-4 text-primary" />
-                Statistiques
-              </h4>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 bg-secondary/50 rounded-lg text-center">
-                <p className="text-lg font-semibold text-primary">{child.stats.totalTrips || 0}</p>
-                <p className="text-xs text-muted-foreground">Trajets</p>
+
+            {child.stats && (
+              <div className="mt-5 border-t border-white/15 pt-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="font-brand text-2xl font-bold text-brand-yellow">
+                      {child.stats.totalTrips || 0}
+                    </p>
+                    <p className="text-xs text-white/60">Trajets</p>
+                  </div>
+                  <div>
+                    <p className="font-brand text-2xl font-bold text-brand-yellow">
+                      {child.stats.completedTrips || 0}
+                    </p>
+                    <p className="text-xs text-white/60">Terminés</p>
+                  </div>
+                </div>
               </div>
-              <div className="p-2 bg-secondary/50 rounded-lg text-center">
-                <p className="text-lg font-semibold text-green-600">{child.stats.completedTrips || 0}</p>
-                <p className="text-xs text-muted-foreground">Terminés</p>
-              </div>
-            </div>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-1 flex-col items-start justify-center gap-3 py-8">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
+              <UserRound className="h-6 w-6 text-white/60" />
+            </span>
+            <p className="text-sm text-white/70">Aucun enfant sélectionné</p>
           </div>
         )}
-        
-
       </CardContent>
     </Card>
   );
