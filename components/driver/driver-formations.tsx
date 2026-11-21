@@ -1,98 +1,50 @@
 'use client';
 
-import React from 'react';
-import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  GraduationCap,
-  Play,
-  Clock,
-  CheckCircle,
-  BookOpen,
-  Award,
-  Brain,
-  Heart
-} from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 
 export function DriverFormations() {
-  // Aucune formation disponible pour le moment
-  const formations = [];
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Formations</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl font-bold tracking-tight">Formations</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Développez vos compétences et restez à jour
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5 text-primary" />
-            <span>Mes formations</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div className="p-6 rounded-full bg-primary/10 mb-6">
-              <GraduationCap className="h-12 w-12 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Aucune formation disponible</h3>
-            <p className="text-muted-foreground mb-6 max-w-md">
-              Les formations seront bientôt disponibles pour vous aider à développer vos compétences et améliorer votre service.
-            </p>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>Nouvelles formations à venir prochainement</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Section éditoriale — image + texte, sans carte */}
+      <div className="grid items-center gap-6 sm:grid-cols-2 sm:gap-10">
+        {/* Image */}
+        <div className="relative h-56 overflow-hidden rounded-xl sm:h-[340px]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/formations-side.jpg"
+            alt="Chauffeur professionnel accueillant un passager"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </div>
 
-      {/* <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-primary" />
-            <span>Certifications</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-secondary/50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Award className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-medium">Transport adapté</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Validée le 15/01/2024
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-secondary/50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Heart className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-medium">Premiers secours</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Validée le 20/02/2024
-                  </p>
-                </div>
-              </div>
-            </div>
+        {/* Contenu */}
+        <div className="sm:py-8">
+          <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-600">
+            Bientôt disponible
+          </span>
+          <h2 className="mt-4 text-xl font-semibold tracking-tight sm:text-2xl">
+            Vos formations arrivent
+          </h2>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+            Transport adapté, premiers secours, accompagnement d&apos;enfants à
+            besoins spécifiques : nos modules de formation sont en cours de
+            préparation pour vous aider à offrir le meilleur service possible.
+          </p>
+          <div className="mt-6 flex items-center gap-2.5 border-t pt-5 text-sm text-muted-foreground">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+              <GraduationCap className="h-4 w-4 text-primary" />
+            </span>
+            <span>Vous serez notifié dès leur mise en ligne</span>
           </div>
-        </CardContent>
-      </Card> */}
+        </div>
+      </div>
     </div>
   );
 }

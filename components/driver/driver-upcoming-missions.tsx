@@ -1,22 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Clock, MapPin, User, AlertTriangle, CheckCircle2, Navigation, Phone, Car, X, Loader2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, X, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AnimatedRoute } from '@/components/ui/animated-route';
-import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useRouter } from 'next/navigation';
 import { RouteModal } from './route-modal';
+import { useAuth } from '@/lib/auth/auth-context';
+import { useTracking } from '@/hooks/use-tracking';
 
 interface UpcomingMission {
   id: string;
   child: {
     name: string;
     age: number;
+    avatar?: string;
     needs?: Array<{ type: string; description: string; severity: 'low' | 'medium' | 'high' }>;
   };
   parent: {
@@ -42,10 +41,13 @@ interface UpcomingMission {
 
 interface DriverUpcomingMissionsProps {
   missions?: UpcomingMission[];
+  onStarted?: () => void;
 }
 
-export function DriverUpcomingMissions({ missions }: DriverUpcomingMissionsProps) {
+export function DriverUpcomingMissions({ missions, onStarted }: DriverUpcomingMissionsProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  const { startMission, loading: trackingLoading } = useTracking();
   // Utiliser les missions passées en props ou les données par défaut
   const upcomingMissions = missions || [];
   
@@ -67,6 +69,31 @@ export function DriverUpcomingMissions({ missions }: DriverUpcomingMissionsProps
 
   const handleViewAllMissions = () => {
     router.push('/driver/missions');
+  };
+
+  // Démarrer une mission directement depuis le tableau de bord
+  const handleStartMission = async (mission: UpcomingMission) => {
+    try {
+      const missionData = {
+        driverId: user?.id!,
+        transportId: mission.id,
+        childName: mission.child.name,
+        from: {
+          address: mission.from.address,
+          lat: mission.from.lat || 0,
+          lng: mission.from.lng || 0,
+        },
+        to: {
+          address: mission.to.address,
+          lat: mission.to.lat || 0,
+          lng: mission.to.lng || 0,
+        },
+      };
+      const result = await startMission(mission.id, missionData);
+      if (result) onStarted?.();
+    } catch (error) {
+      console.error('Erreur lors du démarrage de la mission:', error);
+    }
   };
   
   const handleClosePopup = () => {
@@ -151,176 +178,143 @@ export function DriverUpcomingMissions({ missions }: DriverUpcomingMissionsProps
   
   return (
     <>
-      <Card className="rounded-lg bg-card text-card-foreground overflow-hidden border border-gray-200 dark:border-gray-700 shadow-md">
+      <section>
+        <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900">Missions à venir</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Aujourd&apos;hui · {upcomingMissions.length} mission{upcomingMissions.length > 1 ? 's' : ''} planifiée{upcomingMissions.length > 1 ? 's' : ''}
+        </p>
 
-        <div className="flex flex-col space-y-1.5 p-6 pb-2">
-          <h3 className="font-semibold text-base sm:text-lg whitespace-nowrap   leading-none tracking-tight flex items-center gap-2">
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10">
-              <Clock className="h-4 w-4 text-primary" />
+        {upcomingMissions.length === 0 ? (
+          <div className="mt-6 flex flex-col items-center gap-5 border-t-2 border-slate-900 py-8 text-center sm:flex-row sm:text-left">
+            {/* Illustration : voiture extraite du logo de marque */}
+            <div className="h-28 w-[102px] shrink-0 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo-horizontal.png"
+                alt=""
+                className="h-full w-full object-cover object-left"
+              />
             </div>
-            <span>Missions à venir</span>
-          </h3>
-          <p className="text-sm text-muted-foreground">Aujourd&apos;hui · {upcomingMissions.length} missions planifiées</p>
-        </div>
-        
-        <CardContent className="p-6 pt-0 pb-6">
-          <div className="space-y-4">
-            {upcomingMissions.map((mission, index) => (
-            <Card 
-              key={mission.id}
-              className="rounded-lg text-card-foreground border-0 shadow-md bg-card overflow-hidden"
-            >
-              <div className="p-0">
-                {/* Header avec informations de l'enfant */}
-                <div className="bg-primary/5 border-b border-primary/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border-2 border-primary shadow-md flex-shrink-0">
-                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
-                        {mission.child.name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base font-semibold">{mission.child.name.split(' ')[0]}</h3>
-                        <div className="inline-flex items-center rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-[10px] font-medium px-2 py-0 h-5
-                          ${
-                            mission.transportType === 'aller-retour'
-                              ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800'
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Pas d&apos;autres trajets prévus pour aujourd&apos;hui.<br />
+                Profitez de votre journée !
+              </p>
+              <Button
+                variant="outline"
+                className="mt-4 border-primary/40 text-primary hover:bg-primary/5 hover:text-primary"
+                onClick={handleViewAllMissions}
+              >
+                Voir toutes les missions
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-6 border-t-2 border-slate-900">
+            <div className="divide-y divide-slate-200">
+              {upcomingMissions.map((mission) => {
+                const totalKm = ((mission.distance * (mission.transportType === 'aller-retour' ? 2 : 1)) / 1000).toFixed(1).replace('.', ',');
+                return (
+                  <article
+                    key={mission.id}
+                    className="grid grid-cols-1 gap-x-8 gap-y-4 py-6 sm:grid-cols-[auto_minmax(0,1fr)]"
+                  >
+                    {/* Gros horaire */}
+                    <p className="font-brand text-4xl font-bold leading-none tracking-tight text-slate-900 sm:text-5xl">
+                      {mission.scheduledTime || '—'}
+                    </p>
+
+                    <div className="min-w-0">
+                      {/* Nom + photo + type */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Avatar className="h-11 w-11 shrink-0">
+                          <AvatarImage src={mission.child.avatar || ''} alt={mission.child.name} />
+                          <AvatarFallback className="bg-brand-yellow font-brand text-sm font-bold text-slate-900">
+                            {(mission.child.name || 'E').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <h3 className="font-brand text-xl font-bold text-slate-900">
+                          {mission.child.name}
+                          <span className="ml-2 inline-block rounded-full bg-brand-pink/15 px-3 py-0.5 align-middle text-sm font-bold text-brand-pink">
+                            {mission.transportType === 'aller-retour'
+                              ? 'Aller-retour'
                               : mission.transportType === 'aller'
-                              ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-                              : 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800'
-                          }
-                        ">
-                          {
-                            mission.transportType === 'aller-retour'
-                              ? 'Aller-Retour'
-                              : mission.transportType === 'aller'
-                              ? 'Aller (matin)'
-                              : 'Retour (après-midi)'
-                          }
-                        </div>
+                                ? 'Aller'
+                                : 'Retour'}
+                          </span>
+                        </h3>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Départ prévu à {mission.scheduledTime || '00:00'}
-                      </p>
+
+                      {/* Étapes du trajet — filet pointillé vertical */}
+                      <ul className="relative mt-4 space-y-4">
+                        <span
+                          aria-hidden="true"
+                          className="absolute bottom-6 left-[5px] top-3 w-0 border-l-2 border-dotted border-slate-300"
+                        />
+                        <li className="relative pl-7">
+                          <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-emerald-600" />
+                          <p className="truncate text-sm font-bold text-slate-900">{mission.from.address}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            Départ prévu à {mission.scheduledTime || '—'}
+                          </p>
+                        </li>
+                        <li className="relative pl-7">
+                          <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-primary" />
+                          <p className="truncate text-sm font-bold text-slate-900">{mission.to.address}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">Destination</p>
+                        </li>
+                        {mission.transportType === 'aller-retour' && (
+                          <li className="relative pl-7">
+                            <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-brand-yellow" />
+                            <p className="truncate text-sm font-bold text-slate-900">{mission.from.address}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">Retour</p>
+                          </li>
+                        )}
+                      </ul>
+
+                      {/* Infos */}
+                      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                        <span>Parent : <b className="font-bold text-slate-900">{mission.parent.name}</b></span>
+                        <span><b className="font-bold text-slate-900">{totalKm} km</b> au total</span>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="mt-4 flex flex-wrap gap-2.5">
+                        <Button
+                          className="h-11 bg-primary px-6 font-bold text-white hover:bg-primary/90"
+                          onClick={() => handleStartMission(mission)}
+                          disabled={trackingLoading}
+                        >
+                          <Play className="mr-1.5 h-4 w-4" />
+                          Démarrer
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="h-11 border-[1.5px] border-slate-900 px-6 font-bold text-slate-900 hover:bg-slate-100"
+                          onClick={() => handleShowRoute(mission)}
+                        >
+                          Itinéraire
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  
-                </div>
-                
-                <div className="p-4">
-                  {/* Itinéraire */}
-                  <div className="bg-secondary/30 rounded-xl p-4 mb-4 relative overflow-hidden">
-                    {mission.transportType === 'aller-retour' ? (
-                      // Affichage pour Aller-Retour avec 3 points alignés
-                      <div className="relative grid grid-cols-[24px_1fr] gap-x-3 gap-y-6">
-                        {/* Ligne verticale centrée sur les marqueurs */}
-                        <div className="absolute left-[12px] top-3 bottom-3 w-0.5 bg-primary/20" />
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-                        {/* Départ */}
-                        <div className="h-6 w-6 rounded-full border-2 border-green-500 bg-green-50 flex items-center justify-center z-10">
-                          <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium flex items-center gap-2">
-                            <span className="text-green-600">Départ:</span> {mission.from.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
-                        </div>
-
-                        {/* Destination */}
-                        <div className="h-6 w-6 rounded-full border-2 border-blue-500 bg-blue-50 flex items-center justify-center z-10">
-                          <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium flex items-center gap-2">
-                            <span className="text-blue-600">Destination:</span> {mission.to.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
-                        </div>
-
-                        {/* Retour */}
-                        <div className="h-6 w-6 rounded-full border-2 border-orange-500 bg-orange-50 flex items-center justify-center z-10">
-                          <div className="h-2 w-2 rounded-full bg-orange-500"></div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium flex items-center gap-2">
-                            <span className="text-orange-600">Retour:</span> {mission.from.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      // Affichage standard pour Aller ou Retour
-                      <div className="flex items-start gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="h-6 w-6 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center z-10">
-                            <div className="h-2 w-2 rounded-full bg-primary"></div>
-                          </div>
-                          <div className="w-0.5 h-14 bg-primary/20 my-1"></div>
-                          <div className="h-6 w-6 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center z-10">
-                            <div className="h-2 w-2 rounded-full bg-primary"></div>
-                          </div>
-                        </div>
-                        <div className="flex-1 space-y-5">
-                          <div>
-                            <p className="text-sm font-medium">{mission.from.name}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{mission.from.address}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">{mission.to.name}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{mission.to.address}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Informations supplémentaires pour Aller-Retour */}
-                    {mission.transportType === 'aller-retour' && (
-                      <div className="mt-4 pt-3 border-t border-primary/10">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Car className="h-3 w-3" />
-                            Distance totale: {((mission.distance * 2) / 1000).toFixed(1)} km
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Trajet complet
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Boutons d'action */}
-                  <div className="flex justify-end">
-                    <Button 
-                      size="sm" 
-                      className="text-xs font-medium whitespace-nowrap bg-primary hover:bg-primary/90 text-white"
-                      onClick={() => handleShowRoute(mission)}
-                    >
-                      <MapPin className="h-3.5 w-3.5 mr-1.5" />
-Voir itinéraire
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-        
-        <div className="mt-4 flex justify-center">
-          <Button 
-            variant="outline" 
-            className="text-xs font-medium whitespace-nowrap text-primary border-primary/20 hover:bg-primary/5"
-            onClick={handleViewAllMissions}
-          >
-            <Clock className="h-3.5 w-3.5 mr-1.5 text-primary" />
-            Voir toutes les missions
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        {upcomingMissions.length > 0 && (
+          <p className="mt-4">
+            <button
+              className="min-h-[44px] text-sm font-bold text-primary underline decoration-2 underline-offset-4"
+              onClick={handleViewAllMissions}
+            >
+              Voir toutes les missions
+            </button>
+          </p>
+        )}
+      </section>
     
     {/* Rendu des popups */}
     <NeedsPopup />

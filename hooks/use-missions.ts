@@ -8,12 +8,13 @@ export interface Mission {
   driverId: string;
   date: Timestamp;
   status: 'programmed' | 'in_progress' | 'completed';
-  child: { name: string; age: number; needs: string[]; personality?: string };
+  child: { name: string; age: number; avatar?: string; needs: string[]; personality?: string };
   parent: { name: string; phone?: string }; // Ajouter les informations du parent
   from: { name: string; address: string; lat: number; lng: number };
   to: { name: string; address: string; lat: number; lng: number };
   time: string;
   distance: number; // Distance en mètres
+  transportType?: 'aller' | 'retour' | 'aller-retour';
 }
 
 interface UseMissionsResult {
@@ -62,6 +63,7 @@ const getChildInfo = async (childId: string) => {
       const childData = childSnap.docs[0].data();
       return {
         age: childData.age ?? null,
+        avatar: childData.avatar,
         needs: childData.needs ?? [],
         personality: childData.personality ?? null
       };
@@ -129,6 +131,7 @@ const missionsPromises = filteredDocs.map(async doc => {
   const child = {
     name: data.childName || 'Enfant',
     age: childInfo.age,
+    avatar: childInfo.avatar,
     needs: childInfo.needs,
     personality: childInfo.personality
   };
@@ -159,7 +162,8 @@ const missionsPromises = filteredDocs.map(async doc => {
     from,
     to,
     time,
-    distance: data.distance || 0 // Ajouter la distance
+    distance: data.distance || 0, // Ajouter la distance
+    transportType: data.transportType
   };
 });
 const result: Mission[] = await Promise.all(missionsPromises);

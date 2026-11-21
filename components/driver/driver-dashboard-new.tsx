@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Car, Clock, MapPin, Star, Calendar, User, DollarSign, 
+  CarFront, Clock, MapPin, Star, Calendar, User, DollarSign, 
   Truck, Award, Zap, BarChart, Activity, TrendingUp, 
   Compass, Hourglass, Phone, ChevronRight, AlertTriangle
 } from 'lucide-react';

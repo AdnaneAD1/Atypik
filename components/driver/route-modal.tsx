@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Navigation, MapPin, Clock, User, Car, Loader2 } from 'lucide-react';
+import { X, Navigation, MapPin, Clock, User, CarFront, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTracking } from '@/hooks/use-tracking';
 
@@ -107,7 +107,7 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
         routeRendererRef.current = new google.maps.DirectionsRenderer({
           suppressMarkers: false, // Laisser Google Maps gérer les marqueurs
           polylineOptions: {
-            strokeColor: '#3B82F6',
+            strokeColor: '#EF4B3A',
             strokeWeight: 4,
           },
         });
@@ -172,9 +172,9 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 6,
-          fillColor: '#2563EB',
+          fillColor: '#EF4B3A',
           fillOpacity: 1,
-          strokeColor: '#1D4ED8',
+          strokeColor: '#C93A2B',
           strokeWeight: 2,
         },
         zIndex: 999,
@@ -255,9 +255,9 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary/10 to-primary/5 border-b p-4 flex items-center justify-between flex-shrink-0">
+          <div className="border-b p-4 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary text-primary-foreground">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Navigation className="h-5 w-5" />
               </div>
               <div>
@@ -271,33 +271,33 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
                 </div>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Fermer">
               <X className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Informations du trajet */}
-          <div className="p-4 border-b bg-muted/30 flex-shrink-0">
+          <div className="p-4 border-b flex-shrink-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
-                <div className="w-4 h-4 rounded-full bg-green-500 mt-1 flex-shrink-0"></div>
+                <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-emerald-500 flex-shrink-0"></div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-green-700">Point de départ</p>
-                  <p className="text-xs text-muted-foreground break-words">{mission.from.address}</p>
+                  <p className="text-sm font-medium">Point de départ</p>
+                  <p className="text-xs text-muted-foreground break-words mt-0.5">{mission.from.address}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="w-4 h-4 rounded-full bg-red-500 mt-1 flex-shrink-0"></div>
+                <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-primary flex-shrink-0"></div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-red-700">Destination</p>
-                  <p className="text-xs text-muted-foreground break-words">{mission.to.address}</p>
+                  <p className="text-sm font-medium">Destination</p>
+                  <p className="text-xs text-muted-foreground break-words mt-0.5">{mission.to.address}</p>
                 </div>
               </div>
             </div>
             
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Badge variant="secondary" className="text-xs">
-                <Car className="h-3 w-3 mr-1" />
+                <CarFront className="h-3 w-3 mr-1" />
                 {((mission.distance || 0)/1000).toFixed(1) || '0.0'} km
               </Badge>
               <Badge variant="outline" className="text-xs">
@@ -361,7 +361,7 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t bg-muted/30 flex justify-between items-center flex-shrink-0">
+          <div className="p-4 border-t flex justify-between items-center flex-shrink-0">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
               <span>Itinéraire optimisé par Google Maps</span>

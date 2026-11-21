@@ -1,8 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { User, Car } from 'lucide-react';
+import { User, CarFront } from 'lucide-react';
 import { Conversation, Participant } from '@/hooks/use-messages';
 import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -55,48 +54,56 @@ export function DriverConversationItem({
   const unreadCount = getUnreadCount(conversation);
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      className={`p-3 rounded-lg cursor-pointer transition-colors border-l-4 ${
+      className={`w-full border-l-[3px] p-3 sm:px-4 text-left transition-colors ${
         isSelected
-          ? 'bg-primary/20 border-primary shadow-sm'
-          : 'hover:bg-secondary border-transparent'
+          ? 'border-primary bg-primary/5'
+          : 'border-transparent hover:bg-secondary'
       }`}
     >
       <div className="flex items-center gap-3">
-        <div className="relative">
+        <div className="relative shrink-0">
           <Avatar className="h-10 w-10">
             <AvatarImage src={otherParticipant.avatar ? otherParticipant.avatar : undefined} />
             <AvatarFallback className="bg-primary/10 text-primary">
               {otherParticipant.role === 'Chauffeur' ? (
-                <Car className="h-4 w-4" />
+                <CarFront className="h-4 w-4" />
               ) : (
                 <User className="h-4 w-4" />
               )}
             </AvatarFallback>
           </Avatar>
+          {otherParticipant.online && (
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-center">
-            <span className={`font-medium truncate ${isSelected ? 'text-primary' : ''}`}>{otherParticipant.name}</span>
+          <div className="flex items-baseline justify-between gap-2">
+            <span className={`truncate font-medium ${unreadCount > 0 ? 'font-semibold' : ''}`}>
+              {otherParticipant.name}
+            </span>
             {conversation.lastMessageTime && (
-              <span className="text-xs text-muted-foreground">
+              <span className="shrink-0 text-xs text-muted-foreground">
                 {formatLastMessageTime(new Date(conversation.lastMessageTime))}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="secondary" className="text-xs">{otherParticipant.role}</Badge>
-            {unreadCount > 0 && <Badge variant="default" className="text-xs">{unreadCount}</Badge>}
-          </div>
-          <div className="text-sm text-muted-foreground truncate mt-1">
-            {conversation.lastMessageSender === currentUserId
-              ? <span><span className="font-medium">Vous: </span>{conversation.lastMessage || 'Aucun message'}</span>
-              : conversation.lastMessage || 'Aucun message'}
+          <div className="mt-0.5 flex items-center justify-between gap-2">
+            <p className={`truncate text-sm ${unreadCount > 0 ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+              {conversation.lastMessageSender === currentUserId && 'Vous : '}
+              {conversation.lastMessage || 'Aucun message'}
+            </p>
+            {unreadCount > 0 && (
+              <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                {unreadCount}
+              </span>
+            )}
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 

@@ -13,6 +13,7 @@ export interface DriverStatsData {
   todayMissions: number;
   thisWeekMissions: number;
   thisMonthMissions: number;
+  thisMonthCompletedMissions: number;
   
   // Distances et géographie
   totalKmTraveled: number;
@@ -22,6 +23,8 @@ export interface DriverStatsData {
   // Évaluations et satisfaction
   averageRating: number;
   totalReviews: number;
+  thisMonthAverageRating: number;
+  thisMonthReviews: number;
   ratingDistribution: {
     5: number;
     4: number;
@@ -68,11 +71,14 @@ export function useDriverStats(): UseDriverStatsResult {
     todayMissions: 0,
     thisWeekMissions: 0,
     thisMonthMissions: 0,
+    thisMonthCompletedMissions: 0,
     totalKmTraveled: 0,
     thisWeekKmTraveled: 0,
     thisMonthKmTraveled: 0,
     averageRating: 0,
     totalReviews: 0,
+    thisMonthAverageRating: 0,
+    thisMonthReviews: 0,
     ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
     totalChildrenTransported: 0,
     uniqueChildrenThisMonth: 0,
@@ -142,6 +148,7 @@ export function useDriverStats(): UseDriverStatsResult {
     let todayMissions = 0;
     let thisWeekMissions = 0;
     let thisMonthMissions = 0;
+    let thisMonthCompletedMissions = 0;
     let totalKmTraveled = 0;
     let thisWeekKmTraveled = 0;
     let thisMonthKmTraveled = 0;
@@ -216,6 +223,9 @@ export function useDriverStats(): UseDriverStatsResult {
       if (transportTimestamp >= ranges.month.start && transportTimestamp <= ranges.month.end) {
         thisMonthMissions++;
         thisMonthKmTraveled += distanceKm;
+        if (transport.status === 'completed') {
+          thisMonthCompletedMissions++;
+        }
         if (transport.childId) {
           childrenThisMonth.add(transport.childId);
         }
@@ -244,6 +254,7 @@ export function useDriverStats(): UseDriverStatsResult {
       todayMissions,
       thisWeekMissions,
       thisMonthMissions,
+      thisMonthCompletedMissions,
       totalKmTraveled: Math.round(totalKmTraveled * 10) / 10,
       thisWeekKmTraveled: Math.round(thisWeekKmTraveled * 10) / 10,
       thisMonthKmTraveled: Math.round(thisMonthKmTraveled * 10) / 10,
@@ -328,6 +339,8 @@ export function useDriverStats(): UseDriverStatsResult {
     return {
       averageRating: Math.round(averageRating * 10) / 10,
       totalReviews,
+      thisMonthAverageRating: Math.round(thisMonthAverage * 10) / 10,
+      thisMonthReviews,
       ratingDistribution,
       ratingTrend: Math.round(ratingTrend * 10) / 10,
     };

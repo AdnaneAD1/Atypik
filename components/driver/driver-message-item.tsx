@@ -1,12 +1,16 @@
 "use client";
 
-import { Message } from '@/hooks/use-messages';
+import { Message, MessageAttachment } from '@/hooks/use-messages';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Reply, Download, User, FileText, Image, Video, Music, Archive, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Reply, Download, User, FileText, Image as ImageIcon, Video, Music, Archive, MoreHorizontal, Trash2, Play } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { DriverMediaViewer } from './driver-media-viewer';
+import { DocumentViewer } from '@/components/ui/document-viewer';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,8 +36,38 @@ export function DriverMessageItem({
   onDownloadAttachment
 }: DriverMessageItemProps) {
   const { toast } = useToast();
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [docViewer, setDocViewer] = useState<MessageAttachment | null>(null);
   const formattedTime = message.timestamp ? format(new Date(message.timestamp), 'HH:mm', { locale: fr }) : '';
-  const formattedDate = message.timestamp ? format(new Date(message.timestamp), 'dd MMM', { locale: fr }) : '';
+
+  // Le champ `type` stocké peut être un MIME (image/jpeg) ou une extension (JPG) — on gère les deux
+  const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif', 'heic', 'heif'];
+  const VIDEO_EXTS = ['mp4', 'mov', 'webm', 'mkv', 'avi', 'm4v'];
+  const extOf = (a: MessageAttachment) => {
+    const fromType = a.type && !a.type.includes('/') ? a.type : '';
+    const fromName = a.name?.split('.').pop() || '';
+    return (fromType || fromName).toLowerCase();
+  };
+  const isVideo = (a: MessageAttachment) =>
+    a.type?.startsWith('video/') || VIDEO_EXTS.includes(extOf(a));
+  const isPdf = (a: MessageAttachment) =>
+    a.type === 'application/pdf' || extOf(a) === 'pdf';
+  const isMedia = (a: MessageAttachment) =>
+    a.type?.startsWith('image/') || isVideo(a) || IMAGE_EXTS.includes(extOf(a));
+  const mediaAttachments = (message.attachments ?? []).filter(isMedia);
+  const fileAttachments = (message.attachments ?? []).filter(a => !isMedia(a));
+  // >3 médias : 2 vignettes + tuile "+N" ; ≤3 : toutes les vignettes
+  const showCounter = mediaAttachments.length > 3;
+  const visibleMedia = showCounter ? mediaAttachments.slice(0, 2) : mediaAttachments;
+  const hiddenMediaCount = mediaAttachments.length - visibleMedia.length;
+  const singleMedia = mediaAttachments.length === 1;
+
+  const formatSize = (size?: number | string) => {
+    if (size === undefined || size === null) return '';
+    if (typeof size === 'string') return size;
+    if (size >= 1_048_576) return `${(size / 1_048_576).toFixed(1)} Mo`;
+    return `${Math.max(1, Math.round(size / 1024))} Ko`;
+  };
 
   // Fonction pour obtenir l'icône selon le type de fichier
   const getFileIcon = (filename: string, type?: string) => {
@@ -41,7 +75,7 @@ export function DriverMessageItem({
     const mimeType = type?.toLowerCase();
     
     if (mimeType?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension || '')) {
-      return <Image className="h-4 w-4" />;
+      return <ImageIcon className="h-4 w-4" />;
     }
     if (mimeType?.startsWith('video/') || ['mp4', 'avi', 'mov', 'mkv', 'webm'].includes(extension || '')) {
       return <Video className="h-4 w-4" />;
@@ -169,16 +203,18 @@ export function DriverMessageItem({
         {/* Contenu du message */}
         <div className="relative group">
           <div
-            className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md border whitespace-pre-line break-words text-sm sm:text-base
+            className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-sm border whitespace-pre-line break-words text-sm sm:text-base
               ${isCurrentUser
-                ? 'bg-red-600 text-white border-red-600 rounded-br-md'
-                : 'bg-white text-gray-900 border-gray-200 rounded-bl-md'}
+                ? 'bg-primary text-primary-foreground border-primary rounded-br-md'
+                : 'bg-card text-card-foreground rounded-bl-md'}
               `}
           >
             <div className="flex justify-between items-start gap-2">
-              <div className="flex-1 min-w-0">
-                {message.content}
-              </div>
+              {message.content && (
+                <div className="flex-1 min-w-0">
+                  {message.content}
+                </div>
+              )}
               {/* Menu d'actions pour tous les messages */}
               <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                 <DropdownMenu>
@@ -217,58 +253,102 @@ export function DriverMessageItem({
                 </DropdownMenu>
               </div>
             </div>
-            {/* Pièces jointes */}
-            {message.attachments && message.attachments.length > 0 && (
-              <div className="mt-2 space-y-1 sm:space-y-2">
-                {message.attachments.map((attachment, index) => (
-                  <div key={index} className="flex items-start sm:items-center gap-2 p-2 sm:p-3 rounded-lg bg-background/20 hover:bg-background/30 transition-colors min-w-0">
-                    <div className="flex-shrink-0 mt-0.5 sm:mt-0">
+            {/* Médias : aperçu direct, au-delà de 3 → 2 vignettes + tuile "+N" */}
+            {mediaAttachments.length > 0 && (
+              <div
+                className={cn(
+                  'mt-2 grid gap-1.5',
+                  singleMedia ? 'grid-cols-1' : 'grid-cols-3'
+                )}
+              >
+                {visibleMedia.map((media, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setViewerIndex(i)}
+                    className={cn(
+                      'group relative overflow-hidden rounded-lg bg-black/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      'aspect-[4/3]',
+                      singleMedia && 'max-h-72 w-full'
+                    )}
+                    aria-label={`Ouvrir ${media.name}`}
+                  >
+                    {isVideo(media) ? (
+                      <>
+                        <video src={media.url} className="h-full w-full object-cover" muted preload="metadata" />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/25 transition-colors group-hover:bg-black/40">
+                          <Play className="h-7 w-7 fill-white text-white" />
+                        </span>
+                      </>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={media.url}
+                        alt={media.name}
+                        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    )}
+                  </button>
+                ))}
+                {showCounter && (
+                  <button
+                    type="button"
+                    onClick={() => setViewerIndex(2)}
+                    className="flex aspect-[4/3] items-center justify-center rounded-lg bg-neutral-900 text-lg font-semibold text-white transition-colors hover:bg-neutral-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`Voir ${hiddenMediaCount} médias supplémentaires`}
+                  >
+                    +{hiddenMediaCount}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Fichiers non-média : carte compacte */}
+            {fileAttachments.length > 0 && (
+              <div className="mt-2 space-y-1.5">
+                {fileAttachments.map((attachment, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      'flex items-center gap-2.5 rounded-lg bg-background/20 p-2.5 min-w-0',
+                      isPdf(attachment) && 'cursor-pointer transition-colors hover:bg-background/30'
+                    )}
+                    onClick={isPdf(attachment) ? () => setDocViewer(attachment) : undefined}
+                    title={isPdf(attachment) ? `Ouvrir ${attachment.name}` : undefined}
+                  >
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-background/40">
                       {getFileIcon(attachment.name, attachment.type)}
                     </div>
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <div className="text-xs sm:text-sm font-medium leading-tight truncate" title={attachment.name}>
-                        {/* Troncature intelligente : afficher début + extension si nom trop long */}
-                        {attachment.name.length > 25 ? (
-                          (() => {
-                            const parts = attachment.name.split('.');
-                            const extension = parts.length > 1 ? `.${parts.pop()}` : '';
-                            const nameWithoutExt = parts.join('.');
-                            const maxNameLength = 20 - extension.length;
-                            return nameWithoutExt.length > maxNameLength 
-                              ? `${nameWithoutExt.substring(0, maxNameLength)}...${extension}`
-                              : attachment.name;
-                          })()
-                        ) : (
-                          attachment.name
-                        )}
-                      </div>
-                      {attachment.size && (
-                        <div className="text-xs opacity-70 mt-0.5 truncate">{attachment.size}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-xs sm:text-sm font-medium" title={attachment.name}>
+                        {attachment.name}
+                      </p>
+                      {formatSize(attachment.size) && (
+                        <p className="text-xs opacity-70">{formatSize(attachment.size)}</p>
                       )}
                     </div>
-                    <div className="flex-shrink-0 ml-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0 hover:bg-background/40"
-                        onClick={() => handleDownload(attachment.url, attachment.name)}
-                        title={`Télécharger ${attachment.name}`}
-                      >
-                        <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 flex-shrink-0 p-0 hover:bg-background/40"
+                      onClick={(e) => { e.stopPropagation(); handleDownload(attachment.url, attachment.name); }}
+                      title={`Télécharger ${attachment.name}`}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
               </div>
             )}
-          </div>
-        </div>
-        {/* Heure */}
-        <div className={`text-xs mt-1 ${isCurrentUser ? 'text-red-600/80' : 'text-gray-400'} select-none px-1`}>
-          <div className="flex flex-wrap items-center gap-1">
-            <span>{formattedTime}</span>
-            <span className="hidden sm:inline">•</span>
-            <span className="hidden sm:inline">{formattedDate}</span>
+
+            {/* Heure dans la bulle, en bas à droite */}
+            <div className={cn(
+              'mt-1.5 flex justify-end text-[11px] leading-none',
+              isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
+            )}>
+              {formattedTime}
+            </div>
           </div>
         </div>
       </div>
@@ -282,6 +362,27 @@ export function DriverMessageItem({
           </Avatar>
         </div>
       ) : null}
+
+      {/* Visionneuse média */}
+      {viewerIndex !== null && (
+        <DriverMediaViewer
+          items={mediaAttachments}
+          initialIndex={viewerIndex}
+          open={viewerIndex !== null}
+          onClose={() => setViewerIndex(null)}
+          onDownload={handleDownload}
+        />
+      )}
+
+      {/* Visionneuse de documents (PDF) */}
+      {docViewer && (
+        <DocumentViewer
+          item={docViewer}
+          open={docViewer !== null}
+          onClose={() => setDocViewer(null)}
+          onDownload={handleDownload}
+        />
+      )}
     </div>
   );
 }

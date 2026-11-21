@@ -12,6 +12,8 @@ export interface DriverStats {
   childrenTransported: number;
   completedMissions: number;
   totalMissions: number;
+  /** Missions par jour de la semaine courante, index 0 = lundi … 6 = dimanche */
+  weeklyMissions: number[];
 }
 
 export interface ActiveMission {
@@ -54,6 +56,7 @@ export interface UpcomingMission {
   child: {
     name: string;
     age: number;
+    avatar?: string;
     needs?: { type: string; description: string; severity: 'low' | 'medium' | 'high'; }[];
   };
   parent: {
@@ -117,6 +120,7 @@ export function useDriverDashboard(): UseDriverDashboardResult {
     childrenTransported: 0,
     completedMissions: 0,
     totalMissions: 0,
+    weeklyMissions: [0, 0, 0, 0, 0, 0, 0],
   });
   
   const [activeMission, setActiveMission] = useState<ActiveMission | null>(null);
@@ -198,6 +202,13 @@ export function useDriverDashboard(): UseDriverDashboardResult {
       const childrenSet = new Set<string>();
       const startMs = start.toMillis();
       const endMs = end.toMillis();
+
+      // Semaine courante (lundi → dimanche) pour l'histogramme
+      const now = new Date();
+      const weekDay = (now.getDay() + 6) % 7; // lundi = 0
+      const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - weekDay, 0, 0, 0, 0).getTime();
+      const weekEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - weekDay + 7, 0, 0, 0, 0).getTime();
+      const weeklyMissions = [0, 0, 0, 0, 0, 0, 0];
       
       // Traiter toutes les missions et extraire celles d'aujourd'hui
       allSnapshot.forEach((doc) => {
@@ -220,6 +231,9 @@ export function useDriverDashboard(): UseDriverDashboardResult {
           if (data.childId) {
             childrenSet.add(data.childId);
           }
+        }
+        if (!isNaN(tMs) && tMs >= weekStart && tMs < weekEnd && data.status !== 'cancelled') {
+          weeklyMissions[(tDate.getDay() + 6) % 7]++;
         }
       });
       
@@ -247,6 +261,7 @@ export function useDriverDashboard(): UseDriverDashboardResult {
         childrenTransported: childrenSet.size,
         completedMissions,
         totalMissions,
+        weeklyMissions,
       };
     } catch (error) {
       console.error('Erreur lors du calcul des statistiques:', error);
@@ -282,7 +297,7 @@ export function useDriverDashboard(): UseDriverDashboardResult {
           return {
             id: missionDoc.id,
             transportId: missionData.transportId,
-            status: 'started' as const,
+            status: (missionData.status === 'in_progress' ? 'in_progress' : 'started') as 'started' | 'in_progress',
             child: {
               name: transportData.childName || 'Enfant',
               age: childInfo.age || 0,
@@ -311,7 +326,26 @@ export function useDriverDashboard(): UseDriverDashboardResult {
             timeEstimate: '15 min', // À calculer dynamiquement
             distance: transportData.distance || 0,
             scheduledTime: transportData.time,
-            progress: 50, // À calculer selon la position GPS
+            progress: (() => {
+              // Progression réelle : part du trajet parcourue d'après la position GPS live
+              const pos = missionData.currentPosition;
+              const f = transportData.from;
+              const t = transportData.to;
+              if (!pos?.lat || !pos?.lng || !f?.lat || !t?.lat) return 0;
+              const R = 6371000;
+              const rad = (d: number) => (d * Math.PI) / 180;
+              const hav = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+                const dLat = rad(b.lat - a.lat);
+                const dLng = rad(b.lng - a.lng);
+                const h =
+                  Math.sin(dLat / 2) ** 2 +
+                  Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+                return 2 * R * Math.asin(Math.sqrt(h));
+              };
+              const total = hav(f, t);
+              if (total <= 0) return 0;
+              return Math.min(100, Math.max(0, (hav(f, pos) / total) * 100));
+            })(),
             time: transportData.time,
             transportType: transportData.transportType || 'aller',
           };
@@ -379,7 +413,8 @@ export function useDriverDashboard(): UseDriverDashboardResult {
           child: {
             name: data.childName || 'Enfant',
             age: childInfo.age || 0,
-            needs: Array.isArray(childInfo.needs) ? childInfo.needs.map((need: any) => 
+            avatar: childInfo.avatar,
+            needs: Array.isArray(childInfo.needs) ? childInfo.needs.map((need: any) =>
               typeof need === 'string' ? { type: need, description: need, severity: 'medium' as const } : need
             ) : undefined,
           },

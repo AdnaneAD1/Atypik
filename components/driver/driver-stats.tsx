@@ -1,19 +1,9 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { 
-  BarChart as BarChartIcon, 
-  TrendingUp, 
-  Users, 
-  Star,
-  MapPin,
-  Car,
-  Loader2,
-  AlertTriangle,
-  Banknote
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, Loader2, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useDriverStats } from '@/hooks/use-driver-stats';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -97,175 +87,177 @@ export function DriverStats() {
     );
   }
 
+  const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const maxWeekly = Math.max(...stats.weeklyActivity, 1);
+  const todayIndex = (new Date().getDay() + 6) % 7;
+
+  const completionRate = stats.totalMissions > 0
+    ? Math.round((stats.completedMissions / stats.totalMissions) * 100)
+    : 0;
+
+  const Trend = ({ value }: { value: number }) => (
+    <span className={cn('inline-flex items-center gap-1 font-bold', value >= 0 ? 'text-emerald-700' : 'text-primary')}>
+      {value >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+      {value >= 0 ? '+' : ''}{value.toFixed(0).replace('-', '−')} %
+    </span>
+  );
+
+  const statCards = [
+    {
+      label: 'Note moyenne',
+      value: stats.averageRating.toFixed(1),
+      unit: '/5',
+      decimals: 1,
+      sub: `Basé sur ${stats.totalReviews} évaluation${stats.totalReviews > 1 ? 's' : ''}`,
+      tint: 'bg-brand-yellow/25',
+    },
+    {
+      label: 'Missions du mois',
+      value: stats.thisMonthMissions.toString(),
+      decimals: 0,
+      sub: <><Trend value={stats.trends.missionsGrowth} /> vs mois dernier</>,
+      tint: 'bg-primary/10',
+    },
+    {
+      label: 'Kilomètres parcourus',
+      value: (stats.thisMonthKmTraveled || 0).toFixed(1),
+      unit: 'km',
+      decimals: 1,
+      sub: <><Trend value={stats.trends.kmGrowth} /> vs mois dernier</>,
+      tint: 'bg-brand-teal/10',
+    },
+    {
+      label: 'Gains du mois',
+      value: gainsLoading ? '0' : new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(monthlyGains || 0),
+      unit: '€',
+      decimals: 2,
+      sub: gainsError || 'Somme de vos gains ce mois-ci',
+      tint: 'bg-brand-pink/10',
+    },
+  ];
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
+      {/* En-tête */}
       <div>
-        <h1 className="text-3xl font-bold">Statistiques</h1>
-        <p className="text-muted-foreground mt-2">
-          Suivez vos performances et votre activité
+        <h1 className="text-2xl font-bold tracking-tight">Statistiques</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Votre activité et vos performances
         </p>
       </div>
 
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Note moyenne
-            </CardTitle>
-            <Star className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.averageRating.toFixed(1)}/5</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Basé sur {stats.totalReviews} évaluation{stats.totalReviews > 1 ? 's' : ''}
-            </p>
-            
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Missions du mois
-            </CardTitle>
-            <Car className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.thisMonthMissions}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stats.trends.missionsGrowth >= 0 ? '+' : ''}{stats.trends.missionsGrowth.toFixed(1)}% par rapport au mois dernier
-            </p>
-            
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Kilomètres parcourus
-            </CardTitle>
-            <MapPin className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{(stats.thisMonthKmTraveled || 0).toFixed(1)} km</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stats.trends.kmGrowth >= 0 ? '+' : ''}{stats.trends.kmGrowth.toFixed(1)}% vs mois dernier
-            </p>
-            
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Gains du mois
-            </CardTitle>
-            <Banknote className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {gainsLoading && '—'}
-              {!gainsLoading && (
-                new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(monthlyGains || 0)
+      {/* Chiffres — tuiles teintées façon dashboard */}
+      <dl className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {statCards.map((s, index) => (
+          <div key={s.label} className={cn('rounded-xl p-5 sm:p-6', s.tint)}>
+            <dt className="text-sm text-slate-600">{s.label}</dt>
+            <dd className="mt-1.5 flex items-baseline gap-1.5 font-brand text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+              <AnimatedCounter
+                value={s.value}
+                duration={1.5}
+                delay={0.15 + index * 0.1}
+                decimalPlaces={s.decimals}
+              />
+              {s.unit && (
+                <span className="text-xl font-medium text-muted-foreground">{s.unit}</span>
               )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {gainsError ? gainsError : 'Somme de vos gains ce mois-ci'}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+            </dd>
+            <dd className="mt-2 text-sm text-slate-600">{s.sub}</dd>
+          </div>
+        ))}
+      </dl>
 
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChartIcon className="h-5 w-5 text-primary" />
-              <span>Activité hebdomadaire</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] flex items-end justify-between gap-2">
-              {stats.weeklyActivity.map((value, i) => {
-                const maxValue = Math.max(...stats.weeklyActivity, 1);
-                const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
-                // Hauteur minimale de 10px pour la visibilité, même si value = 0
-                const minHeight = value > 0 ? Math.max(percentage, 10) : 5;
-                
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center">
-                    <div className="w-full flex flex-col items-center justify-end" style={{ height: '260px' }}>
-                      <div 
-                        className={`w-full rounded-t-lg transition-all duration-300 ${
-                          value > 0 
-                            ? 'bg-primary/20 hover:bg-primary/30 border border-primary/30' 
-                            : 'bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-                        }`}
-                        style={{ 
-                          height: `${minHeight}px`,
-                          minHeight: '5px'
-                        }}
-                        title={`${value} mission${value !== 1 ? 's' : ''} - ${['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][i]}`}
-                      />
-                    </div>
-                    <div className="text-xs text-center mt-2 text-muted-foreground font-medium">
-                      {['L', 'M', 'M', 'J', 'V', 'S', 'D'][i]}
-                    </div>
-                    <div className={`text-xs text-center font-bold ${
-                      value > 0 ? 'text-primary' : 'text-muted-foreground'
-                    }`}>
-                      {value}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            {/* Message si aucune activité */}
-            {/* {stats.weeklyActivity.every(v => v === 0) && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <p className="text-sm font-medium">Aucune activité cette semaine</p>
-                  <p className="text-xs mt-1">Les missions apparaîtront ici une fois effectuées</p>
-                </div>
-              </div>
-            )} */}
-          </CardContent>
-        </Card>
+      {/* Activité + performance */}
+      <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-14">
+        {/* Activité hebdomadaire */}
+        <section className="border-t-2 border-slate-900 pt-6">
+          <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900">
+            Activité hebdomadaire
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">Missions par jour</p>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <span>Performance mensuelle</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">Enfants transportés</span>
-                  </div>
-                  <span className="text-sm font-bold">{stats.totalChildrenTransported}</span>
+          <div
+            className="relative mt-7 grid h-64 grid-cols-7 items-end gap-2.5 border-b-2 border-slate-900 sm:h-72"
+            role="img"
+            aria-label={`Missions par jour cette semaine : ${days.map((d, i) => `${stats.weeklyActivity[i]} ${d}`).join(', ')}`}
+          >
+            {/* Ligne médiane en pointillés */}
+            <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-1/2 border-t border-dashed border-slate-200" />
+            {stats.weeklyActivity.map((value, i) => {
+              const isToday = i === todayIndex;
+              return (
+                <div key={days[i]} className="flex h-full flex-col justify-end">
+                  <div
+                    className={cn(
+                      'w-full rounded-t transition-all duration-500',
+                      isToday ? 'bg-primary' : 'bg-slate-200'
+                    )}
+                    style={{ height: value === 0 ? '6px' : `${(value / maxWeekly) * 100}%` }}
+                  />
                 </div>
-                <Progress value={Math.min((stats.totalChildrenTransported / Math.max(stats.totalChildrenTransported, 10)) * 100, 100)} className="h-2" />
-              </div>
+              );
+            })}
+          </div>
+          <div className="mt-2.5 grid grid-cols-7 gap-2.5 text-center" aria-hidden="true">
+            {days.map((d, i) => {
+              const isToday = i === todayIndex;
+              return (
+                <span key={d} className="grid gap-0.5">
+                  <span className={cn('text-xs text-muted-foreground sm:text-sm', isToday && 'font-bold text-primary')}>
+                    {d}
+                  </span>
+                  <b className={cn('font-brand text-base sm:text-lg', isToday ? 'text-primary' : 'text-muted-foreground')}>
+                    {stats.weeklyActivity[i]}
+                  </b>
+                </span>
+              );
+            })}
+          </div>
+        </section>
 
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">Satisfaction</span>
-                  </div>
-                  <span className="text-sm font-bold">{stats.averageRating.toFixed(1)}/5</span>
-                </div>
-                <Progress value={(stats.averageRating / 5) * 100} className="h-2" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Performance globale */}
+        <section className="rounded-[6px_28px_6px_28px] bg-brand-yellow/25 p-6 sm:p-7">
+          <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900">
+            Performance globale
+          </h2>
+          <div className="mt-6 flex items-baseline gap-3">
+            <b className="font-brand text-6xl font-bold leading-none tracking-tight text-slate-900 sm:text-7xl">
+              {completionRate}&nbsp;%
+            </b>
+            <span className="text-sm text-muted-foreground">des missions complétées</span>
+          </div>
+          <div
+            className="mt-4 h-3.5 overflow-hidden rounded-full bg-white"
+            role="progressbar"
+            aria-valuenow={completionRate}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Missions complétées"
+          >
+            <div
+              className="h-full rounded-full bg-brand-teal transition-all duration-700"
+              style={{ width: `${completionRate}%` }}
+            />
+          </div>
+          <ul className="mt-7">
+            <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 py-3.5">
+              <span className="text-sm">Satisfaction</span>
+              <b className="font-brand text-xl text-slate-900">
+                {stats.averageRating.toFixed(1)}<small className="text-sm font-normal text-muted-foreground"> /5</small>
+              </b>
+            </li>
+            <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 py-3.5">
+              <span className="text-sm">Missions complétées</span>
+              <b className="font-brand text-xl text-slate-900">
+                {stats.completedMissions}<small className="text-sm font-normal text-muted-foreground"> sur {stats.totalMissions}</small>
+              </b>
+            </li>
+            <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 py-3.5">
+              <span className="text-sm">Enfants transportés</span>
+              <b className="font-brand text-xl text-slate-900">{stats.totalChildrenTransported}</b>
+            </li>
+          </ul>
+        </section>
       </div>
     </div>
   );
