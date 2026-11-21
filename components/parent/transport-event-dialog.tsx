@@ -22,14 +22,16 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { MapPin } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { FormDialogShell } from '@/components/ui/form-dialog-shell';
 import { useChildren } from '@/hooks/use-children';
 import { useAuth } from '@/lib/auth/auth-context';
-import { AddressSelector } from '@/components/ui/address-selector';
+import { BanAddressAutocomplete } from '@/components/ui/ban-address-autocomplete';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/ClientApp';
 import { authFetch } from '@/lib/api/auth-fetch';
@@ -332,8 +334,9 @@ export function TransportEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <DialogContent className="w-[calc(100vw-2rem)] max-h-[92dvh] gap-0 overflow-hidden p-0 sm:max-w-[880px]">
+        <FormDialogShell image="/formations-side.jpg" caption="Chaque trajet, en toute sérénité">
+        <DialogHeader className="sticky top-0 z-20 -mx-5 -mt-5 border-b bg-background px-5 pb-3 pt-5 sm:-mx-6 sm:-mt-6 sm:px-6 sm:pt-6">
           <DialogTitle>Programmer un transport</DialogTitle>
           <DialogDescription className="flex flex-col space-y-1">
             <span>Pour le {selectedDate ? format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr }) : ''}</span>
@@ -465,40 +468,54 @@ export function TransportEventDialog({
             {/* Adresses: responsive grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Champ Lieu de départ */}
-              <AddressSelector
-                value={from?.address || ''}
-                onChange={val => {
-                  const newFrom = val ? { address: val, lat: 0, lng: 0 } : null;
-                  setFrom(newFrom);
-                  form.setValue('from', newFrom || { address: '', lat: 0, lng: 0 });
-                }}
-                onSelect={res => {
-                  setFrom(res);
-                  form.setValue('from', res);
-                }}
-                placeholder="Adresse de départ"
-                restrictRegion={process.env.NEXT_PUBLIC_REGION_CODE || 'FR'}
-                disabled={!mapsLoaded}
-                label="Lieu de départ"
-              />
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">Lieu de départ</label>
+                <BanAddressAutocomplete
+                  value={from?.address || ''}
+                  onChange={val => {
+                    const newFrom = val ? { address: val, lat: 0, lng: 0 } : null;
+                    setFrom(newFrom);
+                    form.setValue('from', newFrom || { address: '', lat: 0, lng: 0 });
+                  }}
+                  onSelect={res => {
+                    const sel = { address: res.address, lat: res.lat, lng: res.lng };
+                    setFrom(sel);
+                    form.setValue('from', sel);
+                  }}
+                  placeholder="Adresse de départ"
+                />
+                {from?.address && (
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    {from.address}
+                  </p>
+                )}
+              </div>
 
               {/* Champ Lieu d&apos;arrivée */}
-              <AddressSelector
-                value={to?.address || ''}
-                onChange={val => {
-                  const newTo = val ? { address: val, lat: 0, lng: 0 } : null;
-                  setTo(newTo);
-                  form.setValue('to', newTo || { address: '', lat: 0, lng: 0 });
-                }}
-                onSelect={res => {
-                  setTo(res);
-                  form.setValue('to', res);
-                }}
-                placeholder="Adresse d&apos;arrivée (France)"
-                restrictRegion="FR"
-                disabled={!mapsLoaded}
-                label="Lieu d&apos;arrivée"
-              />
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">Lieu d&apos;arrivée</label>
+                <BanAddressAutocomplete
+                  value={to?.address || ''}
+                  onChange={val => {
+                    const newTo = val ? { address: val, lat: 0, lng: 0 } : null;
+                    setTo(newTo);
+                    form.setValue('to', newTo || { address: '', lat: 0, lng: 0 });
+                  }}
+                  onSelect={res => {
+                    const sel = { address: res.address, lat: res.lat, lng: res.lng };
+                    setTo(sel);
+                    form.setValue('to', sel);
+                  }}
+                  placeholder="Adresse d&apos;arrivée"
+                />
+                {to?.address && (
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    {to.address}
+                  </p>
+                )}
+              </div>
             </div>
             {/* Distance affichée */}
             {distance !== null && distance !== undefined && (
@@ -508,16 +525,21 @@ export function TransportEventDialog({
             )}
 
 
-            <DialogFooter className="sticky bottom-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <DialogFooter className="sticky bottom-0 z-20 -mx-5 -mb-5 flex-col-reverse gap-2 border-t bg-background px-5 py-4 sm:-mx-6 sm:-mb-6 sm:flex-row sm:justify-end sm:px-6">
               <Button
                 type="button"
                 variant="outline"
+                className="h-10 w-full sm:w-auto"
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
               >
                 Annuler
               </Button>
-              <Button type="submit" disabled={isSubmitting || isPastDate}>
+              <Button
+                type="submit"
+                className="h-10 w-full bg-primary text-white hover:bg-primary/90 sm:w-auto"
+                disabled={isSubmitting || isPastDate}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader size="sm" className="mr-2" />
@@ -532,6 +554,7 @@ export function TransportEventDialog({
             </DialogFooter>
           </form>
         </Form>
+        </FormDialogShell>
       </DialogContent>
     </Dialog>
   );

@@ -409,8 +409,9 @@ export function AddressSelector({
 
       {/* Adresse sélectionnée */}
       {value && (
-        <div className="text-xs text-muted-foreground">
-          📍 {value}
+        <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5 shrink-0" />
+          {value}
         </div>
       )}
     </div>
