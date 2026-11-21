@@ -17,9 +17,17 @@ const config: Config = {
     },
     fontFamily: {
       sans: ['Poppins', 'sans-serif'],
+      brand: ['Fredoka', 'Poppins', 'sans-serif'],
     },
     extend: {
       colors: {
+        // Couleurs de la direction artistique Atypik Driver (logo officiel)
+        brand: {
+          coral: 'hsl(5 87% 57%)',   // corail "Atypik"
+          yellow: 'hsl(42 98% 52%)', // jaune "Driver"
+          teal: 'hsl(183 72% 38%)',  // turquoise "pour des enfants exceptionnels"
+          pink: 'hsl(330 78% 58%)',  // arc magenta extérieur
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

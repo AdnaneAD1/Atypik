@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -9,7 +9,7 @@ import {
   MessageSquare,
   UserRound,
   MapPin,
-  Car,
+  CarFront,
   FileText,
   Users,
   ShieldCheck,
@@ -22,12 +22,10 @@ export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
-  
-  if (!user) return null;
-  
-  const isParent = user.role === 'parent';
-  const isDriver = user.role === 'driver';
-  const isAdmin = user.role === 'admin';
+
+  const isParent = user?.role === 'parent';
+  const isDriver = user?.role === 'driver';
+  const isAdmin = user?.role === 'admin';
   
   const parentNavItems = [
     {
@@ -64,7 +62,7 @@ export function BottomNav() {
       href: '/driver/dashboard',
     },
     {
-      icon: Car,
+      icon: CarFront,
       label: 'Missions',
       href: '/driver/missions',
     },
@@ -114,13 +112,11 @@ export function BottomNav() {
     // Optionally add messages or profile later if needed
   ];
 
-  const navItems = isParent
-    ? parentNavItems
-    : isDriver
-    ? driverNavItems
-    : isAdmin
-    ? adminNavItems
-    : [];
+  const navItems = useMemo(
+    () => (isParent ? parentNavItems : isDriver ? driverNavItems : isAdmin ? adminNavItems : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isParent, isDriver, isAdmin]
+  );
 
   // Précharger toutes les pages en arrière-plan dès l'affichage pour un clic instantané (0 latence)
   useEffect(() => {
@@ -128,6 +124,8 @@ export function BottomNav() {
       router.prefetch(item.href);
     });
   }, [navItems, router]);
+
+  if (!user) return null;
 
   const handleNavigation = (href: string) => {
     nativeHaptics.light();

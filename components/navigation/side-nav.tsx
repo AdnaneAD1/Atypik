@@ -6,7 +6,7 @@ import {
   MessageSquare,
   UserRound,
   MapPin,
-  Car,
+  CarFront,
   GraduationCap,
   LayoutDashboard,
   Users,
@@ -104,7 +104,7 @@ export function SideNav({ className }: SideNavProps) {
       href: '/driver/dashboard',
     },
     {
-      icon: Car,
+      icon: CarFront,
       label: 'Missions du jour',
       href: '/driver/missions',
     },
@@ -141,56 +141,51 @@ export function SideNav({ className }: SideNavProps) {
   const navItems = isAdmin ? adminNavItems : isParent ? parentNavItems : driverNavItems;
   
   return (
-    <aside className={cn("h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-sm flex flex-col", className)}>
+    <aside className={cn("h-full bg-card border-r flex flex-col", className)}>
       {/* En-tête du menu */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center space-x-2">
-          <Avatar className="h-8 w-8 border">
+      <div className="p-4 border-b">
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-10 w-10 border">
             <AvatarImage src={user.avatar || ''} alt={user.name || 'Utilisateur'} />
-            <AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary">
               {(user.name || 'U').split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div>
             <p className="text-sm font-medium">{user.name || 'Utilisateur'}</p>
             <p className="text-xs text-muted-foreground">{isAdmin ? 'Espace Admin' : isParent ? 'Espace Parent' : 'Espace Chauffeur'}</p>
+            {isDriver && (
+              <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                En service
+              </p>
+            )}
           </div>
         </div>
       </div>
-      
+
       {/* Menu principal */}
       <div className="flex-1 overflow-y-auto py-4 px-3">
         <div className="space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
-            
+
             return (
               <Button
                 key={item.href}
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start gap-x-3 font-medium rounded-xl h-11 mb-1 transition-all duration-200",
-                  isActive 
-                    ? "bg-primary/10 dark:bg-primary/20 text-primary" 
-                    : "hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-600 dark:text-slate-300"
+                  "w-full justify-start gap-x-3 font-medium rounded-full h-11 mb-1 px-4 transition-colors",
+                  isActive
+                    ? "bg-slate-900 text-white hover:bg-slate-800 hover:text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-foreground dark:text-slate-300 dark:hover:bg-slate-800/80"
                 )}
                 onClick={() => router.push(item.href)}
               >
-                <div className={cn(
-                  "flex items-center justify-center h-7 w-7 rounded-lg",
-                  isActive ? "bg-primary/20 dark:bg-primary/30" : "bg-slate-100 dark:bg-slate-800"
-                )}>
-                  <item.icon className={cn(
-                    "h-4 w-4",
-                    isActive ? "text-primary" : "text-slate-500 dark:text-slate-400"
-                  )} />
-                </div>
+                <item.icon className="h-4 w-4" />
                 <span>
                   {item.label}
                 </span>
-                {isActive && (
-                  <div className="ml-auto h-2 w-2 rounded-full bg-primary" />
-                )}
               </Button>
             );
           })}
@@ -198,21 +193,21 @@ export function SideNav({ className }: SideNavProps) {
       </div>
 
       {/* Menu du bas */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50">
+      <div className="p-3 border-t bg-slate-50/60 dark:bg-slate-800/40">
         <div className="space-y-1">
           {bottomNavItems.map((item) => {
             const isActive = pathname === item.href;
-            
+
             return (
               <Button
                 key={item.href}
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "w-full justify-start gap-x-3 font-medium text-sm rounded-lg",
-                  isActive 
-                    ? "bg-primary/10 dark:bg-primary/20 text-primary" 
-                    : "hover:bg-slate-200/80 dark:hover:bg-slate-700/80 text-slate-600 dark:text-slate-400"
+                  "w-full justify-start gap-x-3 font-medium text-sm rounded-full px-4 transition-colors",
+                  isActive
+                    ? "bg-slate-900 text-white hover:bg-slate-800 hover:text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-foreground dark:text-slate-400 dark:hover:bg-slate-700/80"
                 )}
                 onClick={() => router.push(item.href)}
               >

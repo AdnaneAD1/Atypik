@@ -376,7 +376,7 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
       <div className="min-h-screen bg-background">
         {/* Desktop/Tablet Sidebar - Hidden on Mobile */}
         {!isMobile && (
-          <aside className={`fixed left-0 top-0 z-30 h-full w-64 border-r bg-card transition-transform duration-300 ease-in-out ${
+          <aside className={`fixed left-0 top-0 z-30 h-full w-64 transition-transform duration-300 ease-in-out ${
             isTablet && !isSidebarOpen ? '-translate-x-full' : 'translate-x-0'
           }`}>
             <div className="flex h-16 items-center justify-between border-b px-6">

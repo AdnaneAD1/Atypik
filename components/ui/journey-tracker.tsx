@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Car, MapPin, CheckCircle2, Clock } from 'lucide-react';
+import { CarFront, MapPin, CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface JourneyTrackerProps {
@@ -62,7 +62,7 @@ export function JourneyTracker({
               className="absolute -left-3 z-20"
             >
               <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary shadow-md">
-                <Car className="w-3 h-3 text-white" />
+                <CarFront className="w-3 h-3 text-white" />
               </div>
             </motion.div>
           </div>

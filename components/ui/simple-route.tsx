@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Car, MapPin } from 'lucide-react';
+import { CarFront, MapPin } from 'lucide-react';
 
 interface SimpleRouteProps {
   progress: number;
@@ -35,7 +35,7 @@ export function SimpleRoute({ progress, className }: SimpleRouteProps) {
         className="absolute left-1/2 -translate-x-1/2 z-20"
         style={{ top: `${progress}%` }}
       >
-        <Car className="h-5 w-5 -ml-2.5 text-primary" />
+        <CarFront className="h-5 w-5 -ml-2.5 text-primary" />
       </motion.div>
       
       {/* Point d'arrivée */}

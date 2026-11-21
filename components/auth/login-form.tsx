@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loader';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getAuthErrorMessage } from '@/lib/auth/auth-errors';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/firebase/ClientApp';
 
@@ -33,6 +33,9 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+const inputClasses =
+  'h-11 rounded-lg border-input bg-background/50 pl-10 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/15 focus-visible:ring-offset-0';
 
 export function LoginForm() {
   const { user, loading: isAuthLoading } = useAuth();
@@ -145,16 +148,17 @@ export function LoginForm() {
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-8 w-full"
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full"
     >
-      <div className="space-y-2 text-center">
-        <h2 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">Bienvenue</h2>
-        <p className="text-muted-foreground text-base">
-          Authentifiez vous pour accéder à votre espace Atypik
+      {/* En-tête */}
+      <div className="space-y-1.5 mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Bon retour</h1>
+        <p className="text-sm text-muted-foreground">
+          Connectez-vous à votre espace Atypik
         </p>
       </div>
 
@@ -168,13 +172,14 @@ export function LoginForm() {
                 <FormLabel className="text-sm font-medium">Email</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input 
-                      placeholder="Entrez votre email" 
+                    <Input
+                      placeholder="Entrez votre email"
+                      autoComplete="email"
                       {...field}
-                      className="h-12 pl-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                      className={inputClasses}
                     />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <Mail className="h-[18px] w-[18px]" />
                     </div>
                   </div>
                 </FormControl>
@@ -194,11 +199,12 @@ export function LoginForm() {
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
+                      autoComplete="current-password"
                       {...field}
-                      className="h-12 pl-10 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                      className={`${inputClasses} pr-10`}
                     />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                      <Lock className="h-[18px] w-[18px]" />
                     </div>
                     <Button
                       type="button"
@@ -216,19 +222,17 @@ export function LoginForm() {
             )}
           />
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
+          <div className="flex items-center justify-between pt-1">
+            <label htmlFor="remember" className="flex items-center space-x-2 cursor-pointer">
+              <Checkbox
                 id="remember"
                 checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary/30"
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
               />
-              <label htmlFor="remember" className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 Se souvenir de moi
-              </label>
-            </div>
+              </span>
+            </label>
             <Button
               type="button"
               variant="link"
@@ -240,11 +244,11 @@ export function LoginForm() {
             </Button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4 pt-2">
             <Button
               type="submit"
               disabled={isSubmitting || isLoading}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md transition-all duration-300 hover:shadow-lg rounded-xl"
+              className="w-full h-11 text-base font-semibold bg-primary hover:bg-primary/90 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md"
             >
               {isLoading ? (
                 <>
@@ -256,13 +260,13 @@ export function LoginForm() {
               )}
             </Button>
 
-            <div className="relative my-4">
+            <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200 dark:border-slate-700" />
+                <span className="w-full border-t border-slate-200 dark:border-slate-800" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Ou continuer avec
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white dark:bg-slate-950 px-3 text-muted-foreground">
+                  ou continuer avec
                 </span>
               </div>
             </div>
@@ -272,7 +276,7 @@ export function LoginForm() {
               variant="outline"
               disabled={isSubmitting || isLoading}
               onClick={handleGoogleLogin}
-              className="w-full h-12 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium rounded-xl transition-all duration-200 flex items-center justify-center space-x-2"
+              className="w-full h-11 rounded-lg border-input font-medium transition-all duration-200 flex items-center justify-center space-x-2"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path
@@ -298,16 +302,14 @@ export function LoginForm() {
         </form>
       </Form>
 
-      <div className="text-center">
-        <p className="text-sm text-muted-foreground">
-          Vous n'avez pas de compte ?{' '}
-          <Link
-            href="/register"
-            className="font-semibold text-primary hover:text-primary/80 hover:underline transition-colors"
-          >
-            S'inscrire
-          </Link>
-        </p>
+      <div className="mt-8 text-center border-t border-slate-100 dark:border-slate-800 pt-6">
+        <Link
+          href="/register"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+        >
+          Pas encore de compte ? <span className="text-primary">Créer un compte</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
       </div>
     </motion.div>
   );

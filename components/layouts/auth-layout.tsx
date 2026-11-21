@@ -9,48 +9,49 @@ import { motion } from 'framer-motion';
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-900 dark:to-slate-800">
-        <div className="w-full min-h-screen flex flex-col md:flex-row">
-          {/* Image côté gauche - visible uniquement sur desktop */}
-          <div className="hidden md:block md:w-1/2 bg-primary/10 relative">
-            <Image
-              src="https://img.freepik.com/free-photo/close-up-boy-going-school_23-2150814387.jpg?uid=R143971211&ga=GA1.1.1911634789.1729294558&semt=ais_hybrid&w=740"
-              alt="Atypik Driver"
-              fill
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent"></div>
+      <div className="min-h-screen flex bg-white dark:bg-slate-950">
+        {/* Panneau visuel de marque — desktop uniquement */}
+        <div className="hidden md:block md:w-1/2 lg:w-[52%] relative">
+          <Image
+            src="/auth-side.jpg"
+            alt="Enfant sur le chemin de l'école"
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* Overlay fonctionnel : garantit la lisibilité du bloc de marque */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
+          <div className="absolute inset-x-0 bottom-0 p-10 lg:p-14">
+            <div className="font-brand font-bold text-4xl lg:text-5xl leading-none tracking-tight text-white">
+              Atypik <span className="text-brand-yellow">Driver</span>
+            </div>
+            <p className="mt-3 text-lg font-medium text-white/85">
+              pour des enfants exceptionnels
+            </p>
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/60">
+              Le transport adapté et sécurisé de vos enfants, entre des mains de confiance.
+            </p>
           </div>
-          {/* Formulaire côté droit, full width sur mobile, scrollable si besoin */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="w-full md:w-1/2 min-h-screen flex flex-col justify-center items-center bg-white dark:bg-slate-900 relative overflow-y-auto"
-          >
-            {/* Logo et sélecteur de thème en position absolue en haut à droite */}
-            <div className="absolute top-4 right-4 flex items-center space-x-2 z-10">
-              <div className="group relative">
-                <div className="p-1.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm hover:shadow transition-all duration-200 cursor-pointer">
-                  <ModeToggle />
-                </div>
-                <span className="absolute right-0 top-full mt-1 w-max opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-slate-800 text-xs px-2 py-1 rounded shadow-sm pointer-events-none">
-                  Changer de thème
-                </span>
-              </div>
-            </div>
-            {/* Logo en haut à gauche */}
-            <div className="absolute top-4 left-4 z-10">
-              <div className="scale-90 origin-left">
-                <Logo />
-              </div>
-            </div>
-            <div className="w-full max-w-md px-4 sm:px-8 pt-24 pb-8">
-              {children}
-            </div>
-          </motion.div>
         </div>
+
+        {/* Panneau formulaire */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          className="w-full md:w-1/2 lg:w-[48%] min-h-screen flex flex-col items-center justify-center relative px-4 sm:px-8 overflow-y-auto"
+        >
+          <div className="absolute top-5 right-5">
+            <ModeToggle />
+          </div>
+          <div className="w-full max-w-md pt-8 pb-10 md:py-10">
+            {/* Wordmark mobile : dans la colonne, aligné avec le contenu */}
+            <div className="mb-10 md:hidden">
+              <Logo />
+            </div>
+            {children}
+          </div>
+        </motion.div>
       </div>
     </AuthGuard>
   );

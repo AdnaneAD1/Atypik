@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Clock, MapPin, User, AlertTriangle, CheckCircle2, Navigation, Phone, Car } from 'lucide-react';
+import { Clock, MapPin, User, AlertTriangle, CheckCircle2, Navigation, Phone, CarFront } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

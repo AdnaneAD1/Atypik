@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Car } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 interface LogoProps {
@@ -22,22 +22,20 @@ export function Logo({ variant = 'default', className, onClick }: LogoProps) {
   };
 
   return (
-    <div 
-      className={cn(
-        'flex items-center gap-3 cursor-pointer', 
-        className
-      )}
+    <div
+      role="link"
+      aria-label="Atypik Driver — accueil"
+      className={cn('flex items-center cursor-pointer select-none', className)}
       onClick={handleClick}
     >
-      <div className="relative flex items-center justify-center h-10 w-10 bg-primary rounded-xl overflow-hidden">
-        <span className="text-white font-bold text-2xl">A</span>
-      </div>
-      {variant === 'default' && (
-  <span className="text-2xl font-bold text-primary whitespace-nowrap">
-    Atypik Driver
-  </span>
-)}
-
+      <Image
+        src="/logo-horizontal.png"
+        alt="Atypik Driver — pour des enfants exceptionnels"
+        width={1024}
+        height={340}
+        priority
+        className={variant === 'minimal' ? 'h-10 w-auto' : 'h-14 w-auto'}
+      />
     </div>
   );
 }
