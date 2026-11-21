@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest",
+    "test:run": "vitest run",
     "cap:sync": "npx cap sync android",
     "cap:open": "npx cap open android",
     "cap:build": "cd android && .\\gradlew.bat assembleDebug"
@@ -73,6 +75,7 @@
     "react-dropzone": "^14.3.8",
     "react-firebase-hooks": "^5.1.1",
     "react-hook-form": "^7.50.0",
+    "react-pdf": "^9.2.1",
     "react-resizable-panels": "^2.1.8",
     "recharts": "^2.15.3",
     "sonner": "^2.0.3",
@@ -85,16 +88,22 @@
   },
   "devDependencies": {
     "@babel/core": "^7.23.9",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
     "@types/node": "^20.11.20",
     "@types/nodemailer": "^7.0.1",
     "@types/react": "^18.2.58",
     "@types/react-dom": "^18.2.19",
     "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.17",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.0.4",
+    "jsdom": "^26.1.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^3.2.7"
   }
 }
