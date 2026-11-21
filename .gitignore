@@ -56,3 +56,11 @@ google-services.json
 
 local.properties
 **/local.properties
+
+# Outils IA & agents (Devin, Claude, Cursor, Windsurf…)
+/.devin/
+/.agents/
+/.claude/
+/.cursor/
+/.windsurf/
+/.codeium/
