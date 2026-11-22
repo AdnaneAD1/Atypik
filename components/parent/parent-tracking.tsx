@@ -96,25 +96,6 @@ export function ParentTracking() {
         gestureHandling: 'cooperative',
         disableDefaultUI: false,
         clickableIcons: false,
-        // Style nuit — assorti au panneau de suivi sombre
-        styles: [
-          { elementType: 'geometry', stylers: [{ color: '#1d2c4d' }] },
-          { elementType: 'labels.text.fill', stylers: [{ color: '#8ec3b9' }] },
-          { elementType: 'labels.text.stroke', stylers: [{ color: '#1a3646' }] },
-          { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#4b6878' }] },
-          { featureType: 'administrative.province', elementType: 'geometry.stroke', stylers: [{ color: '#4b6878' }] },
-          { featureType: 'landscape.man_made', elementType: 'geometry.stroke', stylers: [{ color: '#334e87' }] },
-          { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#023e58' }] },
-          { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#283d6a' }] },
-          { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#6f9ba5' }] },
-          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304a7d' }] },
-          { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#98a5be' }] },
-          { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2c6675' }] },
-          { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#255763' }] },
-          { featureType: 'transit', elementType: 'labels.text.fill', stylers: [{ color: '#98a5be' }] },
-          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e1626' }] },
-          { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4e6d70' }] },
-        ],
       });
 
       // Ajouter les marqueurs de départ et d'arrivée
@@ -341,14 +322,14 @@ export function ParentTracking() {
 
       {selectedTransport ? (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
-          {/* Carte — fond nuit comme la référence */}
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[6px_28px_6px_28px] bg-slate-900 sm:aspect-[800/560]">
+          {/* Carte — fond clair pendant le chargement */}
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[6px_28px_6px_28px] bg-slate-100 sm:aspect-[800/560]">
             <div ref={mapRef} className="absolute inset-0" />
             {!isMapLoaded && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-2">
                   <LoaderDots large />
-                  <p className="text-sm text-white/60">Initialisation...</p>
+                  <p className="text-sm text-slate-500">Initialisation...</p>
                 </div>
               </div>
             )}
@@ -356,13 +337,13 @@ export function ParentTracking() {
               'absolute left-5 top-5 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold',
               isEnRoute ? 'bg-emerald-400 text-slate-900' : 'bg-primary text-white'
             )}>
-              <span className="h-2.5 w-2.5 rounded-full bg-slate-900" />
+              <span className={cn('h-2.5 w-2.5 rounded-full', isEnRoute ? 'bg-slate-900' : 'bg-white')} />
               {isEnRoute ? 'En route' : 'En attente'}
             </span>
             <span className="absolute bottom-4 right-4 rounded-md bg-slate-900 px-3.5 py-1.5 font-brand text-base font-bold text-white">
               {(selectedTransport.distance / 1000).toFixed(2).replace('.', ',')} km
             </span>
-            <span className="absolute bottom-4 left-5 text-sm text-white/70">
+            <span className="absolute bottom-4 left-5 rounded bg-white/85 px-2 py-0.5 text-sm font-medium text-slate-700">
               Itinéraire prévu
             </span>
           </div>
