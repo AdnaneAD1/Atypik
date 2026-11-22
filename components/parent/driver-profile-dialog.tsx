@@ -27,7 +27,7 @@ export function DriverProfileDialog({ driver, open, onOpenChange }: DriverProfil
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-md gap-0 overflow-hidden rounded-[6px_28px_6px_28px] p-0">
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md sm:rounded-[6px_28px_6px_28px]">
         {/* Identité */}
         <DialogHeader className="items-center gap-0 px-6 pb-5 pt-7 text-center">
           <Avatar className="h-24 w-24">

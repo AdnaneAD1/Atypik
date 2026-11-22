@@ -41,7 +41,7 @@ export function FormDialogShell({
       </div>
 
       {/* Contenu du formulaire */}
-      <div className="max-h-[calc(92dvh-9rem)] overflow-y-auto sm:max-h-[92dvh]">
+      <div className="max-h-[calc(100dvh-9rem)] overflow-y-auto sm:max-h-[92dvh]">
         <div className="p-5 sm:p-6">{children}</div>
       </div>
     </div>

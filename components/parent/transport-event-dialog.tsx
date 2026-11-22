@@ -298,7 +298,7 @@ export function TransportEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-h-[92dvh] gap-0 overflow-hidden p-0 sm:max-w-[880px]">
+      <DialogContent className="max-h-[100dvh] gap-0 overflow-hidden p-0 sm:max-h-[92dvh] sm:max-w-[880px]">
         <FormDialogShell image="/formations-side.jpg" caption="Chaque trajet, en toute sérénité">
         <DialogHeader className="sticky top-0 z-20 -mx-5 -mt-5 border-b bg-background px-5 pb-3 pt-5 sm:-mx-6 sm:-mt-6 sm:px-6 sm:pt-6">
           <DialogTitle className="font-brand text-2xl font-bold">Programmer un transport</DialogTitle>
