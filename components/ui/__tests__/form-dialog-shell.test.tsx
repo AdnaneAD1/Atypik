@@ -10,7 +10,19 @@ describe('FormDialogShell', () => {
       </FormDialogShell>
     );
     expect(container.querySelector('img')).toHaveAttribute('src', '/auth-side.jpg');
-    expect(screen.getByText('Pour des enfants exceptionnels')).toBeInTheDocument();
+    // Le bandeau existe en version mobile (fine bande) et desktop (sur l'image)
+    expect(screen.getAllByText('Pour des enfants exceptionnels').length).toBeGreaterThan(0);
+  });
+
+  it('n’affiche pas la photo en bandeau mobile (masquée avant sm)', () => {
+    const { container } = render(
+      <FormDialogShell image="/auth-side.jpg" caption="Test">
+        <p>contenu</p>
+      </FormDialogShell>
+    );
+    const panel = container.querySelector('img')?.closest('div');
+    expect(panel?.className).toContain('sm:block');
+    expect(panel?.className).toContain('hidden');
   });
 
   it('rend le contenu du formulaire dans le panneau droit', () => {

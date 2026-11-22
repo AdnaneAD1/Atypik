@@ -41,8 +41,13 @@ export function FormDialogShell({
 }: FormDialogShellProps) {
   return (
     <div className="grid sm:grid-cols-[250px_1fr]">
-      {/* Panneau image — bannière en mobile, colonne en desktop */}
-      <div className={cn('relative h-36 shrink-0 sm:h-auto sm:min-h-full', panelClassName)}>
+      {/* Bandeau marque mobile — fin, sans photo (les visages croppent mal en bande fine) */}
+      <div className="bg-brand-teal px-4 py-2 sm:hidden">
+        <p className="text-xs font-semibold text-white">{caption}</p>
+      </div>
+
+      {/* Panneau image — colonne en desktop uniquement */}
+      <div className={cn('relative hidden shrink-0 sm:block sm:min-h-full', panelClassName)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={image}
@@ -55,7 +60,7 @@ export function FormDialogShell({
       </div>
 
       {/* Contenu du formulaire */}
-      <div className="max-h-[calc(100dvh-9rem)] overflow-y-auto sm:max-h-[92dvh]">
+      <div className="max-h-[calc(100dvh-2.5rem)] overflow-y-auto sm:max-h-[92dvh]">
         <div className="p-5 sm:p-6">{children}</div>
       </div>
     </div>
