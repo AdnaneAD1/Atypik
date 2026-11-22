@@ -363,7 +363,7 @@ export function ParentDashboard() {
                           className="flex-1 bg-primary text-white hover:bg-primary/90 sm:flex-none"
                         >
                           <Navigation className="mr-2 h-4 w-4" />
-                          Suivre en temps réel
+                          Suivre
                         </Button>
                       </div>
                     </div>
