@@ -84,10 +84,10 @@ export function DriverSubscriptionPanel() {
   return (
     <section aria-label="Chauffeur et abonnement">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Votre chauffeur */}
-        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border shadow-none">
-          <CardContent className="flex flex-1 flex-col gap-5 p-6">
-            <h2 className="font-brand text-xl font-bold">Votre chauffeur</h2>
+        {/* Votre chauffeur — carte blanche à liseré rose (le "bleu" de la maquette = accent personnes) */}
+        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border border-t-8 border-t-brand-pink shadow-none">
+          <CardContent className="flex flex-1 flex-col gap-5 p-6 pt-7">
+            <h2 className="font-brand text-2xl font-bold">Votre chauffeur</h2>
 
             {driversLoading ? (
               <div className="flex flex-1 items-center justify-center py-6">
@@ -95,14 +95,14 @@ export function DriverSubscriptionPanel() {
               </div>
             ) : selectedDriver ? (
               <div className="flex items-center gap-5">
-                <Avatar className="h-16 w-16 shrink-0">
+                <Avatar className="h-20 w-20 shrink-0">
                   <AvatarImage src={selectedDriver.avatar} alt={selectedDriver.name} />
-                  <AvatarFallback className="bg-slate-100">
-                    <UserRound className="h-7 w-7 text-slate-400" />
+                  <AvatarFallback className="bg-brand-pink/10">
+                    <UserRound className="h-8 w-8 text-brand-pink" />
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <h3 className="truncate font-brand text-xl font-bold leading-tight">
+                  <h3 className="truncate font-brand text-2xl font-bold leading-tight">
                     {selectedDriver.name}
                   </h3>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -135,11 +135,11 @@ export function DriverSubscriptionPanel() {
               </div>
             ) : (
               <div className="flex items-center gap-5">
-                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-100">
-                  <UserRound className="h-7 w-7 text-slate-400" />
+                <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-brand-pink/10">
+                  <UserRound className="h-8 w-8 text-brand-pink" />
                 </span>
                 <div>
-                  <h3 className="font-brand text-xl font-bold leading-tight">Aucun chauffeur</h3>
+                  <h3 className="font-brand text-2xl font-bold leading-tight">Aucun chauffeur</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Choisissez un chauffeur pour vos transports.
                   </p>
@@ -158,11 +158,11 @@ export function DriverSubscriptionPanel() {
           </CardContent>
         </Card>
 
-        {/* Mon abonnement */}
-        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border shadow-none">
-          <CardContent className="flex flex-1 flex-col gap-4 p-6">
+        {/* Mon abonnement — fond beurre + liseré ambre comme la maquette */}
+        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border-0 border-t-8 border-t-brand-yellow bg-brand-yellow/25 shadow-none">
+          <CardContent className="flex flex-1 flex-col gap-4 p-6 pt-7">
             <div className="flex items-center justify-between gap-4">
-              <h2 className="font-brand text-xl font-bold">Mon abonnement</h2>
+              <h2 className="font-brand text-2xl font-bold">Mon abonnement</h2>
               {hasActiveSubscription && subscription && (
                 <span className="rounded-full bg-primary px-3.5 py-1 text-sm font-bold capitalize text-white">
                   {subscription.type}
@@ -176,10 +176,10 @@ export function DriverSubscriptionPanel() {
               </div>
             ) : hasActiveSubscription && subscription ? (
               <>
-                <p className="font-brand text-3xl font-bold leading-tight">
+                <p className="font-brand text-3xl font-bold leading-tight sm:text-4xl">
                   {subscription.type === 'premium' ? 'Transports illimités' : '2 transports par semaine'}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-amber-950/75">
                   {subscription.type === 'standard' && `${weeklyTransportCount}/2 utilisés cette semaine · `}
                   {subscription.autoRenew && renewDate
                     ? `Renouvellement automatique le ${renewDate}`
