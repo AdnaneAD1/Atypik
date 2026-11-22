@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, UserRound } from 'lucide-react';
+import { BadgeCheck, CarFront, Crown, Loader2, UserRound } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useDriverSelection } from '@/hooks/use-driver-selection';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -84,10 +84,13 @@ export function DriverSubscriptionPanel() {
   return (
     <section aria-label="Chauffeur et abonnement">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Votre chauffeur — carte blanche à liseré rose (le "bleu" de la maquette = accent personnes) */}
-        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border border-t-8 border-t-brand-pink shadow-none">
-          <CardContent className="flex flex-1 flex-col gap-5 p-6 pt-7">
-            <h2 className="font-brand text-2xl font-bold">Votre chauffeur</h2>
+        {/* Votre chauffeur */}
+        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border shadow-none">
+          <CardContent className="flex flex-1 flex-col gap-5 p-6">
+            <h2 className="flex items-center gap-2 font-brand text-lg font-bold">
+              <CarFront className="h-5 w-5 text-primary" />
+              Votre chauffeur
+            </h2>
 
             {driversLoading ? (
               <div className="flex flex-1 items-center justify-center py-6">
@@ -102,13 +105,13 @@ export function DriverSubscriptionPanel() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <h3 className="truncate font-brand text-2xl font-bold leading-tight">
+                  <h3 className="truncate font-brand text-xl font-bold leading-tight">
                     {selectedDriver.name}
                   </h3>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     {selectedDriver.status === 'verified' && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                        <BadgeCheck className="h-4 w-4" />
                         Vérifié
                       </span>
                     )}
@@ -127,9 +130,6 @@ export function DriverSubscriptionPanel() {
                         </span>
                       </span>
                     )}
-                    {!hasReviews && (
-                      <span className="text-xs text-muted-foreground">Pas encore d’avis</span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -139,9 +139,9 @@ export function DriverSubscriptionPanel() {
                   <UserRound className="h-8 w-8 text-brand-pink" />
                 </span>
                 <div>
-                  <h3 className="font-brand text-2xl font-bold leading-tight">Aucun chauffeur</h3>
+                  <h3 className="font-brand text-xl font-bold leading-tight">Attribution en cours</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Choisissez un chauffeur pour vos transports.
+                    Nos équipes vous assignent un chauffeur vérifié. Vous pouvez aussi en choisir un dès maintenant.
                   </p>
                 </div>
               </div>
@@ -158,11 +158,14 @@ export function DriverSubscriptionPanel() {
           </CardContent>
         </Card>
 
-        {/* Mon abonnement — fond beurre + liseré ambre comme la maquette */}
-        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border-0 border-t-8 border-t-brand-yellow bg-brand-yellow/25 shadow-none">
-          <CardContent className="flex flex-1 flex-col gap-4 p-6 pt-7">
+        {/* Mon abonnement — fond beurre comme la maquette */}
+        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border-0 bg-brand-yellow/25 shadow-none">
+          <CardContent className="flex flex-1 flex-col gap-4 p-6">
             <div className="flex items-center justify-between gap-4">
-              <h2 className="font-brand text-2xl font-bold">Mon abonnement</h2>
+              <h2 className="flex items-center gap-2 font-brand text-lg font-bold">
+                <Crown className="h-5 w-5 text-primary" />
+                Mon abonnement
+              </h2>
               {hasActiveSubscription && subscription && (
                 <span className="rounded-full bg-primary px-3.5 py-1 text-sm font-bold capitalize text-white">
                   {subscription.type}
@@ -176,7 +179,7 @@ export function DriverSubscriptionPanel() {
               </div>
             ) : hasActiveSubscription && subscription ? (
               <>
-                <p className="font-brand text-3xl font-bold leading-tight sm:text-4xl">
+                <p className="font-brand text-3xl font-bold leading-tight">
                   {subscription.type === 'premium' ? 'Transports illimités' : '2 transports par semaine'}
                 </p>
                 <p className="text-sm text-amber-950/75">

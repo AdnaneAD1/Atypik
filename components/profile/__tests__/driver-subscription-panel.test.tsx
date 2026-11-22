@@ -80,7 +80,7 @@ describe('DriverSubscriptionPanel', () => {
   it('affiche les états vides sans chauffeur ni abonnement', () => {
     mockHooks({ drv: null, sub: null, active: false });
     render(<DriverSubscriptionPanel />);
-    expect(screen.getByText('Aucun chauffeur')).toBeInTheDocument();
+    expect(screen.getByText('Attribution en cours')).toBeInTheDocument();
     expect(screen.getByText('Aucune formule active')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Choisir un chauffeur/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Choisir une formule/ })).toBeInTheDocument();

@@ -46,7 +46,7 @@ describe('DriverProfileDialog', () => {
   it('affiche le profil détaillé du chauffeur en lecture seule', () => {
     render(<DriverProfileDialog driver={driver} open onOpenChange={vi.fn()} />);
     expect(screen.getByText('Thomas Martin')).toBeInTheDocument();
-    expect(screen.getByText('Vérifié')).toBeInTheDocument();
+    expect(screen.getByText('Chauffeur vérifié')).toBeInTheDocument();
     expect(screen.getByText('Missions')).toBeInTheDocument();
     expect(screen.getByText('Ponctualité')).toBeInTheDocument();
     expect(screen.getByText('Fiabilité')).toBeInTheDocument();
@@ -56,8 +56,8 @@ describe('DriverProfileDialog', () => {
 
   it('masque les compteurs à zéro pour un nouveau chauffeur', () => {
     render(<DriverProfileDialog driver={newDriver} open onOpenChange={vi.fn()} />);
-    expect(screen.getByText(/Nouveau chauffeur Atypik/)).toBeInTheDocument();
-    expect(screen.getByText(/Pas encore d.avis/)).toBeInTheDocument();
+    expect(screen.getByText(/contrôlé et validé par nos équipes/)).toBeInTheDocument();
+    expect(screen.queryByText(/Pas encore d.avis/)).not.toBeInTheDocument();
     expect(screen.queryByText('Ponctualité')).not.toBeInTheDocument();
     expect(screen.queryByText('Missions')).not.toBeInTheDocument();
   });

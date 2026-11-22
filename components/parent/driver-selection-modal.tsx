@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Phone, AlertTriangle, Loader2, UserRound } from 'lucide-react';
+import { X, Star, Phone, AlertTriangle, Loader2, UserRound, BadgeCheck, Clock } from 'lucide-react';
 import { useDriverSelection, Driver } from '@/hooks/use-driver-selection';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -145,14 +145,14 @@ export const DriverSelectionModal = ({
                             </h3>
                             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                               {driver.status === 'verified' ? (
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                                  <BadgeCheck className="h-4 w-4" />
                                   Vérifié
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                  En attente
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700">
+                                  <Clock className="h-4 w-4" />
+                                  Vérification en cours
                                 </span>
                               )}
                               {hasReviews ? (

@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Star, UserRound } from 'lucide-react';
+import { BadgeCheck, Mail, Phone, ShieldCheck, Star, UserRound } from 'lucide-react';
 import type { Driver } from '@/hooks/use-driver-selection';
 
 interface DriverProfileDialogProps {
@@ -44,12 +44,12 @@ export function DriverProfileDialog({ driver, open, onOpenChange }: DriverProfil
           </DialogDescription>
           <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
             {driver.status === 'verified' && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Vérifié
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                <BadgeCheck className="h-4 w-4" />
+                Chauffeur vérifié
               </span>
             )}
-            {hasReviews ? (
+            {hasReviews && (
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                 <span className="font-semibold text-foreground">
@@ -57,8 +57,6 @@ export function DriverProfileDialog({ driver, open, onOpenChange }: DriverProfil
                 </span>
                 ({s!.totalReviews} avis)
               </span>
-            ) : (
-              <span className="text-xs text-muted-foreground">Pas encore d&apos;avis</span>
             )}
           </div>
         </DialogHeader>
@@ -112,13 +110,20 @@ export function DriverProfileDialog({ driver, open, onOpenChange }: DriverProfil
             </div>
           </>
         ) : (
-          <p className="mx-6 border-y py-3.5 text-center text-sm text-muted-foreground">
-            Nouveau chauffeur Atypik — profil vérifié par nos équipes.
+          <p className="mx-6 flex items-center justify-center gap-2 border-y py-3.5 text-center text-sm text-muted-foreground">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+            Chauffeur contrôlé et validé par nos équipes — identité, permis et véhicule vérifiés.
           </p>
         )}
 
-        {/* Contact */}
+        {/* Contact + réassurance */}
         <div className="mt-5 space-y-2 px-6">
+          {hasExperience && (
+            <p className="flex items-center gap-2.5 text-sm text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+              Identité, permis et véhicule vérifiés par Atypik
+            </p>
+          )}
           {driver.phone && (
             <p className="flex items-center gap-2.5 text-sm text-muted-foreground">
               <Phone className="h-4 w-4 shrink-0" />
@@ -136,7 +141,7 @@ export function DriverProfileDialog({ driver, open, onOpenChange }: DriverProfil
         {/* Pied */}
         <div className="mt-6 border-t px-6 py-4">
           <p className="mb-3 text-center text-xs text-muted-foreground">
-            Pour changer de chauffeur, contactez le support Atypik.
+            Une question sur votre chauffeur ? Notre équipe s&apos;en occupe.
           </p>
           <Button
             variant="outline"
