@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
  * et croix de fermeture blanche posée sur le bandeau teal.
  */
 export const formDialogContentClass = cn(
-  'gap-0 overflow-hidden p-0 sm:max-h-[92dvh]',
+  'gap-0 overflow-hidden overflow-y-hidden p-0 sm:max-h-[92dvh]',
   '[&>button]:right-4 [&>button]:top-2 [&>button]:z-10 [&>button]:text-white',
   '[&>button]:opacity-90 [&>button]:transition-opacity hover:[&>button]:opacity-100',
   'focus:[&>button]:ring-2 focus:[&>button]:ring-white'
