@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { uploadToCloudinary } from '@/hooks/use-cloudinary';
-import { Loader2, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
+import { LoaderDots } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
@@ -212,7 +213,7 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
           <Button onClick={handleSubmit} className="h-10 w-full bg-primary text-white hover:bg-primary/90 sm:w-auto" disabled={isUploading}>
             {isUploading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <LoaderDots className="mr-2" />
                 Chargement...
               </>
             ) : (

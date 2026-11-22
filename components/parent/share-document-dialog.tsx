@@ -10,7 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Share2, MessageCircle, Link, Copy, Check, ExternalLink } from 'lucide-react';
+import { Share2, MessageCircle, Link, Copy, Check, ExternalLink } from 'lucide-react';
+import { LoaderDots } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { useMessages } from '@/hooks/use-messages';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -429,7 +430,7 @@ export function ShareDocumentDialog({
             >
               {isSharing ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <LoaderDots className="mr-2" />
                   {shareMethod === 'message' ? 'Envoi...' : 'Partage...'}
                 </>
               ) : (

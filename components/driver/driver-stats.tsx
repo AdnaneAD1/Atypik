@@ -1,6 +1,7 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Loader2, AlertTriangle } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { CarLoader } from '@/components/ui/loader';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
@@ -65,7 +66,7 @@ export function DriverStats() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <CarLoader size={160} />
           <p className="text-muted-foreground">Chargement des statistiques...</p>
         </div>
       </div>

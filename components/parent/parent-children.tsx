@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Plus, AlertTriangle, Pencil, Trash2 } from 'lucide-react';
+import { CarLoader } from '@/components/ui/loader';
 import { motion } from 'framer-motion';
 import { AddChildDialog } from './add-child-dialog';
 import { EditChildDialog } from './edit-child-dialog';
@@ -97,9 +98,7 @@ export function ParentChildren() {
       {isLoading ? (
         <div className="flex justify-center items-center py-12">
           <div className="flex flex-col items-center">
-            <div className="relative h-12 w-12">
-              <div className="absolute animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
+            <CarLoader size={160} />
             <p className="mt-4 text-sm text-muted-foreground">Chargement des profils...</p>
           </div>
         </div>

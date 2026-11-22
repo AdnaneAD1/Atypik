@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Crown, Calendar, RefreshCw, Check, X } from 'lucide-react';
+import { Crown, Calendar, RefreshCw, Check, X } from 'lucide-react';
+import { LoaderDots } from '@/components/ui/loader';
 import {
   Dialog,
   DialogContent,
@@ -342,7 +343,7 @@ export function SubscriptionModal({
                           'Formule actuelle'
                         ) : isProcessing && selectedPlan === plan.id ? (
                           <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <LoaderDots className="mr-2" />
                             Traitement...
                           </>
                         ) : subscription?.status === 'active' &&

@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw } from "lucide-react";
+import { LoaderDots } from '@/components/ui/loader';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useTransport } from '@/hooks/use-transport';
 import { useTracking } from '@/hooks/use-tracking';
@@ -346,7 +347,7 @@ export function ParentTracking() {
             {!isMapLoaded && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="h-6 w-6 animate-spin text-brand-yellow" />
+                  <LoaderDots large />
                   <p className="text-sm text-white/60">Initialisation...</p>
                 </div>
               </div>

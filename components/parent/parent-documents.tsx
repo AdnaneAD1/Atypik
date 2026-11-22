@@ -9,8 +9,8 @@ import {
   Download,
   Eye,
   Share2,
-  Loader2,
 } from 'lucide-react';
+import { CarLoader } from '@/components/ui/loader';
 import { useDocuments, Document } from '@/hooks/use-documents';
 import { AddDocumentDialog } from './add-document-dialog';
 import { ShareDocumentDialog } from './share-document-dialog';
@@ -155,7 +155,7 @@ export function ParentDocuments() {
       {/* Liste */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <CarLoader size={160} />
           <span className="ml-2 text-sm text-muted-foreground">Chargement des documents...</span>
         </div>
       ) : error ? (

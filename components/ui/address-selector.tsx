@@ -4,7 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
-import { MapPin, Navigation, Map, Loader2 } from 'lucide-react';
+import { MapPin, Navigation, Map } from 'lucide-react';
+import { CarLoader, LoaderDots } from '@/components/ui/loader';
 
 interface AddressResult {
   address: string;
@@ -323,7 +324,7 @@ export function AddressSelector({
             title="Utiliser ma position"
           >
             {isLoadingLocation ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <LoaderDots />
             ) : (
               <Navigation className="h-4 w-4" />
             )}
@@ -347,7 +348,7 @@ export function AddressSelector({
                 <Map className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Sélectionner une adresse sur la carte</DialogTitle>
               </DialogHeader>
@@ -360,7 +361,7 @@ export function AddressSelector({
                 {!isMapLoaded && (
                   <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg">
                     <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="h-8 w-8 animate-spin" />
+                      <CarLoader size={150} />
                       <p className="text-sm text-muted-foreground">Chargement de la carte...</p>
                     </div>
                   </div>

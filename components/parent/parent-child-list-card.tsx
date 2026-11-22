@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { CarLoader } from '@/components/ui/loader';
 import { AddChildDialog } from './add-child-dialog';
 import { useToast } from '@/hooks/use-toast';
 
@@ -85,7 +86,7 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
       <CardContent className="p-5 pt-4">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-muted border-t-primary"></div>
+            <CarLoader size={110} />
           </div>
         ) : childrenData.length > 0 ? (
           <div className="divide-y">
@@ -146,7 +147,7 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
         )}
 
         <Dialog open={showDetails} onOpenChange={setShowDetails}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">Profil de l&apos;enfant</DialogTitle>
             </DialogHeader>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin } from 'lucide-react';
+import { LoaderDots } from '@/components/ui/loader';
 import { Input } from './input';
 import { cn } from '@/lib/utils';
 
@@ -163,7 +164,7 @@ export function BanAddressAutocomplete({
       />
       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
         {loading ? (
-          <Loader2 className="h-[18px] w-[18px] animate-spin" />
+          <LoaderDots />
         ) : (
           <MapPin className="h-[18px] w-[18px]" />
         )}

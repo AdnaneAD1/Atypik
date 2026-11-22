@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { CarLoader } from '@/components/ui/loader';
 
 const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -115,7 +116,7 @@ export function ParentCalendarView({ weeklySchedule = [], loading = false }: Par
       {/* Transports du jour */}
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
+          <CarLoader size={110} />
         </div>
       ) : dayEvents.length > 0 ? (
         <div className="divide-y">

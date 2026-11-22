@@ -35,7 +35,8 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertTriangle, Trash2, Loader2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
+import { LoaderDots } from '@/components/ui/loader';
 import { DriverSubscriptionPanel } from "@/components/profile/driver-subscription-panel";
 
 const profileSchema = z.object({
@@ -511,7 +512,7 @@ export function ProfileForm() {
                         >
                           {deletingAccount ? (
                             <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              <LoaderDots className="mr-2" />
                               Suppression...
                             </>
                           ) : (

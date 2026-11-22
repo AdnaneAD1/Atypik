@@ -22,6 +22,7 @@ import { ParentCalendarView } from '@/components/parent/parent-calendar-view';
 import { ParentChildListCard } from '@/components/parent/parent-child-list-card';
 import { NextTransportCard } from '@/components/parent/next-transport-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CarLoader } from '@/components/ui/loader';
 import { Badge } from '@/components/ui/badge';
 
 import { useRegion } from '@/hooks/use-region';
@@ -234,7 +235,7 @@ export function ParentDashboard() {
               <CardContent className="p-5 sm:p-6">
                 {loading ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+                    <CarLoader size={130} />
                   </div>
                 ) : nextTrip ? (
                   <div className="space-y-5">
@@ -462,7 +463,7 @@ export function ParentDashboard() {
                     <div className="divide-y">
                       {loading ? (
                         <div className="flex items-center justify-center py-12">
-                          <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+                          <CarLoader size={130} />
                         </div>
                       ) : reviews.filter(r => r.type === 'received' && r.rating).length > 0 ? (
                         reviews.filter(r => r.type === 'received' && r.rating).map((review) => (
@@ -556,7 +557,7 @@ export function ParentDashboard() {
                     <div className="divide-y">
                       {loading ? (
                         <div className="flex items-center justify-center py-12">
-                          <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+                          <CarLoader size={130} />
                         </div>
                       ) : reviews.filter(r => r.type === 'given').length > 0 ? (
                         reviews.filter(r => r.type === 'given').map((review) => (

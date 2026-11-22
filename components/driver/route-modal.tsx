@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Navigation, MapPin, Clock, User, CarFront, Loader2 } from 'lucide-react';
+import { X, Navigation, MapPin, Clock, User, CarFront } from 'lucide-react';
+import { CarLoader } from '@/components/ui/loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTracking } from '@/hooks/use-tracking';
 
@@ -340,7 +341,7 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
                     </>
                   ) : (
                     <>
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <CarLoader size={160} />
                       <div className="text-center">
                         <p className="text-sm font-medium">Chargement de la carte...</p>
                         <p className="text-xs text-muted-foreground mt-1">

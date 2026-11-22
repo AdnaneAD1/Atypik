@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react';
 import { Message } from '@/hooks/use-messages';
 import { MessageItem } from './message-item';
-import { Loader2 } from 'lucide-react';
+import { CarLoader } from '@/components/ui/loader';
 
 interface MessageListProps {
   messages: Message[];
@@ -52,7 +52,7 @@ export function MessageList({
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6 bg-muted/30">
-        <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
+        <CarLoader size={140} />
       </div>
     );
   }

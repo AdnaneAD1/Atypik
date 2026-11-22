@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth, UserRole } from './auth-context';
-import { Loader } from '@/components/ui/loader';
+import { CarLoader } from '@/components/ui/loader';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -65,7 +65,7 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader size="lg" />
+        <CarLoader message="Chargement de votre espace" size={220} />
       </div>
     );
   }

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { CarLoader } from '@/components/ui/loader';
 import { Eye, EyeOff, Lock, ShieldCheck, CheckCircle2, ArrowRight } from 'lucide-react';
 import { getAuthErrorMessage } from '@/lib/auth/auth-errors';
 
@@ -65,7 +66,7 @@ export function ResetPasswordForm() {
   if (verifying) {
     return (
       <div className="flex flex-col items-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+        <CarLoader size={130} />
         <p className="mt-4 text-sm text-muted-foreground">Vérification du lien…</p>
       </div>
     );

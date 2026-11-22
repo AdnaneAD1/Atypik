@@ -1,6 +1,7 @@
 'use client';
 
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import { CarLoader } from '@/components/ui/loader';
 import { DriverStats } from '@/hooks/use-driver-dashboard';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +26,7 @@ export function DriverStatsCard({ stats, loading = false, error = null }: Driver
 
       {loading ? (
         <div className="flex h-52 items-center justify-center">
-          <Loader2 className="h-7 w-7 animate-spin text-primary" />
+          <CarLoader size={140} />
         </div>
       ) : error ? (
         <div className="flex h-52 flex-col items-center justify-center gap-3 text-center">

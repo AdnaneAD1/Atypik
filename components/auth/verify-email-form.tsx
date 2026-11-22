@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { applyActionCode } from 'firebase/auth';
 import { auth } from '@/firebase/ClientApp';
 import { Button } from '@/components/ui/button';
+import { CarLoader } from '@/components/ui/loader';
 import { CheckCircle2, MailWarning } from 'lucide-react';
 
 export function VerifyEmailForm() {
@@ -27,7 +28,7 @@ export function VerifyEmailForm() {
   if (state === 'loading') {
     return (
       <div className="flex flex-col items-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+        <CarLoader size={180} />
         <p className="mt-4 text-sm text-muted-foreground">Confirmation de votre adresse…</p>
       </div>
     );

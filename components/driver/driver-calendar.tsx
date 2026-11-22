@@ -6,6 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, User, MessageCircle, ChevronLeft, ChevronRight, Route as RouteIcon, MoveRight } from 'lucide-react';
+import { CarLoader } from '@/components/ui/loader';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useDriversTransport } from '@/hooks/use-drivers-transport';
 import { format, addDays, isToday, isSameDay, startOfWeek } from 'date-fns';
@@ -205,7 +206,7 @@ export function DriverCalendar() {
     if (loading) {
       return (
         <div className="flex items-center justify-center py-10">
-          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary"></div>
+          <CarLoader size={140} />
         </div>
       );
     }

@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { AuthLayout } from '@/components/layouts/auth-layout';
 import { ResetPasswordForm } from '@/components/auth/reset-password-form';
+import { CarLoader } from '@/components/ui/loader';
 
 export default function ResetPasswordPage() {
   return (
@@ -8,7 +9,7 @@ export default function ResetPasswordPage() {
       <Suspense
         fallback={
           <div className="flex justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+            <CarLoader size={130} />
           </div>
         }
       >

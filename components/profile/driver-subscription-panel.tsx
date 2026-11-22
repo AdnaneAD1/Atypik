@@ -12,7 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { BadgeCheck, CarFront, Crown, Loader2, UserRound } from 'lucide-react';
+import { BadgeCheck, CarFront, Crown, UserRound } from 'lucide-react';
+import { CarLoader, LoaderDots } from '@/components/ui/loader';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useDriverSelection } from '@/hooks/use-driver-selection';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -84,7 +85,7 @@ export function DriverSubscriptionPanel() {
 
             {driversLoading ? (
               <div className="flex flex-1 items-center justify-center py-6">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <CarLoader size={130} />
               </div>
             ) : selectedDriver ? (
               <div className="flex items-center gap-5">
@@ -166,7 +167,7 @@ export function DriverSubscriptionPanel() {
 
             {subscriptionLoading ? (
               <div className="flex flex-1 items-center justify-center py-6">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <CarLoader size={130} />
               </div>
             ) : hasActiveSubscription && subscription ? (
               <>
@@ -254,7 +255,7 @@ export function DriverSubscriptionPanel() {
             >
               {isCancelling ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <LoaderDots className="mr-2" />
                   Arrêt en cours...
                 </>
               ) : (

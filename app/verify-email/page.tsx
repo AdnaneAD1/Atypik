@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { AuthLayout } from '@/components/layouts/auth-layout';
 import { VerifyEmailForm } from '@/components/auth/verify-email-form';
+import { CarLoader } from '@/components/ui/loader';
 
 export default function VerifyEmailPage() {
   return (
@@ -8,7 +9,7 @@ export default function VerifyEmailPage() {
       <Suspense
         fallback={
           <div className="flex justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+            <CarLoader size={130} />
           </div>
         }
       >

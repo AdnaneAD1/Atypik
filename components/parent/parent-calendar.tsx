@@ -18,10 +18,11 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { format, addDays, isToday, isSameDay, startOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
-  CalendarPlus, Clock, MessageCircle, X, Loader2, Star,
+  CalendarPlus, Clock, MessageCircle, X, Star,
   ChevronLeft, ChevronRight, MoveRight, Route as RouteIcon
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { CarLoader, LoaderDots } from '@/components/ui/loader';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -406,7 +407,7 @@ export function ParentCalendar() {
     if (loading) {
       return (
         <div className="flex items-center justify-center py-10">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <CarLoader size={140} />
         </div>
       );
     }
@@ -741,7 +742,7 @@ export function ParentCalendar() {
                     >
                       {isCancelling ? (
                         <>
-                          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                          <LoaderDots className="mr-1.5" />
                           Annulation...
                         </>
                       ) : (
@@ -885,7 +886,7 @@ export function ParentCalendar() {
                       >
                         {isSubmittingComment ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <LoaderDots className="mr-2" />
                             Envoi...
                           </>
                         ) : (

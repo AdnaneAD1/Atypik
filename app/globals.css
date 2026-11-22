@@ -266,3 +266,34 @@
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
   }
 }
+/* =====================================================
+   Loaders Atypik Driver — voiture qui roule, points, overlay
+   ===================================================== */
+.ld{display:inline-flex;flex-direction:column;align-items:center;gap:14px;color:var(--foreground)}
+.ld svg{height:auto;overflow:visible}
+.ld .ld-road{animation:ld-road .7s linear infinite}
+.ld .ld-car{animation:ld-bounce .36s ease-in-out infinite alternate}
+.ld .ld-wheel{transform-box:fill-box;transform-origin:center;animation:ld-spin .6s linear infinite}
+.ld .ld-speed{animation:ld-speed .7s ease-in-out infinite}
+.ld .ld-speed:nth-of-type(2){animation-delay:.2s}
+.ld .ld-speed:nth-of-type(3){animation-delay:.4s}
+.ld-msg{margin:0;min-height:1.5em;font-weight:600;font-size:15px;letter-spacing:-.01em;text-align:center}
+@keyframes ld-road{to{stroke-dashoffset:16}}
+@keyframes ld-bounce{to{transform:translateY(-2px)}}
+@keyframes ld-spin{to{transform:rotate(360deg)}}
+@keyframes ld-speed{0%{opacity:0;transform:translateX(6px)}40%{opacity:.9}100%{opacity:0;transform:translateX(-10px)}}
+
+/* Loader plein écran */
+.ld-overlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:hsl(var(--background)/0.95);backdrop-filter:blur(2px)}
+
+/* Trois points de marque pour boutons et actions inline */
+.ld-dots{display:inline-flex;gap:5px;align-items:center;justify-content:center;vertical-align:middle}
+.ld-dots i{width:7px;height:7px;border-radius:50%;background:hsl(var(--primary));animation:ld-hop .9s ease-in-out infinite}
+.ld-dots i:nth-child(2){background:hsl(42 98% 52%);animation-delay:.15s}
+.ld-dots i:nth-child(3){background:hsl(183 72% 38%);animation-delay:.3s}
+.ld-dots.ld-dots-lg i{width:9px;height:9px}
+
+@media (prefers-reduced-motion:reduce){
+  .ld .ld-road,.ld .ld-car,.ld .ld-wheel,.ld .ld-speed,.ld-dots i{animation:none}
+  .ld .ld-speed{opacity:.5}
+}

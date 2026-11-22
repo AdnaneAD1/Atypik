@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader } from '@/components/ui/loader';
+import { CarLoader, LoaderDots } from '@/components/ui/loader';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
@@ -142,7 +142,7 @@ export function LoginForm() {
   if (isAuthLoading || user) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4 text-center">
-        <div className="w-10 h-10 border-3 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <CarLoader size={160} />
         <p className="text-sm font-medium text-muted-foreground animate-pulse">
           {user ? 'Redirection vers votre espace...' : 'Connexion à votre espace...'}
         </p>
@@ -255,7 +255,7 @@ export function LoginForm() {
             >
               {isLoading ? (
                 <>
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  <LoaderDots className="mr-2" />
                   Connexion...
                 </>
               ) : (
