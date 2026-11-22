@@ -37,7 +37,7 @@ export function NextTransportCard({ trip, child, loading = false }: NextTranspor
   const router = useRouter();
 
   return (
-    <Card className="h-full min-h-[340px] overflow-hidden rounded-2xl border-0 bg-brand-teal text-white shadow-none">
+    <Card className="h-full overflow-hidden rounded-2xl border-0 bg-brand-teal text-white shadow-none">
       <CardContent className="flex h-full flex-col p-5 sm:p-6">
         <p className="text-xs font-medium text-white/60">Prochain transport</p>
 
@@ -90,7 +90,7 @@ export function NextTransportCard({ trip, child, loading = false }: NextTranspor
             </div>
           </>
         ) : (
-          <div className="flex flex-1 flex-col items-start justify-center gap-3 py-8">
+          <div className="flex flex-1 flex-col items-start justify-center gap-3 py-5">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
               <CalendarClock className="h-6 w-6 text-white/60" />
             </span>
