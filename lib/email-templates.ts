@@ -1,26 +1,34 @@
-// Reusable HTML email templates for Atypik brand
-// Uses inline styles for broad email client compatibility
+// Templates e-mail Atypik Driver — design issu de la maquette fournie.
+// Tableaux + styles inline pour compatibilité maximale des clients mail.
+// Palette : corail #E14C38, rail #f3f5f8, beurre #fff6d9, menthe #e6faf4.
 
-export type TemplateName = 'accountApproved' | 'transportReminder' | 'generic';
+const CORAL = '#E14C38';
+const CORAL_DARK = '#C23E2C';
+const INK = '#101828';
+const MUTE = '#566176';
+const RAIL = '#f3f5f8';
+const LINE = '#dfe5ec';
+const BUTTER = '#fff6d9';
+const BUTTER_INK = '#7a4f00';
+const MINT = '#e6faf4';
+const GO_INK = '#0b7a4e';
+const PINK = '#ffe9e9';
+const PINK_INK = '#7a2410';
+
+const DISPLAY = "'Trebuchet MS',Arial,sans-serif";
+const TEXT = 'Arial,sans-serif';
+
+export type TemplateName =
+  | 'accountApproved'
+  | 'passwordReset'
+  | 'transportReminder'
+  | 'notification'
+  | 'generic';
 
 export type RenderOptions = {
   subject?: string;
   previewText?: string;
-  primaryColor?: string; // fallback if env not set
-  logoUrl?: string; // absolute or CID via provider
-  appName?: string;
-  footerText?: string;
 };
-
-function getBrandDefaults() {
-  const primaryColor = process.env.EMAIL_BRAND_PRIMARY || '#4f46e5'; // indigo-600 fallback
-  const appName = process.env.EMAIL_BRAND_NAME || 'Atypik';
-  const logoUrl = process.env.EMAIL_BRAND_LOGO_URL || '';
-  const footerText = process.env.EMAIL_BRAND_FOOTER || `${appName} — Simplifiez vos transports familiaux.`;
-  const accentColor = process.env.EMAIL_BRAND_ACCENT || '#ef4444'; // red-500 fallback for 'Atypik'
-  const driverColor = process.env.EMAIL_BRAND_DRIVER || '#facc15'; // yellow-400 for 'Driver'
-  return { primaryColor, accentColor, driverColor, appName, logoUrl, footerText };
-}
 
 function escapeHtml(input: string) {
   return input
@@ -31,127 +39,191 @@ function escapeHtml(input: string) {
     .replace(/'/g, '&#039;');
 }
 
+function appUrl() {
+  return (process.env.NEXT_PUBLIC_APP_URL || 'https://atypik-driver.com').replace(/\/$/, '');
+}
+
+function logoUrl() {
+  return process.env.EMAIL_LOGO_URL || `${appUrl()}/logo-horizontal.png`;
+}
+
+function brandHeader() {
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="padding:0 0 4px 0;">
+        <img src="${logoUrl()}" width="170" alt="Atypik Driver" style="display:block;border:0;max-width:170px;height:auto;" />
+        <div style="font-family:${TEXT};font-size:13px;color:${MUTE};margin-top:6px;">Pour des enfants exceptionnels</div>
+      </td>
+    </tr></table>`;
+}
+
+function ctaButton(label: string, url: string) {
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+      <td style="border-radius:6px;background:${CORAL};">
+        <a href="${escapeHtml(url)}" style="display:block;background:${CORAL};color:#ffffff;font-family:${TEXT};font-size:16px;font-weight:700;line-height:50px;height:50px;padding:0 28px;border-radius:6px;text-decoration:none;text-align:center;">${escapeHtml(label)}</a>
+      </td>
+    </tr></table>`;
+}
+
+function tag(label: string, bg = BUTTER, color = BUTTER_INK) {
+  return `<span style="display:inline-block;background:${bg};color:${color};font-family:${TEXT};font-size:13px;font-weight:700;padding:5px 14px;border-radius:99px;">${escapeHtml(label)}</span>`;
+}
+
+function h1(text: string) {
+  return `<h1 style="margin:16px 0 0 0;font-family:${DISPLAY};font-size:30px;line-height:1.15;font-weight:700;color:${INK};letter-spacing:-0.5px;">${escapeHtml(text)}</h1>`;
+}
+
+function p(text: string) {
+  return `<p style="margin:14px 0 0 0;font-family:${TEXT};font-size:16px;line-height:1.55;color:${MUTE};">${text}</p>`;
+}
+
 export function renderLayout(contentHtml: string, opts: RenderOptions = {}) {
-  const { primaryColor, accentColor, driverColor, appName, logoUrl, footerText } = { ...getBrandDefaults(), ...opts } as any;
   const safePreview = escapeHtml(opts.previewText || '');
 
-  const headTitle = (() => {
-    const name = String(appName || 'Atypik');
-    if (name.toLowerCase() === 'atypikdriver' || name.includes('Atypik')) return 'AtypikDriver';
-    return name;
-  })();
-
   return `<!DOCTYPE html>
-<html lang="fr">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(opts.subject || headTitle)}</title>
-    <style>
-      @media (prefers-color-scheme: dark) {
-        .card { background: #111827 !important; color: #e5e7eb !important; }
-        .muted { color: #9ca3af !important; }
-      }
-    </style>
-  </head>
-  <body style="margin:0;padding:0;background:#ffffff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,'Helvetica Neue',Arial,'Apple Color Emoji','Segoe UI Emoji';">
-    <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden">${safePreview}</span>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#ffffff;padding:24px 0;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;">
-            <tr>
-              <td style="padding:0 24px 16px 24px; text-align:center;">
-                ${logoUrl ? `<div style=\"margin-bottom:8px;\"><img src=\"${logoUrl}\" height=\"36\" alt=\"${escapeHtml(appName)}\" style=\"display:inline-block;vertical-align:middle;\" /></div>` : ''}
-                ${(() => {
-                  const name = String(appName || 'Atypik');
-                  if (name.toLowerCase() === 'atypikdriver' || name.includes('Atypik')) {
-                    return `<span style=\"font-size:24px;font-weight:800;color:${accentColor};\">Atypik</span><span style=\"font-size:24px;font-weight:800;color:${driverColor};\">Driver</span>`;
-                  }
-                  return `<span style=\"font-size:24px;font-weight:800;color:${primaryColor};\">${escapeHtml(name)}</span>`;
-                })()}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:0 24px 24px 24px;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" class="card" style="background:#ffffff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-                  <tr>
-                    <td style="padding:24px 24px 0 24px;">
-                      <!-- header bar -->
-                      <div style="height:4px;width:64px;background:${accentColor};border-radius:999px;margin:0 0 16px 0;"></div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:0 24px 24px 24px;">
-                      ${contentHtml}
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="text-align:center;padding:8px 24px 0 24px;">
-                <div class="muted" style="color:#6b7280;font-size:12px;line-height:18px;">${escapeHtml(footerText)}</div>
-              </td>
-            </tr>
-            <tr>
-              <td style="text-align:center;padding:8px 24px 24px 24px;">
-                <div class="muted" style="color:#9ca3af;font-size:12px;">© ${new Date().getFullYear()} ${escapeHtml(appName)}. Tous droits réservés.</div>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light only">
+<title>${escapeHtml(opts.subject || 'Atypik Driver')}</title>
+<style>
+@media (max-width:620px){
+  .w{width:100%!important}
+  .px{padding-left:20px!important;padding-right:20px!important}
+}
+</style>
+</head>
+<body style="margin:0;padding:0;background:${RAIL};">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${safePreview}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${RAIL}"><tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" class="w" width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:600px;max-width:600px;border-top:6px solid ${CORAL};">
+
+  <tr><td class="px" style="padding:28px 40px 0 40px;">${brandHeader()}</td></tr>
+  <tr><td class="px" style="padding:36px 40px 44px 40px;">${contentHtml}</td></tr>
+
+  <tr><td bgcolor="${RAIL}" class="px" style="background:${RAIL};padding:0 40px 36px 40px;border-top:1px solid ${LINE};">
+    <p style="margin:28px 0 0 0;font-family:${TEXT};font-size:13px;line-height:1.6;color:${MUTE};">Vous recevez cet e-mail car vous utilisez Atypik Driver.<br>
+      <a href="${appUrl()}" style="color:${MUTE};">Atypik Driver</a> — Pour des enfants exceptionnels</p>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body>
 </html>`;
 }
 
+/** Chauffeur : compte validé par l'équipe — il peut se connecter. */
 export function accountApprovedTemplate(params: { name?: string }) {
-  const title = 'Votre compte chauffeur a été validé';
+  const title = `Bienvenue ${escapeHtml(params.name || '')} — votre compte est validé`;
   const body = `
-    <h1 style="margin:0 0 12px 0;font-size:20px;line-height:28px;">${escapeHtml(title)}</h1>
-    <p style="margin:0 0 12px 0;color:#374151;">Bonjour ${escapeHtml(params.name || '')},</p>
-    <p style="margin:0 0 16px 0;color:#374151;">
-      Bonne nouvelle ! Votre profil chauffeur vient d’être approuvé. Vous pouvez désormais vous connecter et commencer à accepter des missions.
-    </p>
-    <p style="margin:0;color:#374151;">Merci de faire partie d’Atypik.</p>
+    ${tag('Compte validé', MINT, GO_INK)}
+    ${h1(`Bienvenue ${escapeHtml(params.name || 'à bord')} !`)}
+    ${p(`Bonne nouvelle : votre dossier chauffeur vient d'être <b style="color:${INK};">validé par nos équipes</b>. Vous pouvez dès maintenant vous connecter à votre espace et recevoir vos premières missions.`)}
+    <div style="padding:28px 0 0 0;">${ctaButton('Accéder à mon espace', `${appUrl()}/login`)}</div>
+    ${p(`Votre profil sera proposé aux familles de votre région. Pensez à compléter vos informations pour inspirer confiance.`)}
   `;
-  return renderLayout(body, { subject: title, previewText: title });
+  return renderLayout(body, { subject: 'Votre compte chauffeur Atypik est validé', previewText: 'Bonne nouvelle : votre dossier a été validé. Connectez-vous pour recevoir vos missions.' });
 }
 
-export function transportReminderTemplate(params: { childName?: string; date?: string; from?: string; to?: string }) {
-  const title = 'Rappel de transport';
+/** Mot de passe oublié : lien de réinitialisation custom (hors page Firebase). */
+export function passwordResetTemplate(params: { name?: string; resetUrl: string }) {
   const body = `
-    <h1 style="margin:0 0 12px 0;font-size:20px;line-height:28px;">${escapeHtml(title)}</h1>
-    <p style="margin:0 0 12px 0;color:#374151;">Transport pour ${escapeHtml(params.childName || 'votre enfant')}</p>
-    <ul style="margin:0 0 16px 18px;color:#374151;">
-      ${params.date ? `<li>Date: ${escapeHtml(params.date)}</li>` : ''}
-      ${params.from ? `<li>Départ: ${escapeHtml(params.from)}</li>` : ''}
-      ${params.to ? `<li>Arrivée: ${escapeHtml(params.to)}</li>` : ''}
-    </ul>
-    <p style="margin:0;color:#374151;">Vous pouvez suivre le trajet en temps réel dans l’application.</p>
+    ${tag('Sécurité du compte')}
+    ${h1('Réinitialisez votre mot de passe')}
+    ${p(`Bonjour${params.name ? ` <b style="color:${INK};">${escapeHtml(params.name)}</b>` : ''}, nous avons reçu une demande de réinitialisation de votre mot de passe Atypik Driver.`)}
+    <div style="padding:28px 0 0 0;">${ctaButton('Choisir un nouveau mot de passe', params.resetUrl)}</div>
+    ${p(`Ce lien est valable <b style="color:${INK};">1 heure</b>. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail : votre mot de passe reste inchangé.`)}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${PINK}" style="background:${PINK};border-radius:6px;margin-top:28px;"><tr>
+      <td style="padding:14px 18px;font-family:${TEXT};font-size:14px;line-height:1.45;color:${PINK_INK};"><b>À savoir</b> — ne partagez jamais ce lien. Nos équipes ne vous demanderont jamais votre mot de passe.</td>
+    </tr></table>
   `;
-  return renderLayout(body, { subject: title, previewText: title });
+  return renderLayout(body, { subject: 'Réinitialisation de votre mot de passe', previewText: 'Un lien sécurisé pour choisir un nouveau mot de passe.' });
+}
+
+/** Rappel / proposition de transport avec infos trajet. */
+export function transportReminderTemplate(params: {
+  childName?: string;
+  childAvatar?: string;
+  date?: string;
+  time?: string;
+  from?: string;
+  to?: string;
+  transportType?: string;
+}) {
+  const title = `Transport ${escapeHtml(params.childName || '')}`;
+  const childRow = params.childName ? `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:24px;"><tr>
+      ${params.childAvatar ? `<td width="64" style="padding-right:16px;"><img src="${escapeHtml(params.childAvatar)}" width="64" height="64" alt="" style="width:64px;height:64px;border-radius:32px;border:0;"></td>` : ''}
+      <td style="font-family:${TEXT};">
+        <div style="font-family:${DISPLAY};font-size:22px;font-weight:700;color:${INK};">${escapeHtml(params.childName)}</div>
+        ${params.transportType ? `<div style="margin-top:6px;">${tag(params.transportType)}</div>` : ''}
+      </td>
+    </tr></table>` : '';
+
+  const steps = params.from || params.to ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:${TEXT};margin-top:20px;">
+      ${params.from ? `<tr><td width="26" valign="top" style="font-size:18px;line-height:24px;color:#12a06a;">&#9679;</td><td style="padding-bottom:14px;font-size:16px;line-height:1.4;color:${INK};"><b>${escapeHtml(params.from)}</b>${params.time ? `<br><span style="color:${MUTE};font-size:14px;">Départ à ${escapeHtml(params.time)}</span>` : ''}</td></tr>` : ''}
+      ${params.to ? `<tr><td width="26" valign="top" style="font-size:18px;line-height:24px;color:${CORAL};">&#9679;</td><td style="font-size:16px;line-height:1.4;color:${INK};"><b>${escapeHtml(params.to)}</b><br><span style="color:${MUTE};font-size:14px;">Destination</span></td></tr>` : ''}
+    </table>` : '';
+
+  const body = `
+    ${tag('Transport')}
+    ${h1(title)}
+    ${params.date ? p(`${escapeHtml(params.date)}`) : ''}
+    ${childRow}
+    ${steps}
+  `;
+  return renderLayout(body, { subject: `Transport ${params.childName || ''} — ${params.date || 'rappel'}`, previewText: `Transport pour ${params.childName || 'votre enfant'} ${params.date || ''}` });
+}
+
+/** Notification générique — utilisée pour tous les événements in-app. */
+export function notificationTemplate(params: {
+  title: string;
+  message: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  tag?: string;
+}) {
+  const body = `
+    ${params.tag ? tag(params.tag) : tag('Notification')}
+    ${h1(params.title)}
+    ${p(escapeHtml(params.message))}
+    ${params.ctaUrl ? `<div style="padding:28px 0 0 0;">${ctaButton(params.ctaLabel || 'Voir dans l’application', params.ctaUrl)}</div>` : ''}
+  `;
+  return renderLayout(body, { subject: params.title, previewText: params.message.slice(0, 120) });
 }
 
 export function genericTemplate(params: { title: string; messageHtml?: string; messageText?: string }) {
-  const title = params.title || 'Notification Atypik';
-  const body = `
-    <h1 style="margin:0 0 12px 0;font-size:20px;line-height:28px;">${escapeHtml(title)}</h1>
-    ${params.messageHtml ? params.messageHtml : `<p style=\"margin:0;color:#374151;\">${escapeHtml(params.messageText || '')}</p>`}
-  `;
-  return renderLayout(body, { subject: title, previewText: params.messageText || title });
+  return notificationTemplate({
+    title: params.title || 'Notification Atypik Driver',
+    message: params.messageText || '',
+    ...(params.messageHtml ? { message: params.messageText || '' } : {}),
+  });
 }
 
 export function buildEmailHtml(template: TemplateName, vars: Record<string, any>) {
   switch (template) {
     case 'accountApproved':
       return accountApprovedTemplate(vars || {});
+    case 'passwordReset':
+      return passwordResetTemplate({ name: vars?.name, resetUrl: vars?.resetUrl || '#' });
     case 'transportReminder':
       return transportReminderTemplate(vars || {});
+    case 'notification':
+      return notificationTemplate({
+        title: vars?.title || 'Notification',
+        message: vars?.message || '',
+        ctaLabel: vars?.ctaLabel,
+        ctaUrl: vars?.ctaUrl,
+        tag: vars?.tag,
+      });
     case 'generic':
     default:
       return genericTemplate({ title: vars?.title || 'Notification', messageHtml: vars?.messageHtml, messageText: vars?.messageText });
   }
 }
+
+export { CORAL_DARK, escapeHtml };

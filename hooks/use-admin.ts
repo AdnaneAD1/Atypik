@@ -4,7 +4,6 @@ import {
   collection,
   doc,
   getDocs,
-  getDoc,
   query,
   updateDoc,
   where,
@@ -56,28 +55,21 @@ export function useAdmin() {
     await updateDoc(doc(db, 'users', driverId), { status: 'verified' });
     setUsers((prev) => prev.map((u) => (u.id === driverId ? { ...u, status: 'verified' } : u)));
 
-    // Best-effort: envoyer un email d'information au chauffeur (template brandé)
+    // Notifie le chauffeur : in-app + push + e-mail brandé « compte validé »
+    // (la route /api/notifications/send choisit le template accountApproved pour ce type)
     try {
-      const snap = await getDoc(doc(db, 'users', driverId));
-      if (snap.exists()) {
-        const data = snap.data() as any;
-        const email: string | undefined = data?.email;
-        const name: string = data?.displayName || data?.name || 'Chauffeur';
-        if (email) {
-          const subject = 'Atypik Driver • Votre compte a été validé';
-          await authFetch('/api/email/send', {
-            method: 'POST',
-            body: JSON.stringify({
-              to: email,
-              subject,
-              template: 'accountApproved',
-              variables: { name },
-            }),
-          });
-        }
-      }
+      await authFetch('/api/notifications/send', {
+        method: 'POST',
+        body: JSON.stringify({
+          userId: driverId,
+          title: 'Votre compte chauffeur est validé',
+          body: 'Bonne nouvelle : votre dossier a été validé par nos équipes. Vous pouvez vous connecter et recevoir vos missions.',
+          clickAction: '/driver/dashboard',
+          data: { type: 'driverApproved' },
+        }),
+      });
     } catch (e) {
-      console.error('Erreur lors de l\'envoi de l\'email de validation chauffeur:', e);
+      console.error('Erreur lors de la notification de validation chauffeur:', e);
     }
   };
 

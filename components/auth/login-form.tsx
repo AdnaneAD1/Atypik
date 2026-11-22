@@ -24,8 +24,6 @@ import { getAuthErrorMessage } from '@/lib/auth/auth-errors';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@/firebase/ClientApp';
 
 const formSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -97,7 +95,12 @@ export function LoginForm() {
     }
     try {
       setResetLoading(true);
-      await sendPasswordResetEmail(auth, email);
+      // Lien de réinitialisation custom : e-mail brandé Atypik + page dédiée /reset-password
+      await fetch('/api/auth/reset-password/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
       toast({
         title: 'Email envoyé',
         description: 'Un lien de réinitialisation vous a été envoyé si le compte existe.',

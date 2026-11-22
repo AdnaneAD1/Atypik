@@ -53,6 +53,26 @@ export async function POST(req: Request) {
       data: data || {},
     });
 
+    // 1b) E-mail transactionnel — même événement que la notif in-app (best-effort, jamais bloquant)
+    try {
+      const userSnap = await db.doc(`users/${userId}`).get();
+      const recipientEmail = (userSnap.get('email') as string | undefined) || userSnap.get('mail') as string | undefined;
+      if (recipientEmail) {
+        const { sendEmail } = await import('@/lib/email');
+        const { buildEmailHtml } = await import('@/lib/email-templates');
+        const ctaUrl = clickAction
+          ? (clickAction.startsWith('http') ? clickAction : new URL(clickAction, req.url).toString())
+          : new URL('/', req.url).toString();
+        const notifType = data?.type;
+        const html = notifType === 'driverApproved'
+          ? buildEmailHtml('accountApproved', { name: userSnap.get('displayName') || userSnap.get('name') })
+          : buildEmailHtml('notification', { title, message: body, ctaUrl, ctaLabel: 'Voir dans l’application' });
+        await sendEmail({ to: recipientEmail, subject: title, html });
+      }
+    } catch (mailErr: any) {
+      console.warn('[POST]/api/notifications/send email skipped:', mailErr?.message || mailErr);
+    }
+
     // 2) Get user's FCM token for push notification
     const settingsRef = db.doc(`notificationSettings/${userId}`);
     const settingsSnap = await settingsRef.get();

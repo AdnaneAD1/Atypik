@@ -23,13 +23,17 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
         return;
       }
       
+      // Pages d'authentification publiques (connexion, inscription, réinitialisation)
+      const isAuthPage = pathname.includes('/login') || pathname.includes('/register') || pathname.includes('/reset-password');
+
       // Si non authentifié et pas sur les pages d'authentification, rediriger vers login
-      if (!isAuthenticated && !pathname.includes('/login') && !pathname.includes('/register')) {
+      if (!isAuthenticated && !isAuthPage) {
         router.push('/login');
         return;
       }
-      
+
       // Si authentifié mais sur une page d'authentification, rediriger vers le tableau de bord approprié
+      // (la réinitialisation de mot de passe reste accessible même connecté)
       if (isAuthenticated && (pathname.includes('/login') || pathname.includes('/register'))) {
         const dashboardPath = user?.role === 'parent' 
           ? '/parent/dashboard' 
