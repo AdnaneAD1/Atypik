@@ -8,12 +8,12 @@ import { useState, useCallback } from "react";
 import { TransportEventDialog } from './transport-event-dialog';
 import { SubscriptionModal } from './subscription-modal';
 import { DriverSubscriptionPanel } from '@/components/profile/driver-subscription-panel';
-import { DriverSelectionModal } from './driver-selection-modal';
+
 import { useToast } from '@/hooks/use-toast';
 import { useTransport, TransportEvent } from '@/hooks/use-transport';
 import { useChildren } from '@/hooks/use-children';
 import { useSubscription } from '@/hooks/use-subscription';
-import { useDriverSelection, Driver } from '@/hooks/use-driver-selection';
+import { useDriverSelection } from '@/hooks/use-driver-selection';
 import { useAuth } from '@/lib/auth/auth-context';
 import { format, addDays, isToday, isSameDay, startOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -57,9 +57,6 @@ export function ParentCalendar() {
 
   // États pour le modal d'abonnement
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-
-  // États pour le modal de sélection de chauffeur
-  const [isDriverSelectionOpen, setIsDriverSelectionOpen] = useState(false);
 
   // Utiliser le hook useTransport
   const {
@@ -125,16 +122,15 @@ export function ParentCalendar() {
       };
     }
 
-    // Vérifier qu'un chauffeur est sélectionné
+    // Vérifier qu'un chauffeur a été assigné par les équipes
     if (!hasSelectedDriver || !selectedDriver) {
       toast({
-        title: "Chauffeur requis",
-        description: "Vous devez sélectionner un chauffeur avant de programmer un transport.",
-        variant: "destructive",
+        title: "Chauffeur en cours d'attribution",
+        description: "Nos équipes vous assigneront un chauffeur de notre réseau très prochainement.",
       });
       return {
         success: false,
-        message: 'Veuillez sélectionner un chauffeur avant de programmer un transport.',
+        message: 'Aucun chauffeur assigné pour le moment.',
       };
     }
 
@@ -198,29 +194,17 @@ export function ParentCalendar() {
     });
   };
 
-  // Fonction pour gérer l'ouverture du modal de sélection de chauffeur
-  const handleOpenDriverSelection = () => {
-    setIsDriverSelectionOpen(true);
-  };
-
-  // Fonction pour gérer la sélection d'un chauffeur
-  const handleDriverSelected = (driver: Driver) => {
-    toast({
-      title: "Chauffeur sélectionné",
-      description: `${driver.name} a été sélectionné comme votre chauffeur.`,
-    });
-    // Le modal se ferme automatiquement après la sélection
-  };
-
-  // Fonction pour ouvrir le dialog de transport (avec vérification du chauffeur)
+  // Fonction pour ouvrir le dialog de transport (avec vérification du chauffeur assigné)
   const handleOpenTransportDialog = () => {
     if (!hasSelectedDriver || !selectedDriver) {
-      // Ouvrir le modal de sélection de chauffeur si aucun n'est sélectionné
-      handleOpenDriverSelection();
+      toast({
+        title: "Chauffeur en cours d'attribution",
+        description: "Nos équipes vous assigneront un chauffeur de notre réseau très prochainement.",
+      });
       return;
     }
 
-    // Si un chauffeur est sélectionné, ouvrir directement le dialog de transport
+    // Si un chauffeur est assigné, ouvrir directement le dialog de transport
     setIsEventDialogOpen(true);
   };
 
@@ -924,12 +908,6 @@ export function ParentCalendar() {
         onSubscriptionCreated={handleSubscriptionCreated}
       />
 
-      {/* Modal de sélection de chauffeur */}
-      <DriverSelectionModal
-        isOpen={isDriverSelectionOpen}
-        onClose={() => setIsDriverSelectionOpen(false)}
-        onDriverSelected={handleDriverSelected}
-      />
     </div>
   );
 }

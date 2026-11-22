@@ -17,10 +17,8 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { useDriverSelection } from '@/hooks/use-driver-selection';
 import { useSubscription } from '@/hooks/use-subscription';
 import { useToast } from '@/hooks/use-toast';
-import { DriverSelectionModal } from '@/components/parent/driver-selection-modal';
 import { DriverProfileDialog } from '@/components/parent/driver-profile-dialog';
 import { SubscriptionModal } from '@/components/parent/subscription-modal';
-import type { Driver } from '@/hooks/use-driver-selection';
 
 const formatDate = (ts?: { toDate?: () => Date }) => {
   const d = ts?.toDate?.();
@@ -40,7 +38,6 @@ export function DriverSubscriptionPanel() {
     loading: subscriptionLoading,
   } = useSubscription();
 
-  const [driverModalOpen, setDriverModalOpen] = useState(false);
   const [driverProfileOpen, setDriverProfileOpen] = useState(false);
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -53,13 +50,6 @@ export function DriverSubscriptionPanel() {
   const reviewsCount = stats?.totalReviews ?? 0;
   const hasReviews = reviewsCount > 0;
   const renewDate = formatDate(subscription?.nextBillingDate) ?? formatDate(subscription?.endDate);
-
-  const handleDriverSelected = (driver: Driver) => {
-    toast({
-      title: 'Chauffeur sélectionné',
-      description: `${driver.name} a été sélectionné comme votre chauffeur.`,
-    });
-  };
 
   const handleCancelSubscription = async () => {
     setIsCancelling(true);
@@ -141,20 +131,21 @@ export function DriverSubscriptionPanel() {
                 <div>
                   <h3 className="font-brand text-xl font-bold leading-tight">Attribution en cours</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Nos équipes vous assignent un chauffeur vérifié. Vous pouvez aussi en choisir un dès maintenant.
+                    Nos équipes vous assigneront un chauffeur de notre réseau.
                   </p>
                 </div>
               </div>
             )}
 
-            <Button
-              variant="outline"
-              className="mt-auto h-11 self-start border-slate-900 text-slate-900 hover:bg-slate-100"
-              onClick={() => (selectedDriver ? setDriverProfileOpen(true) : setDriverModalOpen(true))}
-              disabled={driversLoading}
-            >
-              {selectedDriver ? 'Voir' : 'Choisir un chauffeur'}
-            </Button>
+            {selectedDriver && (
+              <Button
+                variant="outline"
+                className="mt-auto h-11 self-start border-slate-900 text-slate-900 hover:bg-slate-100"
+                onClick={() => setDriverProfileOpen(true)}
+              >
+                Voir
+              </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -229,11 +220,6 @@ export function DriverSubscriptionPanel() {
       </div>
 
       {/* Modals */}
-      <DriverSelectionModal
-        isOpen={driverModalOpen}
-        onClose={() => setDriverModalOpen(false)}
-        onDriverSelected={handleDriverSelected}
-      />
       <DriverProfileDialog
         driver={selectedDriver}
         open={driverProfileOpen}

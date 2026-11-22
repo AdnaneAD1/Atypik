@@ -159,7 +159,7 @@ export function emailVerificationTemplate(params: {
     <div style="padding:28px 0 0 0;">${ctaButton('Confirmer mon adresse e-mail', params.verifyUrl)}</div>
     ${p(isDriver
       ? `Votre dossier sera ensuite examiné par nos équipes - vous recevrez un e-mail dès sa validation.`
-      : `Vous pourrez ensuite choisir votre chauffeur et programmer le premier transport de vos enfants.`)}
+      : `Nos équipes vous assigneront ensuite un chauffeur de notre réseau pour les transports de vos enfants.`)}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${PINK}" style="background:${PINK};border-radius:6px;margin-top:28px;"><tr>
       <td style="padding:14px 18px;font-family:${TEXT};font-size:14px;line-height:1.45;color:${PINK_INK};"><b>À savoir</b> - si vous n'avez pas créé ce compte, ignorez simplement cet e-mail.</td>
     </tr></table>

@@ -81,8 +81,9 @@ describe('DriverSubscriptionPanel', () => {
     mockHooks({ drv: null, sub: null, active: false });
     render(<DriverSubscriptionPanel />);
     expect(screen.getByText('Attribution en cours')).toBeInTheDocument();
+    expect(screen.getByText(/assigneront un chauffeur de notre réseau/)).toBeInTheDocument();
     expect(screen.getByText('Aucune formule active')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Choisir un chauffeur/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Choisir un chauffeur/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Choisir une formule/ })).toBeInTheDocument();
   });
 
