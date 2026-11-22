@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useCallback } from "react";
 import { TransportEventDialog } from './transport-event-dialog';
 import { SubscriptionModal } from './subscription-modal';
+import { DriverSubscriptionPanel } from '@/components/profile/driver-subscription-panel';
 import { DriverSelectionModal } from './driver-selection-modal';
 import { useToast } from '@/hooks/use-toast';
 import { useTransport, TransportEvent } from '@/hooks/use-transport';
@@ -16,8 +17,8 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { format, addDays, isToday, isSameDay, startOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
-  CalendarPlus, Clock, User, MessageCircle, X, Loader2, Star,
-  CreditCard, RefreshCw, ChevronLeft, ChevronRight, MoveRight, Route as RouteIcon
+  CalendarPlus, Clock, MessageCircle, X, Loader2, Star,
+  ChevronLeft, ChevronRight, MoveRight, Route as RouteIcon
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -55,7 +56,6 @@ export function ParentCalendar() {
 
   // États pour le modal d'abonnement
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-  const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
 
   // États pour le modal de sélection de chauffeur
   const [isDriverSelectionOpen, setIsDriverSelectionOpen] = useState(false);
@@ -75,19 +75,15 @@ export function ParentCalendar() {
   // Utiliser le hook useSubscription
   const {
     subscription,
-    loading: subscriptionLoading,
     hasActiveSubscription,
-    canCreateTransport,
     canCreateTransportForDate,
     getWeeklyTransportCountForDate,
-    weeklyTransportCount,
-    cancelSubscription,
     loadSubscription
   } = useSubscription();
 
   // Utiliser les hooks d'authentification et de sélection de chauffeur
   const { user } = useAuth();
-  const { selectedDriver, hasSelectedDriver, canCreateTransport: canCreateWithDriver } = useDriverSelection();
+  const { selectedDriver, hasSelectedDriver } = useDriverSelection();
 
   // Fonction pour ajouter un nouvel événement de transport
   const handleAddEvent = async (data: any) => {
@@ -188,38 +184,6 @@ export function ParentCalendar() {
       title: 'Abonnement activé !',
       description: 'Vous pouvez maintenant programmer vos transports.',
     });
-  };
-
-  const formatSubscriptionDate = (dateValue: any): string => {
-    if (!dateValue) return '';
-    const d = dateValue instanceof Date
-      ? dateValue
-      : typeof dateValue?.toDate === 'function'
-        ? dateValue.toDate()
-        : new Date(dateValue);
-    return isNaN(d.getTime()) ? '' : format(d, 'dd/MM/yyyy', { locale: fr });
-  };
-
-  const handleCancelAutoRenew = async () => {
-    setIsCancellingSubscription(true);
-    try {
-      await cancelSubscription();
-      const endDateStr = formatSubscriptionDate(subscription?.endDate);
-      toast({
-        title: 'Renouvellement automatique désactivé',
-        description: endDateStr
-          ? `Votre abonnement reste actif jusqu'au ${endDateStr}.`
-          : 'Le renouvellement automatique a bien été arrêté.',
-      });
-    } catch (err) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de désactiver le renouvellement automatique.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsCancellingSubscription(false);
-    }
   };
 
   // Fonction pour gérer l'ouverture du modal de sélection de chauffeur
@@ -557,155 +521,8 @@ export function ParentCalendar() {
         </Button>
       </div>
 
-      {/* Section chauffeur sélectionné & Abonnement */}
-      {user?.role === 'parent' && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* Chauffeur sélectionné */}
-          <Card className="rounded-xl border shadow-none">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <User className="h-4 w-4 text-primary" />
-                Chauffeur sélectionné
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {selectedDriver ? (
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Avatar className="h-11 w-11 border">
-                      <AvatarImage src={selectedDriver.avatar} alt={selectedDriver.name} />
-                      <AvatarFallback className="bg-primary/10 font-semibold text-primary">
-                        {initials(selectedDriver.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{selectedDriver.name}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {selectedDriver.rating && selectedDriver.rating > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                            {selectedDriver.rating.toFixed(1)}
-                          </span>
-                        )}
-                        {selectedDriver.totalTrips && selectedDriver.totalTrips > 0 && (
-                          <span>· {selectedDriver.totalTrips} trajets</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0"
-                    onClick={handleOpenDriverSelection}
-                  >
-                    Changer
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Avatar className="h-11 w-11 border">
-                      <AvatarFallback className="bg-muted">
-                        <User className="h-5 w-5 text-muted-foreground" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="font-medium text-muted-foreground">Aucun chauffeur</p>
-                      <p className="text-xs text-muted-foreground">Choisissez-en un pour programmer</p>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="shrink-0 bg-primary hover:bg-primary/90"
-                    onClick={handleOpenDriverSelection}
-                  >
-                    Sélectionner
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Abonnement */}
-          <Card className="rounded-xl border shadow-none">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <CreditCard className="h-4 w-4 text-primary" />
-                  Mon abonnement
-                </CardTitle>
-                {hasActiveSubscription && subscription && (
-                  <Badge variant={subscription.type === 'premium' ? 'default' : 'secondary'} className="text-[10px]">
-                    {subscription.type === 'premium' ? 'Premium' : 'Standard'}
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {subscriptionLoading ? (
-                <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Chargement de votre abonnement...
-                </div>
-              ) : hasActiveSubscription && subscription ? (
-                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">
-                      {subscription.type === 'premium'
-                        ? 'Transports illimités'
-                        : `${weeklyTransportCount}/2 transports cette semaine`}
-                    </p>
-                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <RefreshCw className="h-3 w-3" />
-                      {subscription.autoRenew !== false
-                        ? `Renouvellement auto${formatSubscriptionDate(subscription.endDate) ? ` le ${formatSubscriptionDate(subscription.endDate)}` : ''}`
-                        : `Actif${formatSubscriptionDate(subscription.endDate) ? ` jusqu'au ${formatSubscriptionDate(subscription.endDate)}` : ''}`}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {subscription.type === 'standard' && (
-                      <Button
-                        size="sm"
-                        className="bg-primary hover:bg-primary/90"
-                        onClick={() => setIsSubscriptionModalOpen(true)}
-                      >
-                        Passer en Premium
-                      </Button>
-                    )}
-                    {subscription.autoRenew !== false && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCancelAutoRenew}
-                        disabled={isCancellingSubscription}
-                      >
-                        {isCancellingSubscription ? 'Arrêt...' : 'Arrêter'}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-medium text-muted-foreground">Aucun abonnement actif</p>
-                    <p className="text-xs text-muted-foreground">
-                      Souscrivez pour programmer vos transports
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="shrink-0 bg-primary hover:bg-primary/90"
-                    onClick={() => setIsSubscriptionModalOpen(true)}
-                  >
-                    Souscrire
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Section chauffeur & abonnement — panneau partagé avec le profil */}
+      {user?.role === 'parent' && <DriverSubscriptionPanel />}
 
       {/* Grille semaine — style Gyaan, comme le planning chauffeur */}
       <Card className="overflow-hidden rounded-xl border shadow-none">

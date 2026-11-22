@@ -36,6 +36,7 @@ export function DriverSubscriptionPanel() {
     hasActiveSubscription,
     cancelSubscription,
     loadSubscription,
+    weeklyTransportCount,
     loading: subscriptionLoading,
   } = useSubscription();
 
@@ -179,6 +180,7 @@ export function DriverSubscriptionPanel() {
                   {subscription.type === 'premium' ? 'Transports illimités' : '2 transports par semaine'}
                 </p>
                 <p className="text-sm text-muted-foreground">
+                  {subscription.type === 'standard' && `${weeklyTransportCount}/2 utilisés cette semaine · `}
                   {subscription.autoRenew && renewDate
                     ? `Renouvellement automatique le ${renewDate}`
                     : renewDate
@@ -186,13 +188,24 @@ export function DriverSubscriptionPanel() {
                       : 'Abonnement actif'}
                   {subscription.price ? ` — ${subscription.price} €` : ''}
                 </p>
-                <Button
-                  variant="outline"
-                  className="mt-auto h-11 self-start border-primary text-primary hover:bg-primary/5"
-                  onClick={() => setCancelDialogOpen(true)}
-                >
-                  Arrêter l’abonnement
-                </Button>
+                <div className="mt-auto flex items-center gap-5">
+                  <Button
+                    variant="outline"
+                    className="h-11 border-primary text-primary hover:bg-primary/5"
+                    onClick={() => setCancelDialogOpen(true)}
+                  >
+                    Arrêter l’abonnement
+                  </Button>
+                  {subscription.type === 'standard' && (
+                    <button
+                      type="button"
+                      className="text-sm font-bold text-primary underline decoration-2 underline-offset-4 hover:text-primary/80"
+                      onClick={() => setSubscriptionModalOpen(true)}
+                    >
+                      Passer en Premium
+                    </button>
+                  )}
+                </div>
               </>
             ) : (
               <>
