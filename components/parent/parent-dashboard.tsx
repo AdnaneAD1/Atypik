@@ -229,7 +229,7 @@ export function ParentDashboard() {
           <motion.div variants={itemVariants}>
             <Card className={cn(
               'overflow-hidden rounded-2xl shadow-none',
-              nextTrip ? 'border-0 bg-primary' : 'border bg-card'
+              nextTrip ? 'border-primary/15 bg-primary/[0.06]' : 'border bg-card'
             )}>
               <CardContent className="p-5 sm:p-6">
                 {loading ? (
@@ -237,11 +237,11 @@ export function ParentDashboard() {
                     <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
                   </div>
                 ) : nextTrip ? (
-                  <div className="space-y-5 text-white">
+                  <div className="space-y-5">
                     {/* Enfant + statut */}
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-3.5">
-                        <Avatar className="h-14 w-14 shrink-0 border-2 border-white/60">
+                        <Avatar className="h-14 w-14 shrink-0 border-2 border-white">
                           <AvatarImage
                             src={children.find(c => c.name === nextTrip.childName)?.avatar || ''}
                             alt={nextTrip.childName || 'Enfant'}
@@ -256,12 +256,12 @@ export function ParentDashboard() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <p className="text-xs font-medium text-white/75">Transport en cours</p>
+                          <p className="text-xs font-medium text-primary">Transport en cours</p>
                           <div className="mt-0.5 flex flex-wrap items-center gap-2">
                             <h3 className="truncate font-brand text-2xl font-bold leading-none">
                               {nextTrip.childName}
                             </h3>
-                            <Badge variant="outline" className="rounded-full border-white/60 bg-transparent px-2.5 text-[11px] font-semibold text-white">
+                            <Badge variant="outline" className="rounded-full border-primary/25 bg-white px-2.5 text-[11px] font-semibold text-primary">
                               {nextTrip.transportType === 'aller-retour' ? 'Aller-retour'
                                 : nextTrip.transportType === 'aller' ? 'Aller' : 'Retour'}
                             </Badge>
@@ -269,16 +269,16 @@ export function ParentDashboard() {
                         </div>
                       </div>
                       {/* Segments de statut — style image de référence */}
-                      <div className="flex shrink-0 rounded-full border border-white/60 p-0.5 text-[11px] font-semibold">
+                      <div className="flex shrink-0 rounded-full border border-primary/20 bg-white p-0.5 text-[11px] font-semibold">
                         <span className={cn(
                           'rounded-full px-2.5 py-1',
-                          nextTrip.status === 'programmed' ? 'bg-white text-primary' : 'text-white/75'
+                          nextTrip.status === 'programmed' ? 'bg-primary text-white' : 'text-muted-foreground'
                         )}>
                           En préparation
                         </span>
                         <span className={cn(
                           'rounded-full px-2.5 py-1',
-                          nextTrip.status === 'in-progress' ? 'bg-white text-primary' : 'text-white/75'
+                          nextTrip.status === 'in-progress' ? 'bg-primary text-white' : 'text-muted-foreground'
                         )}>
                           En route
                         </span>
@@ -288,11 +288,11 @@ export function ParentDashboard() {
                     {/* Ligne de progression — pilotée par la position GPS réelle du chauffeur */}
                     <div className="pt-9">
                       <div className="flex items-center">
-                        <span className="h-3 w-3 shrink-0 rounded-full bg-emerald-500 ring-2 ring-white/60" />
+                        <span className="h-3 w-3 shrink-0 rounded-full bg-emerald-500 ring-2 ring-white" />
                         <div className="relative h-4 flex-1">
-                          <div className="absolute inset-x-0 top-1/2 h-0 -translate-y-1/2 border-t-2 border-dashed border-white/60" />
+                          <div className="absolute inset-x-0 top-1/2 h-0 -translate-y-1/2 border-t-2 border-dashed border-primary/30" />
                           <div
-                            className="absolute left-0 top-1/2 h-0.5 -translate-y-1/2 bg-white transition-[width] duration-700"
+                            className="absolute left-0 top-1/2 h-0.5 -translate-y-1/2 bg-primary transition-[width] duration-700"
                             style={{ width: `${tripProgress * 100}%` }}
                           />
                           <span
@@ -323,18 +323,18 @@ export function ParentDashboard() {
                             />
                           </span>
                         </div>
-                        <span className="h-3 w-3 shrink-0 rounded-full bg-white" />
+                        <span className="h-3 w-3 shrink-0 rounded-full bg-primary" />
                       </div>
                       <div className="mt-3 flex items-start justify-between gap-4">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-bold">{nextTrip.from.address}</p>
-                          <p className="mt-0.5 text-xs text-white/75">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             Départ prévu à {nextTrip.scheduledTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
                         <div className="min-w-0 shrink-0 text-right">
                           <p className="truncate text-sm font-bold">{nextTrip.to.address}</p>
-                          <p className="mt-0.5 text-xs text-white/75">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             {livePosition
                               ? `Reste ${(Math.max(0, 1 - tripProgress) * (nextTrip.distance || 0) / 1000).toFixed(1)} km`
                               : `Destination · ${((nextTrip.distance || 0) / 1000).toFixed(1)} km`}
@@ -344,14 +344,14 @@ export function ParentDashboard() {
                     </div>
 
                     {/* Chauffeur + actions */}
-                    <div className="flex flex-col gap-3 border-t border-white/25 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-3 border-t border-primary/15 pt-4 sm:flex-row sm:items-center sm:justify-between">
                       <p className="text-sm font-medium">
                         Chauffeur : <span className="font-semibold">{nextTrip.driverName}</span>
                       </p>
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
-                          className="flex-1 border-white/60 bg-transparent text-white hover:bg-white/10 hover:text-white sm:flex-none"
+                          className="flex-1 border-primary/25 bg-white text-primary hover:bg-primary/5 hover:text-primary sm:flex-none"
                           onClick={() => router.push('/parent/messages')}
                         >
                           <MessageSquare className="mr-2 h-4 w-4" />
@@ -359,7 +359,7 @@ export function ParentDashboard() {
                         </Button>
                         <Button
                           onClick={() => router.push('/parent/tracking')}
-                          className="flex-1 bg-white text-primary hover:bg-white/90 sm:flex-none"
+                          className="flex-1 bg-primary text-white hover:bg-primary/90 sm:flex-none"
                         >
                           <Navigation className="mr-2 h-4 w-4" />
                           Suivre en temps réel
