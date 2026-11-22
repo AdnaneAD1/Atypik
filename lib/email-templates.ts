@@ -44,17 +44,32 @@ function appUrl() {
 }
 
 function logoUrl() {
-  return process.env.EMAIL_LOGO_URL || `${appUrl()}/logo-horizontal.png`;
+  // cid: = image embarquée dans l'e-mail (lib/email.ts) ; EMAIL_LOGO_URL peut pointer vers un CDN
+  return process.env.EMAIL_LOGO_URL || 'cid:atypik-logo';
 }
 
 function brandHeader() {
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td style="padding:0 0 4px 0;">
-        <img src="${logoUrl()}" width="170" alt="Atypik Driver" style="display:block;border:0;max-width:170px;height:auto;" />
-        <div style="font-family:${TEXT};font-size:13px;color:${MUTE};margin-top:6px;">Pour des enfants exceptionnels</div>
+      <td style="padding:0;">
+        <img src="${logoUrl()}" width="180" alt="Atypik Driver" style="display:block;border:0;max-width:180px;height:auto;" />
       </td>
     </tr></table>`;
+}
+
+function socialLinks() {
+  const socials: Array<{ cid: string; alt: string; url: string }> = [
+    { cid: 'cid:atypik-social-facebook', alt: 'Facebook', url: process.env.EMAIL_SOCIAL_FACEBOOK || appUrl() },
+    { cid: 'cid:atypik-social-instagram', alt: 'Instagram', url: process.env.EMAIL_SOCIAL_INSTAGRAM || appUrl() },
+    { cid: 'cid:atypik-social-linkedin', alt: 'LinkedIn', url: process.env.EMAIL_SOCIAL_LINKEDIN || appUrl() },
+    { cid: 'cid:atypik-social-whatsapp', alt: 'WhatsApp', url: process.env.EMAIL_SOCIAL_WHATSAPP || appUrl() },
+  ];
+  const cells = socials
+    .filter(s => s.url)
+    .map(s => `<td style="padding-left:10px;"><a href="${escapeHtml(s.url)}" style="display:block;"><img src="${s.cid}" width="32" height="32" alt="${s.alt}" style="display:block;border:0;width:32px;height:32px;"></a></td>`)
+    .join('');
+  if (!cells) return '';
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:24px;"><tr>${cells}</tr></table>`;
 }
 
 function ctaButton(label: string, url: string) {
@@ -99,14 +114,15 @@ export function renderLayout(contentHtml: string, opts: RenderOptions = {}) {
 <body style="margin:0;padding:0;background:${RAIL};">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${safePreview}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${RAIL}"><tr><td align="center" style="padding:24px 12px;">
-<table role="presentation" class="w" width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:600px;max-width:600px;border-top:6px solid ${CORAL};">
+<table role="presentation" class="w" width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:600px;max-width:600px;border:1px solid ${LINE};border-radius:8px;">
 
-  <tr><td class="px" style="padding:28px 40px 0 40px;">${brandHeader()}</td></tr>
-  <tr><td class="px" style="padding:36px 40px 44px 40px;">${contentHtml}</td></tr>
+  <tr><td class="px" style="padding:32px 40px 0 40px;">${brandHeader()}</td></tr>
+  <tr><td class="px" style="padding:32px 40px 44px 40px;">${contentHtml}</td></tr>
 
-  <tr><td bgcolor="${RAIL}" class="px" style="background:${RAIL};padding:0 40px 36px 40px;border-top:1px solid ${LINE};">
-    <p style="margin:28px 0 0 0;font-family:${TEXT};font-size:13px;line-height:1.6;color:${MUTE};">Vous recevez cet e-mail car vous utilisez Atypik Driver.<br>
-      <a href="${appUrl()}" style="color:${MUTE};">Atypik Driver</a> — Pour des enfants exceptionnels</p>
+  <tr><td bgcolor="${RAIL}" class="px" style="background:${RAIL};padding:28px 40px 36px 40px;border-top:1px solid ${LINE};">
+    <p style="margin:0;font-family:${TEXT};font-size:13px;line-height:1.6;color:${MUTE};">Vous recevez cet e-mail car vous utilisez Atypik Driver.<br>
+      <a href="${appUrl()}" style="color:${MUTE};text-decoration:underline;">atypik-driver.com</a> &nbsp;·&nbsp; <a href="mailto:contact@atypik-driver.com" style="color:${MUTE};text-decoration:underline;">Nous contacter</a> &nbsp;·&nbsp; <a href="${appUrl()}/privacy" style="color:${MUTE};text-decoration:underline;">Confidentialité</a></p>
+    ${socialLinks()}
   </td></tr>
 
 </table>
