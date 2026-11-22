@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -36,8 +36,6 @@ import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { useToast } from '@/hooks/use-toast';
 import { getAuthErrorMessage } from '@/lib/auth/auth-errors';
 import { ChevronLeft, Eye, EyeOff, CreditCard, ShieldCheck, Check } from 'lucide-react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/firebase/ClientApp';
 
 const inputClasses =
   'h-11 rounded-lg border-input bg-background/50 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/15 focus-visible:ring-offset-0';
@@ -214,48 +212,6 @@ export function RegisterForm() {
   };
 
   const { regions } = useRegion();
-  const [selectedRegionId, setSelectedRegionId] = useState('');
-  const [validatedDriver, setValidatedDriver] = useState<any | null>(null);
-  const [regionStatus, setRegionStatus] = useState<'free' | 'verified' | 'pending' | null>(null);
-
-  useEffect(() => {
-    if (!selectedRegionId) {
-      setValidatedDriver(null);
-      setRegionStatus(null);
-      return;
-    }
-
-    const fetchValidatedDriver = async () => {
-      const q = query(
-        collection(db, 'users'),
-        where('role', '==', 'driver'),
-        where('regionId', '==', selectedRegionId),
-        where('status', '==', 'validated')
-      );
-      const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        setValidatedDriver(snapshot.docs[0].data());
-        setRegionStatus('verified');
-      } else {
-        const pendingQ = query(
-          collection(db, 'users'),
-          where('role', '==', 'driver'),
-          where('regionId', '==', selectedRegionId),
-          where('status', '==', 'pending')
-        );
-        const pendingSnapshot = await getDocs(pendingQ);
-        if (!pendingSnapshot.empty) {
-          setValidatedDriver(null);
-          setRegionStatus('pending');
-        } else {
-          setValidatedDriver(null);
-          setRegionStatus('free');
-        }
-      }
-    };
-
-    fetchValidatedDriver();
-  }, [selectedRegionId]);
 
   const renderPasswordToggle = (
     visible: boolean,
@@ -627,10 +583,7 @@ export function RegisterForm() {
                       <FormLabel className="text-sm font-medium">Région</FormLabel>
                       <Select
                         value={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedRegionId(value);
-                        }}
+                        onValueChange={field.onChange}
                       >
                         <FormControl>
                           <SelectTrigger className={inputClasses}>

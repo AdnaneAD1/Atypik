@@ -354,9 +354,12 @@ export const useDriverSelection = () => {
       // Charger les chauffeurs de la région
       loadDriversByRegion();
       
-      // Charger le chauffeur sélectionné si disponible
+      // Charger le chauffeur sélectionné si disponible, sinon réinitialiser
+      // (désassignation admin propagée en temps réel via le profil)
       if (user.selectedDriverId) {
         loadSelectedDriver(user.selectedDriverId);
+      } else {
+        setState(prev => ({ ...prev, selectedDriver: null }));
       }
     }
   }, [user, userRegion, loadDriversByRegion, loadSelectedDriver]);
