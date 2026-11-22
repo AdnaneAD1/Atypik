@@ -13,7 +13,7 @@ export const EMAIL_SOCIAL_CIDS = {
 
 function brandAttachments() {
   const files: Array<{ cid: string; rel: string }> = [
-    { cid: EMAIL_LOGO_CID, rel: 'logo-horizontal.png' },
+    { cid: EMAIL_LOGO_CID, rel: 'logo-atypik.png' },
     { cid: EMAIL_SOCIAL_CIDS.facebook, rel: 'email/facebook.png' },
     { cid: EMAIL_SOCIAL_CIDS.instagram, rel: 'email/instagram.png' },
     { cid: EMAIL_SOCIAL_CIDS.linkedin, rel: 'email/linkedin.png' },
