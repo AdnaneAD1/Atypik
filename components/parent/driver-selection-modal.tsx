@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Phone, AlertTriangle, Loader2 } from 'lucide-react';
+import { X, Star, Phone, AlertTriangle, Loader2, UserRound } from 'lucide-react';
 import { useDriverSelection, Driver } from '@/hooks/use-driver-selection';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -37,14 +37,6 @@ export const DriverSelectionModal = ({
       setIsSelecting(false);
     }
   };
-
-  const getDriverInitials = (name: string) =>
-    name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
 
   return (
     <AnimatePresence>
@@ -134,7 +126,7 @@ export const DriverSelectionModal = ({
                         className={cn(
                           'relative flex h-full flex-col gap-4 rounded-[6px_28px_6px_28px] border p-5 text-left transition-colors',
                           selected
-                            ? 'border-primary bg-primary/5'
+                            ? 'border-primary bg-white'
                             : 'border-border hover:border-slate-300 hover:bg-muted/30'
                         )}
                       >
@@ -142,8 +134,8 @@ export const DriverSelectionModal = ({
                         <div className="flex items-start gap-4">
                           <Avatar className="h-16 w-16 shrink-0 border-2 border-white">
                             <AvatarImage src={driver.avatar} alt={driver.name} />
-                            <AvatarFallback className="bg-primary/10 font-brand text-xl font-bold text-primary">
-                              {getDriverInitials(driver.name)}
+                            <AvatarFallback className="bg-slate-100">
+                              <UserRound className="h-7 w-7 text-slate-400" />
                             </AvatarFallback>
                           </Avatar>
 
