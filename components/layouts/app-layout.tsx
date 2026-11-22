@@ -516,7 +516,7 @@ export function AppLayout({ children, allowedRoles }: AppLayoutProps) {
 
           {/* Page Content */}
           <div className={`min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8 ${
-            isMobile ? 'pb-24' : 'pb-6'
+            isMobile ? 'pb-[110px]' : 'pb-6'
           } transition-all duration-300`}>
             <AnimatePresence mode="wait">
               <motion.div

@@ -297,3 +297,34 @@
   .ld .ld-road,.ld .ld-car,.ld .ld-wheel,.ld .ld-speed,.ld-dots i{animation:none}
   .ld .ld-speed{opacity:.5}
 }
+
+/* =====================================================
+   Menu du bas mobile — taxi qui roule vers l'onglet actif
+   ===================================================== */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:hsl(var(--background));border-top:3px dotted #b8c3d1;padding-bottom:env(safe-area-inset-bottom);--i:0;--n:5}
+.tabbar ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr))}
+.tab{position:relative;width:100%;background:none;border:0;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:68px;padding:10px 2px 8px;color:hsl(var(--muted-foreground));font-size:12px;line-height:1.1;font-weight:700;transition:color .2s,transform .12s;-webkit-tap-highlight-color:transparent;user-select:none}
+.tab:active{transform:scale(.94)}
+.tab svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.tab svg .f{fill:transparent;transition:fill .2s}
+.tab[aria-current="page"]{color:hsl(var(--primary))}
+.tab[aria-current="page"] svg .f{fill:#ffe9e9}
+.tab[aria-current="page"] svg{stroke-width:2.2}
+
+/* Badges : pastille corail + point live menthe */
+.tab-badge{position:absolute;top:6px;left:calc(50% + 6px);min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:hsl(var(--primary));color:#fff;font-size:11px;font-weight:700;line-height:19px;text-align:center;border:2px solid hsl(var(--background));box-sizing:content-box}
+.tab-live{position:absolute;top:10px;left:calc(50% + 9px);width:11px;height:11px;border-radius:50%;background:hsl(183 72% 38%);border:2px solid hsl(var(--background));box-sizing:content-box}
+.tab-live::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid hsl(183 72% 38%);animation:tab-ping 1.8s ease-out infinite}
+@keyframes tab-ping{from{opacity:.8;transform:scale(.6)}to{opacity:0;transform:scale(1.6)}}
+
+/* Le taxi qui roule jusqu'à l'onglet actif */
+.tab-taxi{position:absolute;top:-24px;left:calc((var(--i) + .5) * (100% / var(--n)));width:38px;height:23px;margin-left:-19px;pointer-events:none;transition:left .5s cubic-bezier(.3,1.25,.5,1)}
+.tab-taxi svg{display:block;width:100%;height:100%;transition:transform .2s}
+.tab-taxi.back svg{transform:scaleX(-1)}
+.tab-taxi .w{transform-box:fill-box;transform-origin:center}
+.tabbar.go .tab-taxi .w{animation:ld-spin .25s linear infinite}
+.sr{position:absolute;left:-9999px}
+
+@media (prefers-reduced-motion:reduce){
+  .tab-taxi{transition:none}.tab-live::after{animation:none}.tabbar.go .tab-taxi .w{animation:none}.tab{transition:none}
+}
