@@ -11,6 +11,7 @@ import { DriverSubscriptionPanel } from '@/components/profile/driver-subscriptio
 import { DriverSelectionModal } from './driver-selection-modal';
 import { useToast } from '@/hooks/use-toast';
 import { useTransport, TransportEvent } from '@/hooks/use-transport';
+import { useChildren } from '@/hooks/use-children';
 import { useSubscription } from '@/hooks/use-subscription';
 import { useDriverSelection, Driver } from '@/hooks/use-driver-selection';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -84,6 +85,17 @@ export function ParentCalendar() {
   // Utiliser les hooks d'authentification et de sélection de chauffeur
   const { user } = useAuth();
   const { selectedDriver, hasSelectedDriver } = useDriverSelection();
+
+  // Enfants du parent — pour afficher leur vraie photo dans le planning
+  const { children } = useChildren();
+
+  const childAvatarFor = useCallback((t: TransportEvent): string | null => {
+    return (
+      children.find(c => c.id === t.childId)?.avatar ??
+      children.find(c => c.name === t.childName)?.avatar ??
+      null
+    );
+  }, [children]);
 
   // Fonction pour ajouter un nouvel événement de transport
   const handleAddEvent = async (data: any) => {
@@ -379,6 +391,7 @@ export function ParentCalendar() {
         )}
       >
         <Avatar className={cn('h-5 w-5 shrink-0 border-2 border-white ring-1', accent.ring.replace('border-', 'ring-'))}>
+          <AvatarImage src={childAvatarFor(t) ?? undefined} alt={t.childName} />
           <AvatarFallback className={cn('text-[8px] font-bold', typeAvatarClass(t.transportType))}>
             {initials(t.childName)}
           </AvatarFallback>
@@ -479,6 +492,7 @@ export function ParentCalendar() {
               {/* Enfant — style liste d'invités */}
               <div className="mt-3 flex items-center gap-3">
                 <Avatar className="h-8 w-8 border">
+                  <AvatarImage src={childAvatarFor(transport) ?? undefined} alt={transport.childName} />
                   <AvatarFallback className={cn('text-[10px] font-bold', typeAvatarClass(transport.transportType))}>
                     {initials(transport.childName)}
                   </AvatarFallback>
@@ -708,6 +722,7 @@ export function ParentCalendar() {
               {/* Profil centré */}
               <div className="flex flex-col items-center px-5 pb-5 pt-10 text-center">
                 <Avatar className={cn('h-20 w-20 border-4 border-white ring-2', detailAccent.ring.replace('border-', 'ring-'))}>
+                  <AvatarImage src={childAvatarFor(selectedTransport) ?? undefined} alt={selectedTransport.childName} />
                   <AvatarFallback className={cn('text-lg font-bold', typeAvatarClass(selectedTransport.transportType))}>
                     {initials(selectedTransport.childName)}
                   </AvatarFallback>
