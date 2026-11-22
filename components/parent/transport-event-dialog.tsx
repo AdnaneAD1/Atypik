@@ -337,7 +337,7 @@ export function TransportEventDialog({
       <DialogContent className="w-[calc(100vw-2rem)] max-h-[92dvh] gap-0 overflow-hidden p-0 sm:max-w-[880px]">
         <FormDialogShell image="/formations-side.jpg" caption="Chaque trajet, en toute sérénité">
         <DialogHeader className="sticky top-0 z-20 -mx-5 -mt-5 border-b bg-background px-5 pb-3 pt-5 sm:-mx-6 sm:-mt-6 sm:px-6 sm:pt-6">
-          <DialogTitle>Programmer un transport</DialogTitle>
+          <DialogTitle className="font-brand text-2xl font-bold">Programmer un transport</DialogTitle>
           <DialogDescription className="flex flex-col space-y-1">
             <span>Pour le {selectedDate ? format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr }) : ''}</span>
             {isPastDate && (
@@ -349,7 +349,11 @@ export function TransportEventDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Section : enfant & horaire */}
+            <section>
+              <h3 className="font-brand text-base font-bold">Enfant &amp; horaire</h3>
+              <div className="mt-4 space-y-4 border-t-2 border-slate-900 pt-4">
             {/* Enfant et type de transport */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -447,24 +451,13 @@ export function TransportEventDialog({
                 )}
               />
             </div>
+              </div>
+            </section>
 
-            {/* Motif (optionnel) */}
-            <FormField
-              control={form.control}
-              name="motif"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Motif</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: RDV à l&apos;hôpital, visite médicale, etc." required {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            
-
+            {/* Section : itinéraire */}
+            <section>
+              <h3 className="font-brand text-base font-bold">Itinéraire</h3>
+              <div className="mt-4 space-y-4 border-t-2 border-slate-900 pt-4">
             {/* Adresses: responsive grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Champ Lieu de départ */}
@@ -519,10 +512,31 @@ export function TransportEventDialog({
             </div>
             {/* Distance affichée */}
             {distance !== null && distance !== undefined && (
-              <div className="text-sm text-primary mt-2">
-                Distance estimée : {(distance / 1000).toFixed(2)} km
-              </div>
+              <p className="text-sm font-medium text-brand-teal">
+                Distance estimée : {(distance / 1000).toFixed(1)} km
+              </p>
             )}
+              </div>
+            </section>
+
+            {/* Section : motif */}
+            <section>
+              <h3 className="font-brand text-base font-bold">Motif</h3>
+              <div className="mt-4 border-t-2 border-slate-900 pt-4">
+                <FormField
+                  control={form.control}
+                  name="motif"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input placeholder="Ex: RDV à l&apos;hôpital, visite médicale, etc." required {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </section>
 
 
             <DialogFooter className="sticky bottom-0 z-20 -mx-5 -mb-5 flex-col-reverse gap-2 border-t bg-background px-5 py-4 sm:-mx-6 sm:-mb-6 sm:flex-row sm:justify-end sm:px-6">
