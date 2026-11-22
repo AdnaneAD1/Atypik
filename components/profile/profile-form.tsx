@@ -36,6 +36,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertTriangle, Trash2, Loader2 } from "lucide-react";
+import { DriverSubscriptionPanel } from "@/components/profile/driver-subscription-panel";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -355,6 +356,8 @@ export function ProfileForm() {
           </Form>
         </CardContent>
       </Card>
+
+      <DriverSubscriptionPanel />
 
       <Card className="shadow-sm">
         <CardHeader>

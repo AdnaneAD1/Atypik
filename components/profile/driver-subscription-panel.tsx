@@ -1,0 +1,260 @@
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Loader2, UserRound } from 'lucide-react';
+import { useAuth } from '@/lib/auth/auth-context';
+import { useDriverSelection } from '@/hooks/use-driver-selection';
+import { useSubscription } from '@/hooks/use-subscription';
+import { useToast } from '@/hooks/use-toast';
+import { DriverSelectionModal } from '@/components/parent/driver-selection-modal';
+import { SubscriptionModal } from '@/components/parent/subscription-modal';
+import type { Driver } from '@/hooks/use-driver-selection';
+
+const formatDate = (ts?: { toDate?: () => Date }) => {
+  const d = ts?.toDate?.();
+  return d ? d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+};
+
+export function DriverSubscriptionPanel() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { selectedDriver, loading: driversLoading } = useDriverSelection();
+  const {
+    subscription,
+    hasActiveSubscription,
+    cancelSubscription,
+    loadSubscription,
+    loading: subscriptionLoading,
+  } = useSubscription();
+
+  const [driverModalOpen, setDriverModalOpen] = useState(false);
+  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  if (user?.role !== 'parent') return null;
+
+  const stats = selectedDriver?.stats;
+  const rating = stats?.averageRating ?? 0;
+  const reviewsCount = stats?.totalReviews ?? 0;
+  const hasReviews = reviewsCount > 0;
+  const renewDate = formatDate(subscription?.nextBillingDate) ?? formatDate(subscription?.endDate);
+
+  const handleDriverSelected = (driver: Driver) => {
+    toast({
+      title: 'Chauffeur sélectionné',
+      description: `${driver.name} a été sélectionné comme votre chauffeur.`,
+    });
+  };
+
+  const handleCancelSubscription = async () => {
+    setIsCancelling(true);
+    try {
+      await cancelSubscription();
+      setCancelDialogOpen(false);
+      toast({
+        title: 'Abonnement arrêté',
+        description: 'Votre abonnement reste actif jusqu’à sa date de fin.',
+      });
+    } catch {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d’arrêter l’abonnement pour le moment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  return (
+    <section aria-label="Chauffeur et abonnement">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* Chauffeur sélectionné */}
+        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border shadow-none">
+          <CardContent className="flex flex-1 flex-col gap-5 p-6">
+            <h2 className="font-brand text-xl font-bold">Chauffeur sélectionné</h2>
+
+            {driversLoading ? (
+              <div className="flex flex-1 items-center justify-center py-6">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : selectedDriver ? (
+              <div className="flex items-center gap-5">
+                <Avatar className="h-16 w-16 shrink-0">
+                  <AvatarImage src={selectedDriver.avatar} alt={selectedDriver.name} />
+                  <AvatarFallback className="bg-slate-100">
+                    <UserRound className="h-7 w-7 text-slate-400" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <h3 className="truncate font-brand text-xl font-bold leading-tight">
+                    {selectedDriver.name}
+                  </h3>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                    {selectedDriver.status === 'verified' && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Vérifié
+                      </span>
+                    )}
+                    {hasReviews && (
+                      <span className="flex items-center gap-2">
+                        <span className="flex gap-0.5" aria-hidden="true">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <span
+                              key={i}
+                              className={`h-2 w-3.5 rounded-sm ${i < Math.round(rating) ? 'bg-amber-400' : 'bg-amber-200/60'}`}
+                            />
+                          ))}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {rating.toFixed(1).replace('.', ',')} ({reviewsCount} avis)
+                        </span>
+                      </span>
+                    )}
+                    {!hasReviews && (
+                      <span className="text-xs text-muted-foreground">Pas encore d’avis</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-5">
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-100">
+                  <UserRound className="h-7 w-7 text-slate-400" />
+                </span>
+                <div>
+                  <h3 className="font-brand text-xl font-bold leading-tight">Aucun chauffeur</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Choisissez un chauffeur pour vos transports.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              className="mt-auto h-11 self-start border-slate-900 text-slate-900 hover:bg-slate-100"
+              onClick={() => setDriverModalOpen(true)}
+              disabled={driversLoading}
+            >
+              {selectedDriver ? 'Changer de chauffeur' : 'Choisir un chauffeur'}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Mon abonnement */}
+        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border shadow-none">
+          <CardContent className="flex flex-1 flex-col gap-4 p-6">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="font-brand text-xl font-bold">Mon abonnement</h2>
+              {hasActiveSubscription && subscription && (
+                <span className="rounded-full bg-primary px-3.5 py-1 text-sm font-bold capitalize text-white">
+                  {subscription.type}
+                </span>
+              )}
+            </div>
+
+            {subscriptionLoading ? (
+              <div className="flex flex-1 items-center justify-center py-6">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : hasActiveSubscription && subscription ? (
+              <>
+                <p className="font-brand text-3xl font-bold leading-tight">
+                  {subscription.type === 'premium' ? 'Transports illimités' : '2 transports par semaine'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {subscription.autoRenew && renewDate
+                    ? `Renouvellement automatique le ${renewDate}`
+                    : renewDate
+                      ? `Actif jusqu’au ${renewDate}`
+                      : 'Abonnement actif'}
+                  {subscription.price ? ` — ${subscription.price} €` : ''}
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-auto h-11 self-start border-primary text-primary hover:bg-primary/5"
+                  onClick={() => setCancelDialogOpen(true)}
+                >
+                  Arrêter l’abonnement
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="font-brand text-3xl font-bold leading-tight">Aucune formule active</p>
+                <p className="text-sm text-muted-foreground">
+                  Choisissez une formule pour programmer des transports.
+                </p>
+                <Button
+                  className="mt-auto h-11 self-start bg-primary text-white hover:bg-primary/90"
+                  onClick={() => setSubscriptionModalOpen(true)}
+                >
+                  Choisir une formule
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Modals */}
+      <DriverSelectionModal
+        isOpen={driverModalOpen}
+        onClose={() => setDriverModalOpen(false)}
+        onDriverSelected={handleDriverSelected}
+      />
+      <SubscriptionModal
+        isOpen={subscriptionModalOpen}
+        onClose={() => setSubscriptionModalOpen(false)}
+        onSubscriptionCreated={() => {
+          loadSubscription();
+          setSubscriptionModalOpen(false);
+        }}
+      />
+
+      {/* Confirmation d'arrêt */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Arrêter l’abonnement ?</DialogTitle>
+            <DialogDescription>
+              Votre formule restera active jusqu’à sa date de fin. Vous ne serez plus débité ensuite.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setCancelDialogOpen(false)} disabled={isCancelling}>
+              Conserver
+            </Button>
+            <Button
+              className="bg-primary text-white hover:bg-primary/90"
+              onClick={handleCancelSubscription}
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Arrêt en cours...
+                </>
+              ) : (
+                'Confirmer l’arrêt'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}
