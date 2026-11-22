@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Download, X } from 'lucide-react';
 import type { MessageAttachment } from '@/hooks/use-messages';
@@ -39,8 +39,9 @@ export function DriverMediaViewer({ items, initialIndex, open, onClose, onDownlo
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-[95vw] sm:max-w-4xl border-0 bg-black/95 p-0 [&>button]:hidden">
-        <div className="relative flex h-[80vh] flex-col">
+      <DialogContent className="flex max-w-5xl flex-col gap-0 border-0 bg-black/95 p-0 sm:h-[86vh] sm:w-[96vw] [&>button]:hidden">
+        <DialogTitle className="sr-only">{item.name}</DialogTitle>
+        <div className="relative flex min-h-0 flex-1 flex-col">
           {/* Barre supérieure */}
           <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-3">
             <span className="text-sm font-medium text-white/80">

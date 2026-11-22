@@ -14,6 +14,9 @@ import { CarLoader } from '@/components/ui/loader';
 import { useDocuments, Document } from '@/hooks/use-documents';
 import { AddDocumentDialog } from './add-document-dialog';
 import { ShareDocumentDialog } from './share-document-dialog';
+import { DocumentViewer } from '@/components/ui/document-viewer';
+import { DriverMediaViewer } from '@/components/driver/driver-media-viewer';
+import { getFileKind } from '@/lib/files/file-kind';
 import { cn } from '@/lib/utils';
 
 function docTypeLabel(type?: string) {
@@ -31,6 +34,7 @@ export function ParentDocuments() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
   const {
@@ -87,6 +91,22 @@ export function ParentDocuments() {
     setSelectedDocument(doc);
     setIsShareDialogOpen(true);
   };
+
+  // Aperçu dans l'app : PDF → visionneuse pdf.js, image/vidéo → visionneuse
+  // média. Les formats non visualisables (docx, zip…) sont téléchargés.
+  const openPreview = (doc: Document) => {
+    if (!doc.url) return;
+    if (getFileKind(doc) === 'other') {
+      void downloadDocument(doc);
+      return;
+    }
+    setPreviewDoc(doc);
+  };
+
+  const previewKind = previewDoc ? getFileKind(previewDoc) : 'other';
+  const previewAttachment = previewDoc
+    ? { id: previewDoc.id, name: previewDoc.name, url: previewDoc.url, type: previewDoc.type, size: 0 }
+    : null;
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-2 sm:px-4 md:px-6">
@@ -222,7 +242,15 @@ export function ParentDocuments() {
                 {/* Titre + méta + tags */}
                 <div className="min-w-0 sm:col-start-2">
                   <h2 className="truncate font-brand text-lg font-bold leading-tight text-slate-900">
-                    {doc.name}
+                    <button
+                      type="button"
+                      onClick={() => openPreview(doc)}
+                      disabled={!doc.url}
+                      title={doc.url ? `Aperçu de ${doc.name}` : undefined}
+                      className="max-w-full truncate text-left transition-colors hover:text-brand-coral disabled:opacity-60"
+                    >
+                      {doc.name}
+                    </button>
                   </h2>
                   <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
                     <span>{doc.type}</span>
@@ -259,7 +287,7 @@ export function ParentDocuments() {
                   </button>
                   <button
                     className="flex min-h-[44px] items-center gap-1.5 px-2.5 text-sm font-bold text-slate-900 underline decoration-2 underline-offset-4 hover:decoration-brand-yellow disabled:text-muted-foreground"
-                    onClick={() => window.open(doc.url, '_blank')}
+                    onClick={() => openPreview(doc)}
                     disabled={!doc.url}
                     aria-label={`Voir ${doc.name}`}
                   >
@@ -329,6 +357,27 @@ export function ParentDocuments() {
         document={selectedDocument}
         onDocumentShared={handleShareDocument}
       />
+
+      {/* Aperçu PDF (visionneuse pdf.js authentifiée) */}
+      {previewDoc && previewAttachment && previewKind === 'pdf' && (
+        <DocumentViewer
+          item={previewAttachment}
+          open
+          onClose={() => setPreviewDoc(null)}
+          onDownload={() => void downloadDocument(previewDoc)}
+        />
+      )}
+
+      {/* Aperçu image / vidéo */}
+      {previewDoc && previewAttachment && previewKind !== 'pdf' && (
+        <DriverMediaViewer
+          items={[previewAttachment]}
+          initialIndex={0}
+          open
+          onClose={() => setPreviewDoc(null)}
+          onDownload={() => void downloadDocument(previewDoc)}
+        />
+      )}
     </div>
   );
 }

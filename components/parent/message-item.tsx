@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DriverMediaViewer } from '@/components/driver/driver-media-viewer';
 import { DocumentViewer } from '@/components/ui/document-viewer';
+import { getFileKind } from '@/lib/files/file-kind';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -40,20 +41,12 @@ export function MessageItem({
   const [docViewer, setDocViewer] = useState<MessageAttachment | null>(null);
   const formattedTime = message.timestamp ? format(new Date(message.timestamp), 'HH:mm', { locale: fr }) : '';
 
-  // Le champ `type` stocké peut être un MIME (image/jpeg) ou une extension (JPG) — on gère les deux
-  const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif', 'heic', 'heif'];
-  const VIDEO_EXTS = ['mp4', 'mov', 'webm', 'mkv', 'avi', 'm4v'];
-  const extOf = (a: MessageAttachment) => {
-    const fromType = a.type && !a.type.includes('/') ? a.type : '';
-    const fromName = a.name?.split('.').pop() || '';
-    return (fromType || fromName).toLowerCase();
-  };
-  const isVideo = (a: MessageAttachment) =>
-    a.type?.startsWith('video/') || VIDEO_EXTS.includes(extOf(a));
-  const isPdf = (a: MessageAttachment) =>
-    a.type === 'application/pdf' || extOf(a) === 'pdf';
-  const isMedia = (a: MessageAttachment) =>
-    a.type?.startsWith('image/') || isVideo(a) || IMAGE_EXTS.includes(extOf(a));
+  // `type` stocké peut être un MIME (image/jpeg), une extension (JPG) ou vide —
+  // getFileKind tranche aussi via l'extension de l'URL/nom du fichier
+  const kindOf = (a: MessageAttachment) => getFileKind({ name: a.name, url: a.url, type: a.type });
+  const isVideo = (a: MessageAttachment) => kindOf(a) === 'video';
+  const isPdf = (a: MessageAttachment) => kindOf(a) === 'pdf';
+  const isMedia = (a: MessageAttachment) => ['image', 'video'].includes(kindOf(a));
   const mediaAttachments = (message.attachments ?? []).filter(isMedia);
   const fileAttachments = (message.attachments ?? []).filter(a => !isMedia(a));
   const showCounter = mediaAttachments.length > 3;

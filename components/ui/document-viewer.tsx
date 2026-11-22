@@ -85,7 +85,7 @@ export function DocumentViewer({ item, open, onClose, onDownload }: DocumentView
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="flex h-[92dvh] w-[96vw] max-w-5xl flex-col gap-0 overflow-hidden border-0 bg-neutral-900 p-0 sm:h-[88vh] [&>button]:hidden">
+      <DialogContent className="flex max-w-5xl flex-col gap-0 overflow-hidden border-0 bg-neutral-900 p-0 sm:h-[88vh] sm:w-[96vw] [&>button]:hidden">
         <DialogTitle className="sr-only">{item.name}</DialogTitle>
 
         {/* Barre d'outils — style viewer natif */}
