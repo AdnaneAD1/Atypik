@@ -32,8 +32,6 @@ import { FormDialogShell } from '@/components/ui/form-dialog-shell';
 import { useChildren } from '@/hooks/use-children';
 import { useAuth } from '@/lib/auth/auth-context';
 import { BanAddressAutocomplete } from '@/components/ui/ban-address-autocomplete';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/firebase/ClientApp';
 import { authFetch } from '@/lib/api/auth-fetch';
 
 // Fonction pour comparer les dates sans tenir compte de l'heure
@@ -255,13 +253,15 @@ export function TransportEventDialog({
           try {
             if (user?.selectedDriverId) {
               const notifTitle = 'Transport programmé';
-              const notifBody = `${childName} • ${data.transportType} le ${format(data.date, 'dd/MM/yyyy', { locale: fr })} à ${data.time}`;
+              const notifBody = `${childName} • ${data.transportType} le ${format(data.date, 'dd/MM/yyyy', { locale: fr })} à ${data.time} • ${from.address} → ${to.address}`;
+              // Un seul appel : notif in-app + push + e-mail brandé (best-effort côté serveur)
               await authFetch('/api/notifications/send', {
                 method: 'POST',
                 body: JSON.stringify({
                   userId: user.selectedDriverId,
                   title: notifTitle,
                   body: notifBody,
+                  clickAction: '/driver/calendar',
                   data: {
                     type: 'transport',
                     childId: data.childId,
@@ -276,42 +276,6 @@ export function TransportEventDialog({
             console.error('Erreur envoi notification push:', e);
           }
 
-          // Envoi email (best-effort) au chauffeur sélectionné
-          try {
-            const driverId = user?.selectedDriverId;
-            if (driverId) {
-              const driverSnap = await getDoc(doc(db, 'users', driverId));
-              const driverData = driverSnap.exists() ? (driverSnap.data() as any) : null;
-              const driverEmail: string | undefined = driverData?.email;
-              const driverName: string = driverData?.displayName || driverData?.name || 'Chauffeur';
-              if (driverEmail) {
-                const subject = `Nouveau transport programmé • ${childName} • ${format(data.date, 'dd/MM/yyyy', { locale: fr })}`;
-                const messageHtml = `
-                  <p style="margin:4px 0;">Bonjour ${driverName},</p>
-                  <p style="margin:4px 0;">Un parent a programmé un transport.</p>
-                  <p style="margin:4px 0;"><strong>Enfant:</strong> ${childName}</p>
-                  <p style="margin:4px 0;"><strong>Date:</strong> ${format(data.date, 'dd/MM/yyyy', { locale: fr })} à ${data.time}</p>
-                  <p style="margin:4px 0;"><strong>Type:</strong> ${data.transportType}</p>
-                  <p style="margin:4px 0;"><strong>Motif:</strong> ${data.motif}</p>
-                  <p style="margin:4px 0;"><strong>Délai d'attente:</strong> ${typeof data.waitingTime === 'number' ? data.waitingTime : ''} min</p>
-                  <p style="margin:4px 0;"><strong>Départ:</strong> ${from.address}</p>
-                  <p style="margin:4px 0;"><strong>Arrivée:</strong> ${to.address}</p>
-                  ${typeof distance === 'number' ? `<p style=\"margin:4px 0;\"><strong>Distance estimée:</strong> ${(distance / 1000).toFixed(2)} km</p>` : ''}
-                `;
-                await authFetch('/api/email/send', {
-                  method: 'POST',
-                  body: JSON.stringify({
-                    to: driverEmail,
-                    subject,
-                    template: 'generic',
-                    variables: { title: 'Nouveau transport programmé', messageHtml },
-                  }),
-                });
-              }
-            }
-          } catch (e) {
-            console.error('Erreur envoi email au chauffeur:', e);
-          }
           form.reset();
           setFrom(null); setTo(null); setDistance(null);
           onOpenChange(false);

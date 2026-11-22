@@ -60,9 +60,10 @@ export async function POST(req: Request) {
       if (recipientEmail) {
         const { sendEmail } = await import('@/lib/email');
         const { buildEmailHtml } = await import('@/lib/email-templates');
+        const appUrl = (process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin).replace(/\/$/, '');
         const ctaUrl = clickAction
-          ? (clickAction.startsWith('http') ? clickAction : new URL(clickAction, req.url).toString())
-          : new URL('/', req.url).toString();
+          ? (clickAction.startsWith('http') ? clickAction : `${appUrl}${clickAction.startsWith('/') ? '' : '/'}${clickAction}`)
+          : `${appUrl}/`;
         const notifType = data?.type;
         const html = notifType === 'driverApproved'
           ? buildEmailHtml('accountApproved', { name: userSnap.get('displayName') || userSnap.get('name') })
@@ -98,10 +99,11 @@ export async function POST(req: Request) {
       }
     }
 
+    const pushAppUrl = (process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin).replace(/\/$/, '');
     const resolvedClickAction = clickAction
       ? clickAction.startsWith('http://') || clickAction.startsWith('https://')
         ? clickAction
-        : new URL(clickAction, req.url).toString()
+        : `${pushAppUrl}${clickAction.startsWith('/') ? '' : '/'}${clickAction}`
       : undefined;
 
     if (resolvedClickAction) {
