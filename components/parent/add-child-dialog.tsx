@@ -119,7 +119,7 @@ export function AddChildDialog({ open, onOpenChange, onAddChild }: AddChildDialo
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={`${formDialogContentClass} sm:max-w-[760px]`}>
-        <FormDialogShell image="/auth-side.jpg" caption="Pour des enfants exceptionnels">
+        <FormDialogShell caption="Pour des enfants exceptionnels">
               <DialogHeader>
                 <DialogTitle>Ajouter un enfant</DialogTitle>
                 <DialogDescription>

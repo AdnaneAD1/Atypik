@@ -119,12 +119,7 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={`${formDialogContentClass} sm:max-w-[760px]`}>
-        <FormDialogShell
-          image="/pas-de-mission.png"
-          caption="Vos documents, toujours à portée de main"
-          imageClassName="object-contain p-6"
-          panelClassName="bg-brand-yellow/15"
-        >
+        <FormDialogShell caption="Vos documents, toujours à portée de main">
         <DialogHeader>
           <DialogTitle>Ajouter un document</DialogTitle>
         </DialogHeader>

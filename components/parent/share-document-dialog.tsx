@@ -284,12 +284,7 @@ export function ShareDocumentDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={`${formDialogContentClass} sm:max-w-[800px]`}>
-        <FormDialogShell
-          image="/pas-de-mission.png"
-          caption="Partagez en toute confiance"
-          imageClassName="object-contain p-6"
-          panelClassName="bg-brand-pink/15"
-        >
+        <FormDialogShell caption="Partagez en toute confiance">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5" />

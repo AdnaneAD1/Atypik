@@ -148,7 +148,7 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={`${formDialogContentClass} sm:max-w-[760px]`}>
-        <FormDialogShell image="/auth-side.jpg" caption="Pour des enfants exceptionnels">
+        <FormDialogShell caption="Pour des enfants exceptionnels">
         <DialogHeader>
           <DialogTitle>Modifier un enfant</DialogTitle>
           <DialogDescription>

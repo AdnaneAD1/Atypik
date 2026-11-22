@@ -3,31 +3,19 @@ import { describe, expect, it } from 'vitest';
 import { FormDialogShell } from '../form-dialog-shell';
 
 describe('FormDialogShell', () => {
-  it('affiche l’image de marque et son bandeau', () => {
+  it('affiche le bandeau de marque sans panneau image', () => {
     const { container } = render(
-      <FormDialogShell image="/auth-side.jpg" caption="Pour des enfants exceptionnels">
+      <FormDialogShell caption="Pour des enfants exceptionnels">
         <p>contenu</p>
       </FormDialogShell>
     );
-    expect(container.querySelector('img')).toHaveAttribute('src', '/auth-side.jpg');
-    // Le bandeau existe en version mobile (fine bande) et desktop (sur l'image)
-    expect(screen.getAllByText('Pour des enfants exceptionnels').length).toBeGreaterThan(0);
+    expect(screen.getByText('Pour des enfants exceptionnels')).toBeInTheDocument();
+    expect(container.querySelector('img')).toBeNull();
   });
 
-  it('n’affiche pas la photo en bandeau mobile (masquée avant sm)', () => {
-    const { container } = render(
-      <FormDialogShell image="/auth-side.jpg" caption="Test">
-        <p>contenu</p>
-      </FormDialogShell>
-    );
-    const panel = container.querySelector('img')?.closest('div');
-    expect(panel?.className).toContain('sm:block');
-    expect(panel?.className).toContain('hidden');
-  });
-
-  it('rend le contenu du formulaire dans le panneau droit', () => {
+  it('rend le contenu du formulaire', () => {
     render(
-      <FormDialogShell image="/formations-side.jpg" caption="Test">
+      <FormDialogShell caption="Test">
         <label htmlFor="nom">Nom</label>
         <input id="nom" />
       </FormDialogShell>
