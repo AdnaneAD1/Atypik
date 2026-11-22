@@ -162,7 +162,10 @@ export function useDashboard() {
           )
         );
         activeResults.forEach((activeSnapshot) => {
-          if (!activeSnapshot.empty) {
+          const hasActive = activeSnapshot.docs.some(
+            (d) => d.data().status === 'started' || d.data().status === 'in_progress'
+          );
+          if (hasActive) {
             activeTrips++;
           } else {
             upcomingTrips++;
@@ -224,7 +227,11 @@ export function useDashboard() {
           const activeSnap = await getDocs(activeQueryRef);
           activeSnap.forEach(docSnap => {
             const data = docSnap.data();
-            if (data.transportId) activeTransportIds.add(data.transportId);
+            // Ne considérer comme actives que les missions réellement démarrées/en cours,
+            // pas les missions terminées ou abandonnées
+            if (data.transportId && (data.status === 'started' || data.status === 'in_progress')) {
+              activeTransportIds.add(data.transportId);
+            }
           });
         } catch (e) {
           console.error('Erreur lors de la vérification des missions actives:', e);
