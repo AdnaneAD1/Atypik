@@ -54,6 +54,7 @@ const commonFieldsSchema = {
 const parentSchema = z.object({
   ...commonFieldsSchema,
   address: z.string().min(5, 'Adresse trop courte'),
+  regionId: z.string().min(1, 'La région est obligatoire'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',
   path: ['confirmPassword'],
@@ -127,6 +128,7 @@ export function RegisterForm() {
       email: '',
       phone: '',
       address: '',
+      regionId: '',
       password: '',
       confirmPassword: '',
     },
@@ -401,6 +403,29 @@ export function RegisterForm() {
                           className={inputClasses}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={parentForm.control}
+                  name="regionId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Région</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className={inputClasses}>
+                            <SelectValue placeholder="Sélectionnez votre région" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {regions.map(region => (
+                            <SelectItem key={region.id} value={region.id}>{region.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -88,9 +88,12 @@ export default function AdminAssignmentsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       {(() => {
-                        const regionalDrivers = drivers.filter(
-                          (d: any) => d?.regionId && d.regionId === p?.regionId && d?.status === 'verified'
-                        );
+                        // Parents sans regionId (comptes existants / Google) : tous les chauffeurs verifies
+                        const regionalDrivers = p?.regionId
+                          ? drivers.filter(
+                              (d: any) => d?.regionId === p.regionId && d?.status === 'verified'
+                            )
+                          : drivers.filter((d: any) => d?.status === 'verified');
                         return (
                           <>
                             <Select

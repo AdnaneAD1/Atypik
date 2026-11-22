@@ -224,10 +224,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         address: userData.address || null,
         role: role,
         createdAt: serverTimestamp(),
+        regionId: userData.regionId || '',
         ...(role === 'driver' && {
           licenseNumber: userData.licenseNumber || '',
           insuranceNumber: userData.insuranceNumber || '',
-          regionId: userData.regionId || '',
           status: 'pending'
         })
       });
@@ -255,7 +255,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: userCredential.user.email || '',
         name: displayName,
         role: role,
-        regionId: role === 'driver' ? userData.regionId : undefined,
+        regionId: userData.regionId || undefined,
         status: role === 'driver' ? 'pending' : undefined,
       });
       
