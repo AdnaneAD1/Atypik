@@ -28,7 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Child } from '@/hooks/use-children';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { uploadImageToCloudinary, validateFile } from '@/hooks/use-cloudinary';
-import { FormDialogShell } from '@/components/ui/form-dialog-shell';
+import { FormDialogShell, formDialogContentClass } from '@/components/ui/form-dialog-shell';
 
 const formSchema = z.object({
   firstName: z.string().min(2, 'Le prénom doit comporter au moins 2 caractères'),
@@ -147,7 +147,7 @@ export function EditChildDialog({ open, onOpenChange, onEditChild, child }: Edit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] gap-0 overflow-hidden p-0 sm:max-w-[760px]">
+      <DialogContent className={`${formDialogContentClass} sm:max-w-[760px]`}>
         <FormDialogShell image="/auth-side.jpg" caption="Pour des enfants exceptionnels">
         <DialogHeader>
           <DialogTitle>Modifier un enfant</DialogTitle>

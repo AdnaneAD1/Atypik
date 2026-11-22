@@ -2,6 +2,20 @@
 
 import { cn } from '@/lib/utils';
 
+/**
+ * Classes du DialogContent associé à ce gabarit :
+ * plein écran sur mobile (100dvh), carte centrée à partir de sm,
+ * et croix de fermeture en rond sombre — lisible sur la bannière image.
+ */
+export const formDialogContentClass = cn(
+  'gap-0 overflow-hidden p-0 sm:max-h-[92dvh]',
+  '[&>button]:right-3 [&>button]:top-3 [&>button]:z-10',
+  '[&>button]:flex [&>button]:h-9 [&>button]:w-9 [&>button]:items-center [&>button]:justify-center',
+  '[&>button]:rounded-full [&>button]:bg-black/45 [&>button]:p-0 [&>button]:text-white',
+  '[&>button]:opacity-100 [&>button]:shadow-sm [&>button]:transition-colors',
+  'hover:[&>button]:bg-black/65 focus:[&>button]:ring-2 focus:[&>button]:ring-white'
+);
+
 interface FormDialogShellProps {
   /** Image affichée dans le panneau latéral */
   image: string;

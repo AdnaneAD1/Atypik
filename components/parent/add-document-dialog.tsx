@@ -12,7 +12,7 @@ import { LoaderDots } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
-import { FormDialogShell } from '@/components/ui/form-dialog-shell';
+import { FormDialogShell, formDialogContentClass } from '@/components/ui/form-dialog-shell';
 
 interface AddDocumentDialogProps {
   open: boolean;
@@ -118,7 +118,7 @@ export function AddDocumentDialog({ open, onOpenChange, onDocumentAdded }: AddDo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] gap-0 overflow-hidden p-0 sm:max-w-[760px]">
+      <DialogContent className={`${formDialogContentClass} sm:max-w-[760px]`}>
         <FormDialogShell
           image="/pas-de-mission.png"
           caption="Vos documents, toujours à portée de main"
