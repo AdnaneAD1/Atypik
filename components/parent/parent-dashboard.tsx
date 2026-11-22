@@ -115,8 +115,11 @@ export function ParentDashboard() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
   const nextTrip = getNextTrip();
-  // Le transport mis en avant : celui en cours, sinon le plus proche à venir
-  const featuredTrip = nextTrip ?? upcomingTrips[0] ?? null;
+  // La carte latérale montre le PROCHAIN transport : si un trajet est en cours,
+  // il est déjà affiché dans le bandeau en haut — on prend le suivant pour éviter le doublon
+  const featuredTrip = nextTrip
+    ? upcomingTrips.find(t => t.id !== nextTrip.id) ?? null
+    : upcomingTrips[0] ?? null;
   const featuredTripChild = featuredTrip
     ? children.find(c => c.name === featuredTrip.childName) ?? null
     : null;

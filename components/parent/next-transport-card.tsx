@@ -35,21 +35,11 @@ const formatTime = (date: Date) =>
 
 export function NextTransportCard({ trip, child, loading = false }: NextTransportCardProps) {
   const router = useRouter();
-  const isActive = trip?.status === 'in-progress';
 
   return (
     <Card className="h-full min-h-[340px] overflow-hidden rounded-2xl border-0 bg-brand-teal text-white shadow-none">
       <CardContent className="flex h-full flex-col p-5 sm:p-6">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-medium text-white/60">
-            {isActive ? 'Transport en cours' : 'Prochain transport'}
-          </p>
-          {isActive && (
-            <span className="rounded-full bg-brand-yellow px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-900">
-              En cours
-            </span>
-          )}
-        </div>
+        <p className="text-xs font-medium text-white/60">Prochain transport</p>
 
         {loading ? (
           <div className="flex flex-1 items-center justify-center py-10">

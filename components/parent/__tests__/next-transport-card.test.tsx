@@ -37,10 +37,10 @@ describe('NextTransportCard', () => {
     expect(screen.getByText(/Aller/)).toBeInTheDocument();
   });
 
-  it('affiche le badge En cours pour un trajet actif', () => {
+  it('affiche toujours le libellé Prochain transport (le trajet actif vit dans le bandeau)', () => {
     render(<NextTransportCard trip={{ ...trip, status: 'in-progress' }} child={child} />);
-    expect(screen.getByText('Transport en cours')).toBeInTheDocument();
-    expect(screen.getByText('En cours')).toBeInTheDocument();
+    expect(screen.getByText('Prochain transport')).toBeInTheDocument();
+    expect(screen.queryByText('En cours')).not.toBeInTheDocument();
   });
 
   it('garde la carte visible sans transport programmé', () => {
