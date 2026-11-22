@@ -237,27 +237,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         displayName: displayName
       }).catch((e) => console.warn('updateProfile warning:', e));
       
-      // Envoi email de confirmation si nouveau compte chauffeur (best-effort, template brandé)
+      // E-mail de bienvenue + validation de l'adresse (parent ET chauffeur, best-effort)
       try {
-        if (role === 'driver' && userData.email) {
-          const subject = 'Atypik Driver • Votre compte chauffeur a été créé';
-          const messageHtml = `
-            <p style="margin:4px 0;">Bienvenue ${displayName},</p>
-            <p style="margin:4px 0;">Votre compte chauffeur a bien été créé.</p>
-            <p style="margin:4px 0;">Votre compte est en cours d\'examen par notre équipe. Vous serez contacté dès que votre profil aura été validé.</p>
-          `;
-          await authFetch('/api/email/send', {
+        if (userData.email) {
+          await authFetch('/api/auth/verify-email/request', {
             method: 'POST',
-            body: JSON.stringify({
-              to: userData.email,
-              subject,
-              template: 'generic',
-              variables: { title: 'Compte chauffeur créé', messageHtml },
-            }),
+            body: JSON.stringify({ email: userData.email, role }),
           });
         }
       } catch (e) {
-        console.error('Erreur envoi email inscription chauffeur:', e);
+        console.error('Erreur envoi email de vérification:', e);
       }
 
       // Mettre à jour l'état local

@@ -71,7 +71,7 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   }
 
   // Auth pages should be accessible when not authenticated
-  if (!isAuthenticated && (pathname.includes('/login') || pathname.includes('/register'))) {
+  if (!isAuthenticated && (pathname.includes('/login') || pathname.includes('/register') || pathname.includes('/reset-password') || pathname.includes('/verify-email'))) {
     return <>{children}</>;
   }
 

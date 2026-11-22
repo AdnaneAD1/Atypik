@@ -1,4 +1,4 @@
-// Templates e-mail Atypik Driver — design issu de la maquette fournie.
+// Templates e-mail Atypik Driver - design issu de la maquette fournie.
 // Tableaux + styles inline pour compatibilité maximale des clients mail.
 // Palette : corail #E14C38, rail #f3f5f8, beurre #fff6d9, menthe #e6faf4.
 
@@ -20,6 +20,7 @@ const TEXT = 'Arial,sans-serif';
 
 export type TemplateName =
   | 'accountApproved'
+  | 'emailVerification'
   | 'passwordReset'
   | 'transportReminder'
   | 'notification'
@@ -121,7 +122,7 @@ export function renderLayout(contentHtml: string, opts: RenderOptions = {}) {
 
   <tr><td bgcolor="${RAIL}" class="px" style="background:${RAIL};padding:28px 40px 36px 40px;border-top:1px solid ${LINE};">
     <p style="margin:0;font-family:${TEXT};font-size:13px;line-height:1.6;color:${MUTE};">Vous recevez cet e-mail car vous utilisez Atypik Driver.<br>
-      <a href="${appUrl()}" style="color:${MUTE};text-decoration:underline;">atypik-driver.com</a> &nbsp;·&nbsp; <a href="mailto:contact@atypik-driver.com" style="color:${MUTE};text-decoration:underline;">Nous contacter</a> &nbsp;·&nbsp; <a href="${appUrl()}/privacy" style="color:${MUTE};text-decoration:underline;">Confidentialité</a></p>
+      <a href="${appUrl()}" style="color:${MUTE};text-decoration:underline;">atypik-driver.com</a> &nbsp;·&nbsp; <a href="mailto:contact@atypik-driver.com" style="color:${MUTE};text-decoration:underline;">Nous contacter</a></p>
     ${socialLinks()}
   </td></tr>
 
@@ -131,9 +132,9 @@ export function renderLayout(contentHtml: string, opts: RenderOptions = {}) {
 </html>`;
 }
 
-/** Chauffeur : compte validé par l'équipe — il peut se connecter. */
+/** Chauffeur : compte validé par l'équipe - il peut se connecter. */
 export function accountApprovedTemplate(params: { name?: string }) {
-  const title = `Bienvenue ${escapeHtml(params.name || '')} — votre compte est validé`;
+  const title = `Bienvenue ${escapeHtml(params.name || '')} - votre compte est validé`;
   const body = `
     ${tag('Compte validé', MINT, GO_INK)}
     ${h1(`Bienvenue ${escapeHtml(params.name || 'à bord')} !`)}
@@ -142,6 +143,31 @@ export function accountApprovedTemplate(params: { name?: string }) {
     ${p(`Votre profil sera proposé aux familles de votre région. Pensez à compléter vos informations pour inspirer confiance.`)}
   `;
   return renderLayout(body, { subject: 'Votre compte chauffeur Atypik est validé', previewText: 'Bonne nouvelle : votre dossier a été validé. Connectez-vous pour recevoir vos missions.' });
+}
+
+/** Bienvenue + validation de l'adresse e-mail après création de compte. */
+export function emailVerificationTemplate(params: {
+  name?: string;
+  role?: 'parent' | 'driver' | string;
+  verifyUrl: string;
+}) {
+  const isDriver = params.role === 'driver';
+  const body = `
+    ${tag('Bienvenue', MINT, GO_INK)}
+    ${h1(`Bienvenue${params.name ? ` ${escapeHtml(params.name)}` : ''}, confirmez votre adresse`)}
+    ${p(`Votre compte ${isDriver ? 'chauffeur' : 'parent'} Atypik Driver vient d'être créé. Une dernière étape : confirmez que cette adresse e-mail vous appartient.`)}
+    <div style="padding:28px 0 0 0;">${ctaButton('Confirmer mon adresse e-mail', params.verifyUrl)}</div>
+    ${p(isDriver
+      ? `Votre dossier sera ensuite examiné par nos équipes - vous recevrez un e-mail dès sa validation.`
+      : `Vous pourrez ensuite choisir votre chauffeur et programmer le premier transport de vos enfants.`)}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${PINK}" style="background:${PINK};border-radius:6px;margin-top:28px;"><tr>
+      <td style="padding:14px 18px;font-family:${TEXT};font-size:14px;line-height:1.45;color:${PINK_INK};"><b>À savoir</b> - si vous n'avez pas créé ce compte, ignorez simplement cet e-mail.</td>
+    </tr></table>
+  `;
+  return renderLayout(body, {
+    subject: 'Confirmez votre adresse e-mail - Atypik Driver',
+    previewText: 'Votre compte est créé - confirmez votre adresse e-mail pour l’activer.',
+  });
 }
 
 /** Mot de passe oublié : lien de réinitialisation custom (hors page Firebase). */
@@ -153,7 +179,7 @@ export function passwordResetTemplate(params: { name?: string; resetUrl: string 
     <div style="padding:28px 0 0 0;">${ctaButton('Choisir un nouveau mot de passe', params.resetUrl)}</div>
     ${p(`Ce lien est valable <b style="color:${INK};">1 heure</b>. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail : votre mot de passe reste inchangé.`)}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${PINK}" style="background:${PINK};border-radius:6px;margin-top:28px;"><tr>
-      <td style="padding:14px 18px;font-family:${TEXT};font-size:14px;line-height:1.45;color:${PINK_INK};"><b>À savoir</b> — ne partagez jamais ce lien. Nos équipes ne vous demanderont jamais votre mot de passe.</td>
+      <td style="padding:14px 18px;font-family:${TEXT};font-size:14px;line-height:1.45;color:${PINK_INK};"><b>À savoir</b> - ne partagez jamais ce lien. Nos équipes ne vous demanderont jamais votre mot de passe.</td>
     </tr></table>
   `;
   return renderLayout(body, { subject: 'Réinitialisation de votre mot de passe', previewText: 'Un lien sécurisé pour choisir un nouveau mot de passe.' });
@@ -192,10 +218,10 @@ export function transportReminderTemplate(params: {
     ${childRow}
     ${steps}
   `;
-  return renderLayout(body, { subject: `Transport ${params.childName || ''} — ${params.date || 'rappel'}`, previewText: `Transport pour ${params.childName || 'votre enfant'} ${params.date || ''}` });
+  return renderLayout(body, { subject: `Transport ${params.childName || ''} - ${params.date || 'rappel'}`, previewText: `Transport pour ${params.childName || 'votre enfant'} ${params.date || ''}` });
 }
 
-/** Notification générique — utilisée pour tous les événements in-app. */
+/** Notification générique - utilisée pour tous les événements in-app. */
 export function notificationTemplate(params: {
   title: string;
   message: string;
@@ -224,6 +250,8 @@ export function buildEmailHtml(template: TemplateName, vars: Record<string, any>
   switch (template) {
     case 'accountApproved':
       return accountApprovedTemplate(vars || {});
+    case 'emailVerification':
+      return emailVerificationTemplate({ name: vars?.name, role: vars?.role, verifyUrl: vars?.verifyUrl || '#' });
     case 'passwordReset':
       return passwordResetTemplate({ name: vars?.name, resetUrl: vars?.resetUrl || '#' });
     case 'transportReminder':
