@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { ExpandableTag } from '@/components/ui/expandable-tag';
 import { Plus, AlertTriangle, Pencil, Trash2 } from 'lucide-react';
 import { CarLoader } from '@/components/ui/loader';
 import { motion } from 'framer-motion';
@@ -197,13 +197,7 @@ export function ParentChildren() {
                         {child.needs && child.needs.length > 0 ? (
                           <div className="mt-2 flex flex-wrap gap-1.5">
                             {child.needs.map((need, needIndex) => (
-                              <Badge
-                                key={needIndex}
-                                variant="outline"
-                                className="h-6 border-slate-200 bg-white py-0 text-xs font-medium text-slate-700"
-                              >
-                                {need}
-                              </Badge>
+                              <ExpandableTag key={needIndex} text={need} />
                             ))}
                           </div>
                         ) : (

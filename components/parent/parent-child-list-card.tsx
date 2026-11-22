@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { ExpandableTag } from '@/components/ui/expandable-tag';
 import { CarLoader } from '@/components/ui/loader';
 import { AddChildDialog } from './add-child-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -188,13 +189,7 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
                   {selectedChild.needs && Array.isArray(selectedChild.needs) && selectedChild.needs.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {selectedChild.needs.map((need, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs py-1 px-2 bg-primary/5 text-primary border-primary/20"
-                        >
-                          {need}
-                        </Badge>
+                        <ExpandableTag key={index} text={need} />
                       ))}
                     </div>
                   ) : (
