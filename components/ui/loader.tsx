@@ -14,11 +14,11 @@ const TAXI_SVG = (
   <svg viewBox="0 0 240 90" aria-hidden="true" focusable="false">
     <line className="ld-road" x1="0" x2="240" y1="80" y2="80" stroke="#b8c3d1" strokeWidth="4" strokeLinecap="round" strokeDasharray="2 14" />
     <g stroke="#b8c3d1" strokeWidth="3" strokeLinecap="round">
-      <line className="ld-speed" x1="52" x2="68" y1="38" y2="38" />
-      <line className="ld-speed" x1="44" x2="64" y1="52" y2="52" />
-      <line className="ld-speed" x1="56" x2="70" y1="66" y2="66" />
+      <line className="ld-speed" x1="42" x2="58" y1="38" y2="38" />
+      <line className="ld-speed" x1="34" x2="54" y1="52" y2="52" />
+      <line className="ld-speed" x1="46" x2="60" y1="66" y2="66" />
     </g>
-    <g className="ld-car" transform="translate(72 4)">
+    <g className="ld-car" transform="translate(66 4)">
       <g stroke="#101828" strokeWidth="2.5" strokeLinejoin="round">
         <rect x="40" y="2" width="22" height="7" rx="2" fill="#101828" />
         <path d="M20 30 L30 12 H74 L86 30 Z" fill="#ffc21a" />

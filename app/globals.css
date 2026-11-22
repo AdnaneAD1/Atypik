@@ -323,7 +323,7 @@
 .tab-taxi.back svg{transform:scaleX(-1)}
 .tab-taxi .w{transform-box:fill-box;transform-origin:center}
 .tabbar.go .tab-taxi .w{animation:ld-spin .25s linear infinite}
-.sr{position:absolute;left:-9999px}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
 @media (prefers-reduced-motion:reduce){
   .tab-taxi{transition:none}.tab-live::after{animation:none}.tabbar.go .tab-taxi .w{animation:none}.tab{transition:none}
