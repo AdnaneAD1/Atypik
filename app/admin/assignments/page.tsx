@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAdmin } from '@/hooks/use-admin';
 
+// Valeur sentinelle pour « ne assigner personne » (Radix Select n'accepte pas de chaîne vide)
+const NONE_VALUE = '__none__';
+
 export default function AdminAssignmentsPage() {
   const { parents, drivers, loading, error, loadUsers, assignDriverToParent } = useAdmin();
   const [assignments, setAssignments] = useState<Record<string,string>>({});
@@ -32,6 +35,10 @@ export default function AdminAssignmentsPage() {
         if (validRegionalDriver && !next[p.id]) {
           next[p.id] = validRegionalDriver.id as string;
         }
+        // If the parent has no assigned driver, show « Aucun chauffeur » as current state
+        if (!validRegionalDriver && !next[p.id]) {
+          next[p.id] = NONE_VALUE;
+        }
         // If an existing assignment is not valid for the region, clear it
         if (
           next[p.id] &&
@@ -49,7 +56,7 @@ export default function AdminAssignmentsPage() {
   const handleAssign = async (parentId: string) => {
     const driverId = assignments[parentId];
     if (!driverId) return;
-    await assignDriverToParent(parentId, driverId);
+    await assignDriverToParent(parentId, driverId === NONE_VALUE ? null : driverId);
   };
 
   return (
@@ -84,18 +91,17 @@ export default function AdminAssignmentsPage() {
                         const regionalDrivers = drivers.filter(
                           (d: any) => d?.regionId && d.regionId === p?.regionId && d?.status === 'verified'
                         );
-                        const disabled = regionalDrivers.length === 0;
                         return (
                           <>
                             <Select
                               value={assignments[p.id] || ''}
                               onValueChange={(v) => setAssignments((prev) => ({ ...prev, [p.id]: v }))}
-                              disabled={disabled}
                             >
                               <SelectTrigger className="w-56">
-                                <SelectValue placeholder={disabled ? 'Aucun chauffeur disponible' : 'Choisir un chauffeur'} />
+                                <SelectValue placeholder="Choisir un chauffeur" />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value={NONE_VALUE}>Aucun chauffeur</SelectItem>
                                 {regionalDrivers.map((d: any) => (
                                   <SelectItem key={d.id} value={d.id}>
                                     {d.displayName || d.email || d.id}
@@ -106,7 +112,7 @@ export default function AdminAssignmentsPage() {
                             <Button
                               variant="outline"
                               onClick={() => handleAssign(p.id)}
-                              disabled={disabled || !assignments[p.id]}
+                              disabled={!assignments[p.id]}
                             >
                               Assigner
                             </Button>

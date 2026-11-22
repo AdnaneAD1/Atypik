@@ -21,7 +21,7 @@ export interface AdminUser {
   role: AdminUserRole;
   status?: string; // e.g., 'pending' | 'verified' for drivers
   regionId?: string;
-  selectedDriverId?: string;
+  selectedDriverId?: string | null;
   createdAt?: any;
 }
 
@@ -73,9 +73,29 @@ export function useAdmin() {
     }
   };
 
-  const assignDriverToParent = async (parentId: string, driverId: string) => {
+  const assignDriverToParent = async (parentId: string, driverId: string | null) => {
     await updateDoc(doc(db, 'users', parentId), { selectedDriverId: driverId });
     setUsers((prev) => prev.map((u) => (u.id === parentId ? { ...u, selectedDriverId: driverId } : u)));
+
+    // Notifie le parent lorsqu'un chauffeur lui est assigné (in-app + push + e-mail)
+    if (driverId) {
+      try {
+        const driver = users.find((u) => u.id === driverId);
+        const driverName = driver?.displayName || 'votre chauffeur';
+        await authFetch('/api/notifications/send', {
+          method: 'POST',
+          body: JSON.stringify({
+            userId: parentId,
+            title: 'Votre chauffeur vous a été assigné',
+            body: `${driverName} sera votre chauffeur Atypik. Vous pouvez dès maintenant programmer vos transports.`,
+            clickAction: '/parent/calendar',
+            data: { type: 'driverAssigned', driverId },
+          }),
+        });
+      } catch (e) {
+        console.error('Erreur lors de la notification d\'attribution chauffeur:', e);
+      }
+    }
   };
 
   const promoteToAdmin = async (userId: string) => {
