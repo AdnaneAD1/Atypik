@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ParentCalendarView } from '@/components/parent/parent-calendar-view';
 import { ParentChildListCard } from '@/components/parent/parent-child-list-card';
-import { FeaturedChildProfile } from '@/components/parent/featured-child-profile';
+import { NextTransportCard } from '@/components/parent/next-transport-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 
@@ -46,7 +46,6 @@ export function ParentDashboard() {
     error,
     markNotificationAsRead,
     getNextTrip,
-    getFeaturedChild,
     getUnreadNotifications,
   } = useDashboard();
 
@@ -116,6 +115,11 @@ export function ParentDashboard() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
   const nextTrip = getNextTrip();
+  // Le transport mis en avant : celui en cours, sinon le plus proche à venir
+  const featuredTrip = nextTrip ?? upcomingTrips[0] ?? null;
+  const featuredTripChild = featuredTrip
+    ? children.find(c => c.name === featuredTrip.childName) ?? null
+    : null;
 
   // Position GPS live du chauffeur pour la barre de progression réelle
   const { listenMissionByTransport } = useTracking();
@@ -408,10 +412,11 @@ export function ParentDashboard() {
               </Card>
             </motion.div>
 
-            {/* Profil enfant */}
-            <motion.div variants={itemVariants} className="order-2">
-              <FeaturedChildProfile
-                child={getFeaturedChild()}
+            {/* Prochain transport */}
+            <motion.div variants={itemVariants} className="order-2 self-start lg:sticky lg:top-6">
+              <NextTransportCard
+                trip={featuredTrip}
+                child={featuredTripChild}
                 loading={loading}
               />
             </motion.div>
