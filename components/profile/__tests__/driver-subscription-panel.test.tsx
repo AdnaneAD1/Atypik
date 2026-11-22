@@ -17,6 +17,9 @@ vi.mock('@/hooks/use-subscription', () => ({
 vi.mock('@/components/parent/driver-selection-modal', () => ({
   DriverSelectionModal: () => null,
 }));
+vi.mock('@/components/parent/driver-profile-dialog', () => ({
+  DriverProfileDialog: () => null,
+}));
 vi.mock('@/components/parent/subscription-modal', () => ({
   SubscriptionModal: () => null,
 }));
@@ -65,12 +68,12 @@ describe('DriverSubscriptionPanel', () => {
   it('affiche le chauffeur et la formule active', () => {
     mockHooks();
     render(<DriverSubscriptionPanel />);
-    expect(screen.getByText('Chauffeur sélectionné')).toBeInTheDocument();
+    expect(screen.getByText('Votre chauffeur')).toBeInTheDocument();
     expect(screen.getByText('Thomas Martin')).toBeInTheDocument();
     expect(screen.getByText('Vérifié')).toBeInTheDocument();
     expect(screen.getByText('Mon abonnement')).toBeInTheDocument();
     expect(screen.getByText('Transports illimités')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Changer de chauffeur/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Voir' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Arrêter l’abonnement/ })).toBeInTheDocument();
   });
 

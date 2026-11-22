@@ -18,6 +18,7 @@ import { useDriverSelection } from '@/hooks/use-driver-selection';
 import { useSubscription } from '@/hooks/use-subscription';
 import { useToast } from '@/hooks/use-toast';
 import { DriverSelectionModal } from '@/components/parent/driver-selection-modal';
+import { DriverProfileDialog } from '@/components/parent/driver-profile-dialog';
 import { SubscriptionModal } from '@/components/parent/subscription-modal';
 import type { Driver } from '@/hooks/use-driver-selection';
 
@@ -39,6 +40,7 @@ export function DriverSubscriptionPanel() {
   } = useSubscription();
 
   const [driverModalOpen, setDriverModalOpen] = useState(false);
+  const [driverProfileOpen, setDriverProfileOpen] = useState(false);
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -81,10 +83,10 @@ export function DriverSubscriptionPanel() {
   return (
     <section aria-label="Chauffeur et abonnement">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Chauffeur sélectionné */}
+        {/* Votre chauffeur */}
         <Card className="flex flex-col rounded-[6px_28px_6px_28px] border shadow-none">
           <CardContent className="flex flex-1 flex-col gap-5 p-6">
-            <h2 className="font-brand text-xl font-bold">Chauffeur sélectionné</h2>
+            <h2 className="font-brand text-xl font-bold">Votre chauffeur</h2>
 
             {driversLoading ? (
               <div className="flex flex-1 items-center justify-center py-6">
@@ -147,10 +149,10 @@ export function DriverSubscriptionPanel() {
             <Button
               variant="outline"
               className="mt-auto h-11 self-start border-slate-900 text-slate-900 hover:bg-slate-100"
-              onClick={() => setDriverModalOpen(true)}
+              onClick={() => (selectedDriver ? setDriverProfileOpen(true) : setDriverModalOpen(true))}
               disabled={driversLoading}
             >
-              {selectedDriver ? 'Changer de chauffeur' : 'Choisir un chauffeur'}
+              {selectedDriver ? 'Voir' : 'Choisir un chauffeur'}
             </Button>
           </CardContent>
         </Card>
@@ -215,6 +217,11 @@ export function DriverSubscriptionPanel() {
         isOpen={driverModalOpen}
         onClose={() => setDriverModalOpen(false)}
         onDriverSelected={handleDriverSelected}
+      />
+      <DriverProfileDialog
+        driver={selectedDriver}
+        open={driverProfileOpen}
+        onOpenChange={setDriverProfileOpen}
       />
       <SubscriptionModal
         isOpen={subscriptionModalOpen}
