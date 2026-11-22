@@ -11,9 +11,9 @@ export const formDialogContentClass = cn(
   'gap-0 overflow-hidden p-0 sm:max-h-[92dvh]',
   '[&>button]:right-3 [&>button]:top-3 [&>button]:z-10',
   '[&>button]:flex [&>button]:h-9 [&>button]:w-9 [&>button]:items-center [&>button]:justify-center',
-  '[&>button]:rounded-full [&>button]:bg-black/45 [&>button]:p-0 [&>button]:text-white',
+  '[&>button]:rounded-full [&>button]:bg-slate-900 [&>button]:p-0 [&>button]:text-white',
   '[&>button]:opacity-100 [&>button]:shadow-sm [&>button]:transition-colors',
-  'hover:[&>button]:bg-black/65 focus:[&>button]:ring-2 focus:[&>button]:ring-white'
+  'hover:[&>button]:bg-slate-800 focus:[&>button]:ring-2 focus:[&>button]:ring-slate-900'
 );
 
 interface FormDialogShellProps {
@@ -47,7 +47,7 @@ export function FormDialogShell({
         <img
           src={image}
           alt=""
-          className={cn('absolute inset-0 h-full w-full object-cover object-top', imageClassName)}
+          className={cn('absolute inset-0 h-full w-full object-cover object-center', imageClassName)}
         />
         <div className="absolute inset-x-0 bottom-0 bg-brand-teal px-4 py-2.5">
           <p className="text-xs font-semibold text-white">{caption}</p>
