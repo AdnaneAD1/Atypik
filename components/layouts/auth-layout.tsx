@@ -46,8 +46,21 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="w-full max-w-md pt-8 pb-10 md:py-10">
             {/* Wordmark mobile : dans la colonne, aligné avec le contenu */}
-            <div className="mb-10 md:hidden">
+            <div className="mb-6 md:hidden">
               <Logo />
+            </div>
+            {/* Illustration mobile : image de marque en arc avant le titre */}
+            <div
+              className="relative -mx-4 mb-8 h-40 overflow-hidden sm:-mx-8 sm:h-48 md:hidden"
+              style={{ borderRadius: '0 0 50% 50% / 0 0 90% 90%' }}
+            >
+              <Image
+                src="/auth-side.png"
+                alt=""
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
             {children}
           </div>
