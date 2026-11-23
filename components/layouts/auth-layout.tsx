@@ -13,7 +13,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         {/* Panneau visuel de marque — desktop uniquement */}
         <div className="hidden md:block md:w-1/2 lg:w-[52%] relative">
           <Image
-            src="/auth-side.jpg"
+            src="/auth-side.png"
             alt="Enfant sur le chemin de l'école"
             fill
             className="object-cover"
