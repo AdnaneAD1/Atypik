@@ -26,7 +26,7 @@ export function DriverFormations() {
 
         {/* Contenu */}
         <div className="sm:py-8">
-          <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-600">
+          <span className="inline-flex rounded-full border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
             Bientôt disponible
           </span>
           <h2 className="mt-4 text-xl font-semibold tracking-tight sm:text-2xl">

@@ -489,8 +489,8 @@ export function ParentDashboard() {
                                       <Badge variant="outline" className={cn(
                                         'h-5 px-2 py-0 text-[10px]',
                                         review.tripType === 'aller'
-                                          ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                                          : 'border-amber-200 bg-amber-50 text-amber-700'
+                                          ? 'border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300'
+                                          : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
                                       )}>
                                         {review.tripType === 'aller' ? 'Aller' : 'Retour'}
                                       </Badge>
@@ -523,7 +523,7 @@ export function ParentDashboard() {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="h-10 border-brand-yellow/60 bg-brand-yellow/10 text-xs font-medium text-slate-900 hover:bg-brand-yellow/20 sm:h-9"
+                                      className="h-10 border-brand-yellow/60 bg-brand-yellow/10 text-xs font-medium text-slate-900 dark:text-amber-200 hover:bg-brand-yellow/20 sm:h-9"
                                       onClick={() => handleThank(review.id, review.reviewerName)}
                                     >
                                       <Star className="mr-1.5 h-3.5 w-3.5 fill-amber-400 text-amber-400" />
@@ -584,8 +584,8 @@ export function ParentDashboard() {
                                       <Badge variant="outline" className={cn(
                                         'h-5 px-2 py-0 text-[10px]',
                                         review.tripType === 'aller'
-                                          ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                                          : 'border-amber-200 bg-amber-50 text-amber-700'
+                                          ? 'border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300'
+                                          : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
                                       )}>
                                         {review.tripType === 'aller' ? 'Aller' : 'Retour'}
                                       </Badge>

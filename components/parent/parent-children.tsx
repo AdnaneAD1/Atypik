@@ -15,7 +15,7 @@ import { useChildren, AddChildData, Child } from '@/hooks/use-children';
 
 // Rotation des teintes de marque pour les cartes enfants
 const CARD_TINTS = [
-  { card: 'bg-brand-yellow/15', avatar: 'bg-brand-yellow text-slate-900' },
+  { card: 'bg-brand-yellow/15 dark:bg-brand-yellow/10', avatar: 'bg-brand-yellow text-slate-900' },
   { card: 'bg-brand-teal/10', avatar: 'bg-brand-teal text-white' },
   { card: 'bg-primary/10', avatar: 'bg-primary text-white' },
   { card: 'bg-brand-pink/15', avatar: 'bg-brand-pink text-white' },

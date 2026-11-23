@@ -110,7 +110,7 @@ export function DriverStats() {
       unit: '/5',
       decimals: 1,
       sub: `Basé sur ${stats.totalReviews} évaluation${stats.totalReviews > 1 ? 's' : ''}`,
-      tint: 'bg-brand-yellow/25',
+      tint: 'bg-brand-yellow/25 dark:bg-brand-yellow/10',
     },
     {
       label: 'Missions du mois',
@@ -217,7 +217,7 @@ export function DriverStats() {
         </section>
 
         {/* Performance globale */}
-        <section className="rounded-[6px_28px_6px_28px] bg-brand-yellow/25 p-6 sm:p-7">
+        <section className="rounded-[6px_28px_6px_28px] bg-brand-yellow/25 dark:bg-brand-yellow/10 p-6 sm:p-7">
           <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Performance globale
           </h2>
@@ -241,19 +241,19 @@ export function DriverStats() {
             />
           </div>
           <ul className="mt-7">
-            <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 py-3.5">
+            <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 dark:border-brand-yellow/20 py-3.5">
               <span className="text-sm">Satisfaction</span>
               <b className="font-brand text-xl text-slate-900 dark:text-slate-100">
                 {stats.averageRating.toFixed(1)}<small className="text-sm font-normal text-muted-foreground"> /5</small>
               </b>
             </li>
-            <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 py-3.5">
+            <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 dark:border-brand-yellow/20 py-3.5">
               <span className="text-sm">Missions complétées</span>
               <b className="font-brand text-xl text-slate-900 dark:text-slate-100">
                 {stats.completedMissions}<small className="text-sm font-normal text-muted-foreground"> sur {stats.totalMissions}</small>
               </b>
             </li>
-            <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 py-3.5">
+            <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 dark:border-brand-yellow/20 py-3.5">
               <span className="text-sm">Enfants transportés</span>
               <b className="font-brand text-xl text-slate-900 dark:text-slate-100">{stats.totalChildrenTransported}</b>
             </li>

@@ -177,12 +177,12 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
 
               <div className="space-y-3">
                 {mission.child.needs?.map((need, index) => (
-                  <div key={index} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <div key={index} className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
                     <div className="flex items-start gap-3">
                       <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5" />
                       <div>
-                        <h5 className="font-medium text-amber-700">{need.type || need.description}</h5>
-                        <p className="text-sm text-amber-600/80 mt-1">
+                        <h5 className="font-medium text-amber-700 dark:text-amber-300">{need.type || need.description}</h5>
+                        <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-1">
                           {need.description || (need.type === 'TDAH' ?
                             'Peut avoir besoin d\'attention supplémentaire et de patience. Préfère un environnement calme.' :
                             'Besoin spécial à prendre en compte.')}
@@ -247,7 +247,7 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
                 className={cn(
                   'rounded-full px-4 py-1.5 text-sm',
                   !isEnRoute
-                    ? 'bg-brand-yellow/25 font-bold text-amber-800 ring-1 ring-inset ring-brand-yellow'
+                    ? 'bg-brand-yellow/25 font-bold text-amber-800 ring-1 ring-inset ring-brand-yellow dark:bg-brand-yellow/15 dark:text-amber-300 dark:ring-brand-yellow/50'
                     : 'bg-slate-100 dark:bg-slate-800 text-muted-foreground'
                 )}
                 aria-current={!isEnRoute ? 'step' : undefined}
@@ -258,7 +258,7 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
                 className={cn(
                   'rounded-full px-4 py-1.5 text-sm',
                   isEnRoute
-                    ? 'bg-brand-yellow/25 font-bold text-amber-800 ring-1 ring-inset ring-brand-yellow'
+                    ? 'bg-brand-yellow/25 font-bold text-amber-800 ring-1 ring-inset ring-brand-yellow dark:bg-brand-yellow/15 dark:text-amber-300 dark:ring-brand-yellow/50'
                     : 'bg-slate-100 dark:bg-slate-800 text-muted-foreground'
                 )}
                 aria-current={isEnRoute ? 'step' : undefined}

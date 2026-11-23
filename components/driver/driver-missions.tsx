@@ -135,27 +135,27 @@ export function DriverMissions() {
   // Palette Planning : indigo / ambre / violet
   const typeBadge = (type?: string) =>
     type === 'aller-retour'
-      ? 'bg-violet-50 text-violet-700 border-violet-200'
+      ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800'
       : type === 'aller'
-      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-      : 'bg-amber-50 text-amber-700 border-amber-300';
+      ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+      : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700';
 
   const typeLabel = (type?: string) =>
     type === 'aller-retour' ? 'Aller-Retour' : type === 'aller' ? 'Aller' : 'Retour';
 
   const typeAccent = (type?: string) =>
     type === 'aller-retour'
-      ? { text: 'text-violet-600', ring: 'ring-violet-300', avatar: 'bg-violet-100 text-violet-600' }
+      ? { text: 'text-violet-600 dark:text-violet-400', ring: 'ring-violet-300 dark:ring-violet-700', avatar: 'bg-violet-100 dark:bg-violet-950 text-violet-600 dark:text-violet-400' }
       : type === 'retour'
-      ? { text: 'text-amber-600', ring: 'ring-amber-300', avatar: 'bg-amber-100 text-amber-700' }
-      : { text: 'text-indigo-600', ring: 'ring-indigo-300', avatar: 'bg-indigo-100 text-indigo-600' };
+      ? { text: 'text-amber-600 dark:text-amber-400', ring: 'ring-amber-300 dark:ring-amber-700', avatar: 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300' }
+      : { text: 'text-indigo-600 dark:text-indigo-400', ring: 'ring-indigo-300 dark:ring-indigo-700', avatar: 'bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400' };
 
   const statusBadge = (status?: string) =>
     status === 'completed'
-      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
       : status === 'in_progress'
       ? 'bg-sky-50 text-sky-700 border-sky-200'
-      : 'bg-amber-50 text-amber-700 border-amber-200';
+      : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
 
   const statusLabel = (status?: string) =>
     status === 'completed' ? 'Terminée' : status === 'in_progress' ? 'En cours' : 'Programmée';
@@ -257,7 +257,7 @@ export function DriverMissions() {
                 <Badge
                   key={i}
                   variant="outline"
-                  className="h-5 border-amber-300/70 bg-transparent py-0 text-[10px] font-normal text-amber-700"
+                  className="h-5 border-amber-300/70 bg-transparent py-0 text-[10px] font-normal text-amber-700 dark:text-amber-300"
                 >
                   {need}
                 </Badge>

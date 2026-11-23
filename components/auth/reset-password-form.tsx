@@ -75,8 +75,8 @@ export function ResetPasswordForm() {
   if (done) {
     return (
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-          <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/40">
+          <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
         </span>
         <h1 className="mt-6 font-brand text-3xl font-bold">Mot de passe mis à jour</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -164,10 +164,10 @@ export function ResetPasswordForm() {
 
         {/* Règles visibles — pas de surprise à la soumission */}
         <ul className="space-y-1.5 text-xs">
-          <li className={passwordOk ? 'text-emerald-600' : 'text-muted-foreground'}>
+          <li className={passwordOk ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>
             {passwordOk ? '✓' : '•'} Au moins 8 caractères
           </li>
-          <li className={confirm.length > 0 && match ? 'text-emerald-600' : 'text-muted-foreground'}>
+          <li className={confirm.length > 0 && match ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>
             {confirm.length > 0 && match ? '✓' : '•'} Les deux mots de passe correspondent
           </li>
         </ul>

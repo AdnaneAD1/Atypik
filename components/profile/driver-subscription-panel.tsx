@@ -151,7 +151,7 @@ export function DriverSubscriptionPanel() {
         </Card>
 
         {/* Mon abonnement — fond beurre comme la maquette */}
-        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border-0 bg-brand-yellow/25 shadow-none">
+        <Card className="flex flex-col rounded-[6px_28px_6px_28px] border-0 bg-brand-yellow/25 dark:bg-brand-yellow/10 shadow-none">
           <CardContent className="flex flex-1 flex-col gap-4 p-6">
             <div className="flex items-center justify-between gap-4">
               <h2 className="flex items-center gap-2 font-brand text-lg font-bold">
@@ -174,7 +174,7 @@ export function DriverSubscriptionPanel() {
                 <p className="font-brand text-3xl font-bold leading-tight">
                   {subscription.type === 'premium' ? 'Transports illimités' : '2 transports par semaine'}
                 </p>
-                <p className="text-sm text-amber-950/75">
+                <p className="text-sm text-amber-950/75 dark:text-amber-100/80">
                   {subscription.type === 'standard' && `${weeklyTransportCount}/2 utilisés cette semaine · `}
                   {subscription.autoRenew && renewDate
                     ? `Renouvellement automatique le ${renewDate}`

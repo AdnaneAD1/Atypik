@@ -77,7 +77,7 @@ export function DriverDashboard() {
     {
       label: 'Note moyenne',
       value: rating.toFixed(1),
-      tint: 'bg-brand-yellow/25',
+      tint: 'bg-brand-yellow/25 dark:bg-brand-yellow/10',
       unit: '/5',
       decimals: 1,
       isRating: true,
@@ -124,12 +124,12 @@ export function DriverDashboard() {
                       key={i}
                       className={cn(
                         'h-2 w-[18px] rounded-sm',
-                        i <= Math.round(rating) ? 'bg-brand-yellow' : 'bg-brand-yellow/25'
+                        i <= Math.round(rating) ? 'bg-brand-yellow' : 'bg-brand-yellow/25 dark:bg-brand-yellow/15'
                       )}
                     />
                   ))}
                 </span>
-                <span className="text-sm font-bold text-amber-800">{ratingLabel}</span>
+                <span className="text-sm font-bold text-amber-800 dark:text-amber-200">{ratingLabel}</span>
               </div>
             )}
           </div>

@@ -285,22 +285,22 @@ export function ParentCalendar() {
 
   const typeBadge = (type?: string) =>
     type === 'aller-retour'
-      ? 'bg-violet-50 text-violet-700 border-violet-200'
+      ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800'
       : type === 'aller'
-      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-      : 'bg-amber-50 text-amber-700 border-amber-300';
+      ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+      : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700';
 
   const typeLabel = (type?: string) =>
     type === 'aller-retour' ? 'Aller-Retour' : type === 'aller' ? 'Aller' : 'Retour';
 
   const statusBadge = (status?: string) =>
     status === 'completed'
-      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
       : status === 'cancelled'
-      ? 'bg-red-50 text-red-600 border-red-200'
+      ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
       : status === 'in-progress' || status === 'in_progress' || status === 'started'
       ? 'bg-sky-50 text-sky-700 border-sky-200'
-      : 'bg-amber-50 text-amber-700 border-amber-200';
+      : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
 
   const statusLabel = (status?: string) =>
     status === 'completed' ? 'Terminé' :
@@ -310,26 +310,26 @@ export function ParentCalendar() {
 
   const typeChipClass = (type?: string) =>
     type === 'aller-retour'
-      ? 'border-violet-300 bg-violet-50'
+      ? 'border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-950/40'
       : type === 'aller'
-      ? 'border-indigo-200 bg-indigo-50'
+      ? 'border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40'
       : type === 'retour'
-      ? 'border-amber-300 bg-amber-50'
-      : 'border-indigo-200 bg-indigo-50/60';
+      ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40'
+      : 'border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/30';
 
   const typeAvatarClass = (type?: string) =>
     type === 'aller-retour'
-      ? 'bg-violet-100 text-violet-600'
+      ? 'bg-violet-100 dark:bg-violet-950 text-violet-600 dark:text-violet-400'
       : type === 'aller'
-      ? 'bg-indigo-100 text-indigo-600'
-      : 'bg-amber-100 text-amber-700';
+      ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'
+      : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300';
 
   const typeAccent = (type?: string) =>
     type === 'aller-retour'
-      ? { border: 'border-l-violet-500', text: 'text-violet-600', ring: 'border-violet-300' }
+      ? { border: 'border-l-violet-500', text: 'text-violet-600 dark:text-violet-400', ring: 'border-violet-300 dark:border-violet-700' }
       : type === 'retour'
-      ? { border: 'border-l-amber-400', text: 'text-amber-600', ring: 'border-amber-300' }
-      : { border: 'border-l-indigo-500', text: 'text-indigo-600', ring: 'border-indigo-300' };
+      ? { border: 'border-l-amber-400', text: 'text-amber-600 dark:text-amber-400', ring: 'border-amber-300 dark:border-amber-700' }
+      : { border: 'border-l-indigo-500', text: 'text-indigo-600 dark:text-indigo-400', ring: 'border-indigo-300 dark:border-indigo-700' };
 
   const detailAccent = typeAccent(selectedTransport?.transportType);
 
@@ -582,7 +582,7 @@ export function ParentCalendar() {
                   onClick={() => handleSelectDate(d)}
                   className={cn(
                     'flex flex-col items-center gap-1 border-l py-3 transition-colors first:border-l-0 hover:bg-accent/50',
-                    date && isSameDay(d, date) && 'bg-indigo-50/60'
+                    date && isSameDay(d, date) && 'bg-indigo-50/60 dark:bg-indigo-950/30'
                   )}
                 >
                   <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -592,7 +592,7 @@ export function ParentCalendar() {
                     className={cn(
                       'flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium',
                       isToday(d) && 'bg-primary font-semibold text-primary-foreground',
-                      date && isSameDay(d, date) && !isToday(d) && 'bg-amber-100 font-semibold text-amber-800'
+                      date && isSameDay(d, date) && !isToday(d) && 'bg-amber-100 dark:bg-amber-950 font-semibold text-amber-800 dark:text-amber-200'
                     )}
                   >
                     {format(d, 'd')}
@@ -617,7 +617,7 @@ export function ParentCalendar() {
                     onKeyDown={(e) => e.key === 'Enter' && handleSelectDate(d)}
                     className={cn(
                       'flex min-h-[300px] cursor-pointer flex-col gap-2 border-l p-2 transition-colors first:border-l-0 hover:bg-accent/30',
-                      selected && 'bg-indigo-50/40'
+                      selected && 'bg-indigo-50/40 dark:bg-indigo-950/20'
                     )}
                   >
                     {dayTransports.length === 0

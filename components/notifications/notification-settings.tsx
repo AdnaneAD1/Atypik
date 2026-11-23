@@ -241,13 +241,13 @@ export function NotificationSettings() {
             <div className="grid grid-cols-2 gap-4 text-xs">
               <div>
                 <p className="font-medium text-muted-foreground">Statut</p>
-                <p className={settings.isEnabled ? 'text-green-600' : 'text-red-600'}>
+                <p className={settings.isEnabled ? 'text-green-600' : 'text-red-600 dark:text-red-400'}>
                   {settings.isEnabled ? 'Actives' : 'Désactivées'}
                 </p>
               </div>
               <div>
                 <p className="font-medium text-muted-foreground">Permission navigateur</p>
-                <p className={hasPermission ? 'text-green-600' : 'text-red-600'}>
+                <p className={hasPermission ? 'text-green-600' : 'text-red-600 dark:text-red-400'}>
                   {hasPermission ? 'Accordée' : 'Refusée'}
                 </p>
               </div>
@@ -256,8 +256,8 @@ export function NotificationSettings() {
         )}
 
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
           </div>
         )}
       </CardContent>

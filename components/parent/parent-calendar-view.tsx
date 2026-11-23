@@ -133,8 +133,8 @@ export function ParentCalendarView({ weeklySchedule = [], loading = false }: Par
                 <span className={cn(
                   'shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium',
                   event.status === 'completed'
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-red-200 bg-red-50 text-red-600'
+                    ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+                    : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400'
                 )}>
                   {event.status === 'completed' ? 'Terminé' : 'Annulé'}
                 </span>
