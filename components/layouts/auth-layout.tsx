@@ -16,7 +16,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             src="/auth-side.png"
             alt="Enfant sur le chemin de l'école"
             fill
-            className="object-cover"
+            className="object-cover object-[50%_25%]"
             priority
           />
           {/* Overlay fonctionnel : garantit la lisibilité du bloc de marque */}
@@ -58,7 +58,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
                 src="/auth-side.png"
                 alt=""
                 fill
-                className="object-cover"
+                className="object-cover object-[50%_28%]"
                 priority
               />
             </div>
