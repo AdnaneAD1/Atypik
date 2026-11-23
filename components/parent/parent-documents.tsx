@@ -138,7 +138,7 @@ export function ParentDocuments() {
               'min-h-[44px] rounded-full px-5 text-sm transition-colors',
               activeTag === null
                 ? 'bg-primary font-bold text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             )}
           >
             Tous
@@ -152,7 +152,7 @@ export function ParentDocuments() {
                 'min-h-[44px] rounded-full px-5 text-sm transition-colors',
                 activeTag === tag
                   ? 'bg-primary font-bold text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               )}
             >
               {tag}
@@ -167,7 +167,7 @@ export function ParentDocuments() {
             aria-label="Rechercher un document"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-12 w-full border-b-2 border-slate-900 bg-transparent pl-7 text-sm outline-none placeholder:text-muted-foreground"
+            className="h-12 w-full border-b-2 border-slate-900 dark:border-slate-500 bg-transparent pl-7 text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
       </div>
@@ -205,7 +205,7 @@ export function ParentDocuments() {
           {/* En-têtes de colonnes — desktop */}
           <div
             className={cn(
-              'hidden items-center gap-6 border-b-2 border-slate-900 pb-2.5 text-sm text-muted-foreground sm:grid',
+              'hidden items-center gap-6 border-b-2 border-slate-900 dark:border-slate-500 pb-2.5 text-sm text-muted-foreground sm:grid',
               DOCS_GRID_COLS
             )}
           >
@@ -215,24 +215,24 @@ export function ParentDocuments() {
             <span className="text-right">Actions</span>
           </div>
 
-          <ul className="divide-y divide-slate-200">
+          <ul className="divide-y divide-slate-200 dark:divide-slate-700">
             {filteredDocuments.map((doc) => (
               <li
                 key={doc.id}
                 className={cn(
-                  'grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-2 py-5 transition-colors hover:bg-slate-50 sm:items-center sm:gap-x-6 sm:gap-y-0',
+                  'grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-2 py-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 sm:items-center sm:gap-x-6 sm:gap-y-0',
                   DOCS_GRID_COLS
                 )}
               >
                 {/* Mini-feuille document */}
                 <div
                   aria-hidden="true"
-                  className="row-span-3 flex h-16 w-12 shrink-0 flex-col justify-between overflow-hidden rounded-md border border-slate-300 bg-white sm:col-start-1 sm:row-span-1"
+                  className="row-span-3 flex h-16 w-12 shrink-0 flex-col justify-between overflow-hidden rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 sm:col-start-1 sm:row-span-1"
                 >
                   <div className="space-y-1 px-1.5 pt-2">
-                    <div className="h-[3px] w-4/5 rounded-full bg-slate-200" />
-                    <div className="h-[3px] w-3/5 rounded-full bg-slate-200" />
-                    <div className="h-[3px] w-4/5 rounded-full bg-slate-200" />
+                    <div className="h-[3px] w-4/5 rounded-full bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-[3px] w-3/5 rounded-full bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-[3px] w-4/5 rounded-full bg-slate-200 dark:bg-slate-700" />
                   </div>
                   <span className="bg-brand-yellow py-0.5 text-center text-[9px] font-bold uppercase tracking-wide text-slate-900">
                     {docTypeLabel(doc.type)}
@@ -241,7 +241,7 @@ export function ParentDocuments() {
 
                 {/* Titre + méta + tags */}
                 <div className="min-w-0 sm:col-start-2">
-                  <h2 className="truncate font-brand text-lg font-bold leading-tight text-slate-900">
+                  <h2 className="truncate font-brand text-lg font-bold leading-tight text-slate-900 dark:text-slate-100">
                     <button
                       type="button"
                       onClick={() => openPreview(doc)}
@@ -261,7 +261,7 @@ export function ParentDocuments() {
                       {doc.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="rounded-full bg-slate-100 px-3 py-0.5 text-xs font-semibold text-slate-700"
+                          className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-0.5 text-xs font-semibold text-slate-700 dark:text-slate-300"
                         >
                           {tag}
                         </span>
@@ -278,7 +278,7 @@ export function ParentDocuments() {
                 {/* Actions — icônes conservées */}
                 <div className="col-start-2 -ml-2.5 flex items-center gap-1 sm:col-start-4 sm:ml-0 sm:justify-end">
                   <button
-                    className="flex min-h-[44px] items-center gap-1.5 px-2.5 text-sm font-bold text-slate-900 underline decoration-2 underline-offset-4 hover:decoration-brand-yellow"
+                    className="flex min-h-[44px] items-center gap-1.5 px-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 underline decoration-2 underline-offset-4 hover:decoration-brand-yellow"
                     onClick={() => openShareDialog(doc)}
                     aria-label={`Partager ${doc.name}`}
                   >
@@ -286,7 +286,7 @@ export function ParentDocuments() {
                     <span className="hidden md:inline">Partager</span>
                   </button>
                   <button
-                    className="flex min-h-[44px] items-center gap-1.5 px-2.5 text-sm font-bold text-slate-900 underline decoration-2 underline-offset-4 hover:decoration-brand-yellow disabled:text-muted-foreground"
+                    className="flex min-h-[44px] items-center gap-1.5 px-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 underline decoration-2 underline-offset-4 hover:decoration-brand-yellow disabled:text-muted-foreground"
                     onClick={() => openPreview(doc)}
                     disabled={!doc.url}
                     aria-label={`Voir ${doc.name}`}
@@ -295,7 +295,7 @@ export function ParentDocuments() {
                     <span className="hidden md:inline">Voir</span>
                   </button>
                   <button
-                    className="flex min-h-[44px] items-center gap-1.5 px-2.5 text-sm font-bold text-slate-900 underline decoration-2 underline-offset-4 hover:decoration-brand-yellow"
+                    className="flex min-h-[44px] items-center gap-1.5 px-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 underline decoration-2 underline-offset-4 hover:decoration-brand-yellow"
                     onClick={() => downloadDocument(doc)}
                     aria-label={`Télécharger ${doc.name}`}
                   >
@@ -324,18 +324,18 @@ export function ParentDocuments() {
         }}
         className={cn(
           'flex flex-wrap items-center justify-between gap-4 rounded-[6px_28px_6px_28px] border-2 border-dashed p-6 transition-colors sm:p-8',
-          isDragOver ? 'border-slate-900 bg-slate-50' : 'border-slate-300'
+          isDragOver ? 'border-slate-900 dark:border-slate-500 bg-slate-50 dark:bg-slate-800' : 'border-slate-300 dark:border-slate-700'
         )}
       >
         <div>
-          <h2 className="font-brand text-xl font-bold text-slate-900">Ajouter un document</h2>
+          <h2 className="font-brand text-xl font-bold text-slate-900 dark:text-slate-100">Ajouter un document</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Glissez un fichier ici ou choisissez-le sur votre appareil.
           </p>
         </div>
         <Button
           variant="outline"
-          className="h-11 border-slate-900 font-bold text-slate-900 hover:bg-slate-100 sm:h-12 sm:px-6"
+          className="h-11 border-slate-900 dark:border-slate-500 font-bold text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 sm:h-12 sm:px-6"
           onClick={() => setIsAddDialogOpen(true)}
         >
           <FileText className="mr-1.5 h-4 w-4" />

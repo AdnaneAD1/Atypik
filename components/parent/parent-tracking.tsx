@@ -292,7 +292,7 @@ export function ParentTracking() {
                   'flex min-w-0 items-center gap-2.5 rounded-full py-2 pl-2 pr-3 text-left transition-colors sm:gap-3 sm:pr-5',
                   selected
                     ? 'bg-primary text-white'
-                    : 'bg-white text-slate-900 hover:bg-slate-50'
+                    : 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800'
                 )}
               >
                 <span className={cn(
@@ -307,7 +307,7 @@ export function ParentTracking() {
                   )}
                 </span>
                 <span className="min-w-0">
-                  <span className={cn('block truncate text-sm font-bold', selected ? 'text-white' : 'text-slate-900')}>
+                  <span className={cn('block truncate text-sm font-bold', selected ? 'text-white' : 'text-slate-900 dark:text-slate-100')}>
                     {transport.childName}, {transport.time}
                   </span>
                   <span className={cn('block truncate text-xs', selected ? 'text-white/75' : 'text-muted-foreground')}>
@@ -323,13 +323,13 @@ export function ParentTracking() {
       {selectedTransport ? (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
           {/* Carte — fond clair pendant le chargement */}
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[6px_28px_6px_28px] bg-slate-100 sm:aspect-[800/560]">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[6px_28px_6px_28px] bg-slate-100 dark:bg-slate-800 sm:aspect-[800/560]">
             <div ref={mapRef} className="absolute inset-0" />
             {!isMapLoaded && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-2">
                   <LoaderDots large />
-                  <p className="text-sm text-slate-500">Initialisation...</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Initialisation...</p>
                 </div>
               </div>
             )}
@@ -343,14 +343,14 @@ export function ParentTracking() {
             <span className="absolute bottom-4 right-4 rounded-md bg-slate-900 px-3.5 py-1.5 font-brand text-base font-bold text-white">
               {(selectedTransport.distance / 1000).toFixed(2).replace('.', ',')} km
             </span>
-            <span className="absolute bottom-4 left-5 rounded bg-white/85 px-2 py-0.5 text-sm font-medium text-slate-700">
+            <span className="absolute bottom-4 left-5 rounded bg-white/85 dark:bg-slate-900/85 px-2 py-0.5 text-sm font-medium text-slate-700 dark:text-slate-300">
               Itinéraire prévu
             </span>
           </div>
 
           {/* Panneau info — carte claire à liseré jaune */}
-          <div className="rounded-[6px_28px_6px_28px] bg-white p-6 shadow-sm sm:p-7">
-            <h2 className="font-brand text-2xl font-bold leading-tight text-slate-900">
+          <div className="rounded-[6px_28px_6px_28px] bg-white dark:bg-slate-900 p-6 shadow-sm sm:p-7">
+            <h2 className="font-brand text-2xl font-bold leading-tight text-slate-900 dark:text-slate-100">
               {isEnRoute
                 ? `${firstName} est en route.`
                 : `${firstName} n'est pas encore parti.`}
@@ -370,8 +370,8 @@ export function ParentTracking() {
                   className={cn(
                     'border-t-[6px] pt-2.5 text-sm',
                     i === stepIndex
-                      ? 'border-primary font-bold text-slate-900'
-                      : 'border-slate-200 text-muted-foreground'
+                      ? 'border-primary font-bold text-slate-900 dark:text-slate-100'
+                      : 'border-slate-200 dark:border-slate-700 text-muted-foreground'
                   )}
                 >
                   {step}
@@ -381,7 +381,7 @@ export function ParentTracking() {
 
             {/* Heure */}
             <div className="mt-7 flex items-baseline gap-3.5">
-              <span className="font-brand text-6xl font-bold leading-none tracking-tight text-slate-900">
+              <span className="font-brand text-6xl font-bold leading-none tracking-tight text-slate-900 dark:text-slate-100">
                 {selectedTransport.time}
               </span>
               <span className="text-sm text-muted-foreground">
@@ -391,10 +391,10 @@ export function ParentTracking() {
 
             {/* Itinéraire — pointillés + points vert/corail */}
             <ul className="relative mt-6 space-y-5">
-              <span className="absolute bottom-7 left-[7px] top-3.5 w-0 border-l-2 border-dotted border-slate-300" aria-hidden="true" />
+              <span className="absolute bottom-7 left-[7px] top-3.5 w-0 border-l-2 border-dotted border-slate-300 dark:border-slate-700" aria-hidden="true" />
               <li className="relative pl-8">
                 <span className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full bg-emerald-600" />
-                <p className="truncate text-sm font-bold text-slate-900">
+                <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
                   {shortAddr(selectedTransport.from?.address) || 'Départ'}
                 </p>
                 <p className="mt-0.5 break-words text-xs text-muted-foreground">
@@ -403,7 +403,7 @@ export function ParentTracking() {
               </li>
               <li className="relative pl-8">
                 <span className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full bg-primary" />
-                <p className="truncate text-sm font-bold text-slate-900">
+                <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
                   {shortAddr(selectedTransport.to?.address) || 'Arrivée'}
                 </p>
                 <p className="mt-0.5 break-words text-xs text-muted-foreground">
@@ -413,11 +413,11 @@ export function ParentTracking() {
             </ul>
 
             {/* Faits — grille dt/dd comme la référence */}
-            <dl className="mt-7 grid grid-cols-2 gap-x-4 gap-y-5 border-t border-slate-200 pt-6">
+            <dl className="mt-7 grid grid-cols-2 gap-x-4 gap-y-5 border-t border-slate-200 dark:border-slate-700 pt-6">
               <div>
                 <dt className="text-sm text-muted-foreground">Enfant</dt>
                 <dd className="mt-0.5 flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-[10px] font-bold text-slate-900">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-900 dark:text-slate-100">
                     {childPhoto(selectedTransport.childName) ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={childPhoto(selectedTransport.childName)} alt="" className="h-full w-full object-cover" />
@@ -425,7 +425,7 @@ export function ParentTracking() {
                       childInitials(selectedTransport.childName)
                     )}
                   </span>
-                  <span className="truncate text-base font-bold text-slate-900">{selectedTransport.childName}</span>
+                  <span className="truncate text-base font-bold text-slate-900 dark:text-slate-100">{selectedTransport.childName}</span>
                 </dd>
               </div>
               <div>
@@ -440,18 +440,18 @@ export function ParentTracking() {
               {selectedTransport.motif && selectedTransport.motif.trim() !== '' && (
                 <div>
                   <dt className="text-sm text-muted-foreground">Motif</dt>
-                  <dd className="mt-0.5 break-words text-base font-bold text-slate-900">{selectedTransport.motif}</dd>
+                  <dd className="mt-0.5 break-words text-base font-bold text-slate-900 dark:text-slate-100">{selectedTransport.motif}</dd>
                 </div>
               )}
               {typeof (selectedTransport as any).waitingTime === 'number' && (
                 <div>
                   <dt className="text-sm text-muted-foreground">Temps d&apos;attente</dt>
-                  <dd className="mt-0.5 text-base font-bold text-slate-900">{(selectedTransport as any).waitingTime} min</dd>
+                  <dd className="mt-0.5 text-base font-bold text-slate-900 dark:text-slate-100">{(selectedTransport as any).waitingTime} min</dd>
                 </div>
               )}
               <div>
                 <dt className="text-sm text-muted-foreground">Distance</dt>
-                <dd className="mt-0.5 text-base font-bold text-slate-900">
+                <dd className="mt-0.5 text-base font-bold text-slate-900 dark:text-slate-100">
                   {(selectedTransport.distance / 1000).toFixed(2).replace('.', ',')} km
                 </dd>
               </div>

@@ -290,8 +290,8 @@ export function DriverCalendar() {
               {mission.parentName && (
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8 border">
-                    <AvatarFallback className="bg-slate-100 text-transparent">
-                      <User className="h-3.5 w-3.5 text-slate-500" />
+                    <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-transparent">
+                      <User className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                     </AvatarFallback>
                   </Avatar>
                   <p className="min-w-0 truncate text-sm font-medium leading-tight">{mission.parentName}</p>
@@ -555,7 +555,7 @@ export function DriverCalendar() {
                   <div className="flex items-start gap-3">
                     <div className="flex flex-col items-center pt-1.5">
                       <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                      <span className="my-1 h-8 w-0 border-l-2 border-dashed border-slate-300" />
+                      <span className="my-1 h-8 w-0 border-l-2 border-dashed border-slate-300 dark:border-slate-700" />
                       <span className="h-2.5 w-2.5 rounded-full bg-primary" />
                     </div>
                     <div className="min-w-0 flex-1 space-y-3.5">
@@ -581,8 +581,8 @@ export function DriverCalendar() {
                 {selectedMission.parentName && (
                   <div className="flex items-center gap-3 px-5 py-3.5">
                     <Avatar className="h-8 w-8 border">
-                      <AvatarFallback className="bg-slate-100 text-transparent">
-                        <User className="h-3.5 w-3.5 text-slate-500" />
+                      <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-transparent">
+                        <User className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                       </AvatarFallback>
                     </Avatar>
                     <p className="min-w-0 flex-1 truncate text-sm font-medium">{selectedMission.parentName}</p>

@@ -546,7 +546,7 @@ export function RegisterForm() {
                         <FormControl>
                           <div className="relative">
                             <Input placeholder="123456789" {...field} className={cn(inputClasses, 'pl-10')} />
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none">
                               <CreditCard className="h-[18px] w-[18px]" />
                             </div>
                           </div>
@@ -564,7 +564,7 @@ export function RegisterForm() {
                         <FormControl>
                           <div className="relative">
                             <Input placeholder="987654321" {...field} className={cn(inputClasses, 'pl-10')} />
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none">
                               <ShieldCheck className="h-[18px] w-[18px]" />
                             </div>
                           </div>

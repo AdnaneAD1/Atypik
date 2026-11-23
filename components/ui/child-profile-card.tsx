@@ -40,26 +40,26 @@ export function ChildProfileCard({ child, className, onViewProfile }: ChildProfi
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'high':
-        return 'bg-red-50/50 border-red-100 text-red-600';
+        return 'bg-red-50/50 border-red-100 text-red-600 dark:bg-red-950/40 dark:border-red-900 dark:text-red-400';
       case 'medium':
-        return 'bg-amber-50/50 border-amber-100 text-amber-600';
+        return 'bg-amber-50/50 border-amber-100 text-amber-600 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-400';
       case 'low':
-        return 'bg-blue-50/50 border-blue-100 text-blue-600';
+        return 'bg-blue-50/50 border-blue-100 text-blue-600 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-400';
       default:
-        return 'bg-gray-50/50 border-gray-100 text-gray-600';
+        return 'bg-gray-50/50 border-gray-100 text-gray-600 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-400';
     }
   };
 
   const getSeverityBgColor = (severity: string) => {
     switch (severity) {
       case 'high':
-        return 'bg-red-100';
+        return 'bg-red-100 dark:bg-red-950';
       case 'medium':
-        return 'bg-amber-100';
+        return 'bg-amber-100 dark:bg-amber-950';
       case 'low':
-        return 'bg-blue-100';
+        return 'bg-blue-100 dark:bg-blue-950';
       default:
-        return 'bg-gray-100';
+        return 'bg-gray-100 dark:bg-gray-800';
     }
   };
 

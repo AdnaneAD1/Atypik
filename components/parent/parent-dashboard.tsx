@@ -247,7 +247,7 @@ export function ParentDashboard() {
                             src={children.find(c => c.name === nextTrip.childName)?.avatar || ''}
                             alt={nextTrip.childName || 'Enfant'}
                           />
-                          <AvatarFallback className="bg-white text-sm font-bold text-primary">
+                          <AvatarFallback className="bg-white dark:bg-slate-900 text-sm font-bold text-primary">
                             {(nextTrip.childName || 'EN')
                               .split(' ')
                               .map(n => n[0])
@@ -262,7 +262,7 @@ export function ParentDashboard() {
                             <h3 className="truncate font-brand text-2xl font-bold leading-none">
                               {nextTrip.childName}
                             </h3>
-                            <Badge variant="outline" className="rounded-full border-primary/25 bg-white px-2.5 text-[11px] font-semibold text-primary">
+                            <Badge variant="outline" className="rounded-full border-primary/25 bg-white dark:bg-slate-900 px-2.5 text-[11px] font-semibold text-primary">
                               {nextTrip.transportType === 'aller-retour' ? 'Aller-retour'
                                 : nextTrip.transportType === 'aller' ? 'Aller' : 'Retour'}
                             </Badge>
@@ -270,7 +270,7 @@ export function ParentDashboard() {
                         </div>
                       </div>
                       {/* Segments de statut — style image de référence */}
-                      <div className="flex shrink-0 rounded-full border border-primary/20 bg-white p-0.5 text-[11px] font-semibold">
+                      <div className="flex shrink-0 rounded-full border border-primary/20 bg-white dark:bg-slate-900 p-0.5 text-[11px] font-semibold">
                         <span className={cn(
                           'rounded-full px-2.5 py-1',
                           nextTrip.status === 'programmed' ? 'bg-primary text-white' : 'text-muted-foreground'
@@ -352,7 +352,7 @@ export function ParentDashboard() {
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
-                          className="flex-1 border-primary/25 bg-white text-primary hover:bg-primary/5 hover:text-primary sm:flex-none"
+                          className="flex-1 border-primary/25 bg-white dark:bg-slate-900 text-primary hover:bg-primary/5 hover:text-primary sm:flex-none"
                           onClick={() => router.push('/parent/messages')}
                         >
                           <MessageSquare className="mr-2 h-4 w-4" />
@@ -400,7 +400,7 @@ export function ParentDashboard() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-10 shrink-0 border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      className="h-10 shrink-0 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
                       onClick={() => router.push('/parent/calendar')}
                     >
                       Voir plus
@@ -447,13 +447,13 @@ export function ParentDashboard() {
                   <TabsList className="mb-5 w-full justify-start gap-2 bg-transparent p-0">
                     <TabsTrigger
                       value="received"
-                      className="min-h-[40px] rounded-full border border-slate-200 bg-transparent px-4 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"
+                      className="min-h-[40px] rounded-full border border-slate-200 dark:border-slate-700 bg-transparent px-4 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"
                     >
                       Reçues
                     </TabsTrigger>
                     <TabsTrigger
                       value="given"
-                      className="min-h-[40px] rounded-full border border-slate-200 bg-transparent px-4 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"
+                      className="min-h-[40px] rounded-full border border-slate-200 dark:border-slate-700 bg-transparent px-4 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"
                     >
                       Données
                     </TabsTrigger>
@@ -506,14 +506,14 @@ export function ParentDashboard() {
                                     {[1, 2, 3, 4, 5].map((star) => (
                                       <Star
                                         key={star}
-                                        className={`h-4 w-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"}`}
+                                        className={`h-4 w-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200 dark:text-slate-600"}`}
                                       />
                                     ))}
                                   </div>
                                 </div>
 
                                 {review.comment && (
-                                  <p className="mt-2.5 border-l-2 border-slate-200 pl-3 text-sm italic leading-relaxed text-muted-foreground">
+                                  <p className="mt-2.5 border-l-2 border-slate-200 dark:border-slate-700 pl-3 text-sm italic leading-relaxed text-muted-foreground">
                                     &quot;{review.comment}&quot;
                                   </p>
                                 )}
@@ -546,7 +546,7 @@ export function ParentDashboard() {
                         ))
                       ) : (
                         <div className="py-10">
-                          <p className="text-sm font-bold text-slate-900">Aucune évaluation reçue</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Aucune évaluation reçue</p>
                           <p className="mt-1 text-sm text-muted-foreground">Les évaluations apparaîtront ici</p>
                         </div>
                       )}
@@ -602,7 +602,7 @@ export function ParentDashboard() {
                                       {[1, 2, 3, 4, 5].map((star) => (
                                         <Star
                                           key={star}
-                                          className={`h-4 w-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"}`}
+                                          className={`h-4 w-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200 dark:text-slate-600"}`}
                                         />
                                       ))}
                                     </div>
@@ -610,7 +610,7 @@ export function ParentDashboard() {
                                 </div>
 
                                 {review.comment && (
-                                  <p className="mt-2.5 border-l-2 border-slate-200 pl-3 text-sm italic leading-relaxed text-muted-foreground">
+                                  <p className="mt-2.5 border-l-2 border-slate-200 dark:border-slate-700 pl-3 text-sm italic leading-relaxed text-muted-foreground">
                                     &quot;{review.comment}&quot;
                                   </p>
                                 )}
@@ -620,7 +620,7 @@ export function ParentDashboard() {
                         ))
                       ) : (
                         <div className="py-10">
-                          <p className="text-sm font-bold text-slate-900">Aucune évaluation donnée</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Aucune évaluation donnée</p>
                           <p className="mt-1 text-sm text-muted-foreground">Vos évaluations apparaîtront ici</p>
                         </div>
                       )}

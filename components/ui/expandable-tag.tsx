@@ -21,7 +21,7 @@ export function ExpandableTag({ text, maxChars = 40, className }: ExpandableTagP
   const isLong = text.length > maxChars;
 
   const chipClass = cn(
-    'inline-flex max-w-full items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700',
+    'inline-flex max-w-full items-center gap-1.5 rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-xs font-medium text-slate-700 dark:text-slate-300',
     className
   );
 
@@ -37,7 +37,7 @@ export function ExpandableTag({ text, maxChars = 40, className }: ExpandableTagP
       title={text}
       className={cn(
         chipClass,
-        'cursor-pointer text-left transition-colors hover:bg-slate-100',
+        'cursor-pointer text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal'
       )}
     >
@@ -46,7 +46,7 @@ export function ExpandableTag({ text, maxChars = 40, className }: ExpandableTagP
       </span>
       <Info
         aria-hidden="true"
-        className={cn('h-3 w-3 shrink-0', expanded ? 'text-brand-teal' : 'text-slate-400')}
+        className={cn('h-3 w-3 shrink-0', expanded ? 'text-brand-teal' : 'text-slate-400 dark:text-slate-500')}
       />
     </button>
   );

@@ -95,7 +95,7 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
               {childrenData.map((child, index) => (
                 <motion.div
                   key={child.id}
-                  className="group -mx-2 flex cursor-pointer items-center gap-3.5 rounded-lg px-2 py-4 transition-colors active:bg-slate-50"
+                  className="group -mx-2 flex cursor-pointer items-center gap-3.5 rounded-lg px-2 py-4 transition-colors active:bg-slate-50 dark:active:bg-slate-800"
                   onClick={() => handleShowDetails(child)}
                 >
                   <Avatar className="h-11 w-11 shrink-0">
@@ -110,7 +110,7 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
                   </Avatar>
 
                   <div className="min-w-0 flex-1">
-                    <h4 className="truncate font-bold text-slate-900">{child.name}</h4>
+                    <h4 className="truncate font-bold text-slate-900 dark:text-slate-100">{child.name}</h4>
                     <p className="mt-0.5 truncate text-sm text-muted-foreground">
                       {child.age} ans, {child.school}
                     </p>
@@ -125,7 +125,7 @@ export function ParentChildListCard({ childrenData = [], loading = false }: Pare
                     )}
                   </div>
 
-                  <span className="shrink-0 text-sm font-semibold text-slate-900 underline underline-offset-4">
+                  <span className="shrink-0 text-sm font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4">
                     Voir le profil
                   </span>
                 </motion.div>

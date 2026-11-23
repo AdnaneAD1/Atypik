@@ -181,7 +181,7 @@ export function LoginForm() {
                       {...field}
                       className={inputClasses}
                     />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none">
                       <Mail className="h-[18px] w-[18px]" />
                     </div>
                   </div>
@@ -206,7 +206,7 @@ export function LoginForm() {
                       {...field}
                       className={`${inputClasses} pr-10`}
                     />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none">
                       <Lock className="h-[18px] w-[18px]" />
                     </div>
                     <Button

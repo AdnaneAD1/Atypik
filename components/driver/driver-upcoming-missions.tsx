@@ -179,13 +179,13 @@ export function DriverUpcomingMissions({ missions, onStarted }: DriverUpcomingMi
   return (
     <>
       <section>
-        <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900">Missions à venir</h2>
+        <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Missions à venir</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Aujourd&apos;hui · {upcomingMissions.length} mission{upcomingMissions.length > 1 ? 's' : ''} planifiée{upcomingMissions.length > 1 ? 's' : ''}
         </p>
 
         {upcomingMissions.length === 0 ? (
-          <div className="mt-6 flex flex-col items-center gap-5 border-t-2 border-slate-900 py-8 text-center sm:flex-row sm:text-left">
+          <div className="mt-6 flex flex-col items-center gap-5 border-t-2 border-slate-900 dark:border-slate-500 py-8 text-center sm:flex-row sm:text-left">
             {/* Illustration : voiture extraite du logo de marque */}
             <div className="h-28 w-[102px] shrink-0 overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -210,8 +210,8 @@ export function DriverUpcomingMissions({ missions, onStarted }: DriverUpcomingMi
             </div>
           </div>
         ) : (
-          <div className="mt-6 border-t-2 border-slate-900">
-            <div className="divide-y divide-slate-200">
+          <div className="mt-6 border-t-2 border-slate-900 dark:border-slate-500">
+            <div className="divide-y divide-slate-200 dark:divide-slate-700">
               {upcomingMissions.map((mission) => {
                 const totalKm = ((mission.distance * (mission.transportType === 'aller-retour' ? 2 : 1)) / 1000).toFixed(1).replace('.', ',');
                 return (
@@ -220,7 +220,7 @@ export function DriverUpcomingMissions({ missions, onStarted }: DriverUpcomingMi
                     className="grid grid-cols-1 gap-x-8 gap-y-4 py-6 sm:grid-cols-[auto_minmax(0,1fr)]"
                   >
                     {/* Gros horaire */}
-                    <p className="font-brand text-4xl font-bold leading-none tracking-tight text-slate-900 sm:text-5xl">
+                    <p className="font-brand text-4xl font-bold leading-none tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
                       {mission.scheduledTime || '—'}
                     </p>
 
@@ -233,7 +233,7 @@ export function DriverUpcomingMissions({ missions, onStarted }: DriverUpcomingMi
                             {(mission.child.name || 'E').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <h3 className="font-brand text-xl font-bold text-slate-900">
+                        <h3 className="font-brand text-xl font-bold text-slate-900 dark:text-slate-100">
                           {mission.child.name}
                           <span className="ml-2 inline-block rounded-full bg-brand-pink/15 px-3 py-0.5 align-middle text-sm font-bold text-brand-pink">
                             {mission.transportType === 'aller-retour'
@@ -249,24 +249,24 @@ export function DriverUpcomingMissions({ missions, onStarted }: DriverUpcomingMi
                       <ul className="relative mt-4 space-y-4">
                         <span
                           aria-hidden="true"
-                          className="absolute bottom-6 left-[5px] top-3 w-0 border-l-2 border-dotted border-slate-300"
+                          className="absolute bottom-6 left-[5px] top-3 w-0 border-l-2 border-dotted border-slate-300 dark:border-slate-700"
                         />
                         <li className="relative pl-7">
                           <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-emerald-600" />
-                          <p className="truncate text-sm font-bold text-slate-900">{mission.from.address}</p>
+                          <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">{mission.from.address}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
                             Départ prévu à {mission.scheduledTime || '—'}
                           </p>
                         </li>
                         <li className="relative pl-7">
                           <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-primary" />
-                          <p className="truncate text-sm font-bold text-slate-900">{mission.to.address}</p>
+                          <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">{mission.to.address}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground">Destination</p>
                         </li>
                         {mission.transportType === 'aller-retour' && (
                           <li className="relative pl-7">
                             <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-brand-yellow" />
-                            <p className="truncate text-sm font-bold text-slate-900">{mission.from.address}</p>
+                            <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">{mission.from.address}</p>
                             <p className="mt-0.5 text-xs text-muted-foreground">Retour</p>
                           </li>
                         )}
@@ -274,8 +274,8 @@ export function DriverUpcomingMissions({ missions, onStarted }: DriverUpcomingMi
 
                       {/* Infos */}
                       <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
-                        <span>Parent : <b className="font-bold text-slate-900">{mission.parent.name}</b></span>
-                        <span><b className="font-bold text-slate-900">{totalKm} km</b> au total</span>
+                        <span>Parent : <b className="font-bold text-slate-900 dark:text-slate-100">{mission.parent.name}</b></span>
+                        <span><b className="font-bold text-slate-900 dark:text-slate-100">{totalKm} km</b> au total</span>
                       </div>
 
                       {/* Actions */}
@@ -290,7 +290,7 @@ export function DriverUpcomingMissions({ missions, onStarted }: DriverUpcomingMi
                         </Button>
                         <Button
                           variant="outline"
-                          className="h-11 border-[1.5px] border-slate-900 px-6 font-bold text-slate-900 hover:bg-slate-100"
+                          className="h-11 border-[1.5px] border-slate-900 dark:border-slate-500 px-6 font-bold text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
                           onClick={() => handleShowRoute(mission)}
                         >
                           Itinéraire

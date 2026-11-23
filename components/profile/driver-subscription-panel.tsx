@@ -141,7 +141,7 @@ export function DriverSubscriptionPanel() {
             {selectedDriver && (
               <Button
                 variant="outline"
-                className="mt-auto h-11 self-start border-slate-900 text-slate-900 hover:bg-slate-100"
+                className="mt-auto h-11 self-start border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
                 onClick={() => setDriverProfileOpen(true)}
               >
                 Voir

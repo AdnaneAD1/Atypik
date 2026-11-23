@@ -151,8 +151,8 @@ export function DriverStats() {
       <dl className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {statCards.map((s, index) => (
           <div key={s.label} className={cn('rounded-xl p-5 sm:p-6', s.tint)}>
-            <dt className="text-sm text-slate-600">{s.label}</dt>
-            <dd className="mt-1.5 flex items-baseline gap-1.5 font-brand text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+            <dt className="text-sm text-slate-600 dark:text-slate-400">{s.label}</dt>
+            <dd className="mt-1.5 flex items-baseline gap-1.5 font-brand text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl lg:text-5xl">
               <AnimatedCounter
                 value={s.value}
                 duration={1.5}
@@ -163,7 +163,7 @@ export function DriverStats() {
                 <span className="text-xl font-medium text-muted-foreground">{s.unit}</span>
               )}
             </dd>
-            <dd className="mt-2 text-sm text-slate-600">{s.sub}</dd>
+            <dd className="mt-2 text-sm text-slate-600 dark:text-slate-400">{s.sub}</dd>
           </div>
         ))}
       </dl>
@@ -171,19 +171,19 @@ export function DriverStats() {
       {/* Activité + performance */}
       <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-14">
         {/* Activité hebdomadaire */}
-        <section className="border-t-2 border-slate-900 pt-6">
-          <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900">
+        <section className="border-t-2 border-slate-900 dark:border-slate-500 pt-6">
+          <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Activité hebdomadaire
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">Missions par jour</p>
 
           <div
-            className="relative mt-7 grid h-64 grid-cols-7 items-end gap-2.5 border-b-2 border-slate-900 sm:h-72"
+            className="relative mt-7 grid h-64 grid-cols-7 items-end gap-2.5 border-b-2 border-slate-900 dark:border-slate-500 sm:h-72"
             role="img"
             aria-label={`Missions par jour cette semaine : ${days.map((d, i) => `${stats.weeklyActivity[i]} ${d}`).join(', ')}`}
           >
             {/* Ligne médiane en pointillés */}
-            <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-1/2 border-t border-dashed border-slate-200" />
+            <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-1/2 border-t border-dashed border-slate-200 dark:border-slate-700" />
             {stats.weeklyActivity.map((value, i) => {
               const isToday = i === todayIndex;
               return (
@@ -191,7 +191,7 @@ export function DriverStats() {
                   <div
                     className={cn(
                       'w-full rounded-t transition-all duration-500',
-                      isToday ? 'bg-primary' : 'bg-slate-200'
+                      isToday ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'
                     )}
                     style={{ height: value === 0 ? '6px' : `${(value / maxWeekly) * 100}%` }}
                   />
@@ -218,17 +218,17 @@ export function DriverStats() {
 
         {/* Performance globale */}
         <section className="rounded-[6px_28px_6px_28px] bg-brand-yellow/25 p-6 sm:p-7">
-          <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900">
+          <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Performance globale
           </h2>
           <div className="mt-6 flex items-baseline gap-3">
-            <b className="font-brand text-6xl font-bold leading-none tracking-tight text-slate-900 sm:text-7xl">
+            <b className="font-brand text-6xl font-bold leading-none tracking-tight text-slate-900 dark:text-slate-100 sm:text-7xl">
               {completionRate}&nbsp;%
             </b>
             <span className="text-sm text-muted-foreground">des missions complétées</span>
           </div>
           <div
-            className="mt-4 h-3.5 overflow-hidden rounded-full bg-white"
+            className="mt-4 h-3.5 overflow-hidden rounded-full bg-white dark:bg-slate-900"
             role="progressbar"
             aria-valuenow={completionRate}
             aria-valuemin={0}
@@ -243,19 +243,19 @@ export function DriverStats() {
           <ul className="mt-7">
             <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 py-3.5">
               <span className="text-sm">Satisfaction</span>
-              <b className="font-brand text-xl text-slate-900">
+              <b className="font-brand text-xl text-slate-900 dark:text-slate-100">
                 {stats.averageRating.toFixed(1)}<small className="text-sm font-normal text-muted-foreground"> /5</small>
               </b>
             </li>
             <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 py-3.5">
               <span className="text-sm">Missions complétées</span>
-              <b className="font-brand text-xl text-slate-900">
+              <b className="font-brand text-xl text-slate-900 dark:text-slate-100">
                 {stats.completedMissions}<small className="text-sm font-normal text-muted-foreground"> sur {stats.totalMissions}</small>
               </b>
             </li>
             <li className="flex items-center justify-between gap-4 border-t border-brand-yellow/40 py-3.5">
               <span className="text-sm">Enfants transportés</span>
-              <b className="font-brand text-xl text-slate-900">{stats.totalChildrenTransported}</b>
+              <b className="font-brand text-xl text-slate-900 dark:text-slate-100">{stats.totalChildrenTransported}</b>
             </li>
           </ul>
         </section>

@@ -6,7 +6,7 @@ export default function DriverPending() {
   const { logout } = useAuth();
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-      <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 shadow-lg rounded-lg p-8 max-w-md w-full">
         <h2 className="text-2xl font-bold mb-4 text-primary">Compte en attente de validation</h2>
         <p className="text-muted-foreground mb-6">
           Merci pour votre inscription en tant que chauffeur.<br />

@@ -211,7 +211,7 @@ export function DriverMissions() {
       <div className="grid gap-x-6 gap-y-3 sm:grid-cols-[92px_1fr]">
         {/* Horaire typographique */}
         <div>
-          <p className={cn('text-3xl font-bold tracking-tight', completed ? 'text-slate-400' : 'text-foreground')}>
+          <p className={cn('text-3xl font-bold tracking-tight', completed ? 'text-slate-400 dark:text-slate-500' : 'text-foreground')}>
             {mission.time}
           </p>
           <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
@@ -274,7 +274,7 @@ export function DriverMissions() {
                 <p className="truncate text-xs text-muted-foreground">{mission.from.address}</p>
               </div>
             </div>
-            <div className="my-1 ml-[4px] h-4 w-0 border-l-2 border-dashed border-slate-300" />
+            <div className="my-1 ml-[4px] h-4 w-0 border-l-2 border-dashed border-slate-300 dark:border-slate-700" />
             <div className="flex items-start gap-3">
               <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
               <div className="min-w-0">
@@ -360,7 +360,7 @@ export function DriverMissions() {
               placeholder="Rechercher une mission"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-none border-0 border-b border-slate-300 bg-transparent pl-6 shadow-none focus-visible:ring-0 sm:w-[240px]"
+              className="w-full rounded-none border-0 border-b border-slate-300 dark:border-slate-700 bg-transparent pl-6 shadow-none focus-visible:ring-0 sm:w-[240px]"
             />
           </div>
           <DropdownMenu>
@@ -558,7 +558,7 @@ export function DriverMissions() {
                   <div className="flex items-start gap-3">
                     <div className="flex flex-col items-center pt-1.5">
                       <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                      <span className="my-1 h-8 w-0 border-l-2 border-dashed border-slate-300" />
+                      <span className="my-1 h-8 w-0 border-l-2 border-dashed border-slate-300 dark:border-slate-700" />
                       <span className="h-2.5 w-2.5 rounded-full bg-primary" />
                     </div>
                     <div className="min-w-0 flex-1 space-y-3.5">
@@ -584,8 +584,8 @@ export function DriverMissions() {
                 {selectedMission.parent?.name && (
                   <div className="flex items-center gap-3 px-5 py-3.5">
                     <Avatar className="h-8 w-8 border">
-                      <AvatarFallback className="bg-slate-100">
-                        <User className="h-3.5 w-3.5 text-slate-500" />
+                      <AvatarFallback className="bg-slate-100 dark:bg-slate-800">
+                        <User className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                       </AvatarFallback>
                     </Avatar>
                     <p className="min-w-0 flex-1 truncate text-sm font-medium">{selectedMission.parent.name}</p>

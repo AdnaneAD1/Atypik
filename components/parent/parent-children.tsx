@@ -158,8 +158,8 @@ export function ParentChildren() {
                     <div className="flex-1 w-full min-w-0">
                       <div className="flex flex-row items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">{child.name}</h3>
-                          <p className="text-xs sm:text-sm text-slate-600">
+                          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">{child.name}</h3>
+                          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                             {child.age} ans, {child.school}
                           </p>
                         </div>
@@ -167,7 +167,7 @@ export function ParentChildren() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-10 w-10 rounded-full bg-white/70 text-slate-700 hover:bg-white"
+                            className="h-10 w-10 rounded-full bg-white/70 dark:bg-slate-900/70 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900"
                             onClick={() => handleEditClick(child)}
                             aria-label={`Modifier ${child.name}`}
                           >
@@ -176,7 +176,7 @@ export function ParentChildren() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-10 w-10 rounded-full bg-white/70 text-primary hover:bg-white"
+                            className="h-10 w-10 rounded-full bg-white/70 dark:bg-slate-900/70 text-primary hover:bg-white dark:hover:bg-slate-900"
                             onClick={async () => {
                               if (child.id && confirm(`Êtes-vous sûr de vouloir supprimer ${child.name} ?`)) {
                                 await deleteChild(child.id);
@@ -190,8 +190,8 @@ export function ParentChildren() {
                       </div>
 
                       {/* Besoins — bloc blanc façon référence */}
-                      <div className="mt-3 rounded-xl bg-white/70 px-3.5 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <div className="mt-3 rounded-xl bg-white/70 dark:bg-slate-900/70 px-3.5 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                           Besoins spécifiques
                         </p>
                         {child.needs && child.needs.length > 0 ? (
@@ -201,16 +201,16 @@ export function ParentChildren() {
                             ))}
                           </div>
                         ) : (
-                          <p className="mt-1 text-xs text-slate-500">Aucun besoin renseigné</p>
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Aucun besoin renseigné</p>
                         )}
                       </div>
 
                       {/* Personnalité — sous filet */}
-                      <div className="mt-3 border-t border-slate-900/10 pt-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <div className="mt-3 border-t border-slate-900/10 dark:border-white/10 pt-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                           Personnalité
                         </p>
-                        <p className="mt-1 text-xs sm:text-sm font-medium text-slate-900 leading-relaxed">
+                        <p className="mt-1 text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 leading-relaxed">
                           {child.personality || 'Non renseignée'}
                         </p>
                       </div>

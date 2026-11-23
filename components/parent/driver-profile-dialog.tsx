@@ -32,8 +32,8 @@ export function DriverProfileDialog({ driver, open, onOpenChange }: DriverProfil
         <DialogHeader className="items-center gap-0 px-6 pb-5 pt-7 text-center">
           <Avatar className="h-24 w-24">
             <AvatarImage src={driver.avatar} alt={driver.name} />
-            <AvatarFallback className="bg-slate-100">
-              <UserRound className="h-10 w-10 text-slate-400" />
+            <AvatarFallback className="bg-slate-100 dark:bg-slate-800">
+              <UserRound className="h-10 w-10 text-slate-400 dark:text-slate-500" />
             </AvatarFallback>
           </Avatar>
           <DialogTitle className="mt-4 font-brand text-2xl font-bold leading-tight">
@@ -85,7 +85,7 @@ export function DriverProfileDialog({ driver, open, onOpenChange }: DriverProfil
                     <span className="text-muted-foreground">Ponctualité</span>
                     <span className="font-brand font-bold">{Math.round(s!.punctualityRate)} %</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                     <div
                       className="h-full rounded-full bg-brand-teal"
                       style={{ width: `${Math.min(100, s!.punctualityRate)}%` }}
@@ -99,7 +99,7 @@ export function DriverProfileDialog({ driver, open, onOpenChange }: DriverProfil
                     <span className="text-muted-foreground">Fiabilité</span>
                     <span className="font-brand font-bold">{Math.round(s!.reliabilityScore)}/100</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                     <div
                       className="h-full rounded-full bg-brand-teal"
                       style={{ width: `${Math.min(100, s!.reliabilityScore)}%` }}
@@ -145,7 +145,7 @@ export function DriverProfileDialog({ driver, open, onOpenChange }: DriverProfil
           </p>
           <Button
             variant="outline"
-            className="h-11 w-full border-slate-900 text-slate-900 hover:bg-slate-100"
+            className="h-11 w-full border-slate-900 dark:border-slate-500 text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
             onClick={() => onOpenChange(false)}
           >
             Fermer

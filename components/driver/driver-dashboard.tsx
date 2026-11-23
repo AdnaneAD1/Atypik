@@ -104,8 +104,8 @@ export function DriverDashboard() {
       <dl className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {statsData.map((stat, index) => (
           <div key={index} className={cn('rounded-xl p-5 sm:p-6', stat.tint)}>
-            <dt className="text-sm text-slate-600">{stat.label}</dt>
-            <dd className="mt-1.5 flex items-baseline gap-1.5 font-brand text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+            <dt className="text-sm text-slate-600 dark:text-slate-400">{stat.label}</dt>
+            <dd className="mt-1.5 flex items-baseline gap-1.5 font-brand text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl lg:text-5xl">
               <AnimatedCounter
                 value={stat.value}
                 duration={1.5}

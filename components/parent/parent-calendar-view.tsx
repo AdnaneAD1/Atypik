@@ -64,7 +64,7 @@ export function ParentCalendarView({ weeklySchedule = [], loading = false }: Par
           variant="outline"
           size="sm"
           onClick={() => setCurrentWeek(currentWeek - 1)}
-          className="h-10 border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+          className="h-10 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
         >
           Semaine précédente
         </Button>
@@ -72,7 +72,7 @@ export function ParentCalendarView({ weeklySchedule = [], loading = false }: Par
           variant="outline"
           size="sm"
           onClick={() => setCurrentWeek(currentWeek + 1)}
-          className="h-10 border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+          className="h-10 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
         >
           Semaine suivante
         </Button>
@@ -90,7 +90,7 @@ export function ParentCalendarView({ weeklySchedule = [], loading = false }: Par
                 'relative flex flex-col items-center justify-center rounded-lg border py-2.5 transition-colors',
                 selected
                   ? 'border-brand-yellow bg-brand-yellow text-slate-900'
-                  : 'border-slate-200 text-slate-900 hover:border-brand-yellow/60'
+                  : 'border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:border-brand-yellow/60'
               )}
             >
               {isToday(index) && (
@@ -122,9 +122,9 @@ export function ParentCalendarView({ weeklySchedule = [], loading = false }: Par
         <div className="divide-y">
           {dayEvents.map((event, index) => (
             <div key={event.id || `event-${index}`} className="flex items-baseline gap-4 py-3.5 first:pt-0">
-              <span className="w-12 shrink-0 text-lg font-bold text-slate-900">{event.time}</span>
+              <span className="w-12 shrink-0 text-lg font-bold text-slate-900 dark:text-slate-100">{event.time}</span>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-bold text-slate-900">{event.childName}</p>
+                <p className="truncate font-bold text-slate-900 dark:text-slate-100">{event.childName}</p>
                 <p className="mt-0.5 truncate text-sm text-muted-foreground">
                   {event.from?.address || 'Adresse de départ'} · {typeLabel(event.type)}
                 </p>

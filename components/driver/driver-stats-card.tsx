@@ -19,7 +19,7 @@ export function DriverStatsCard({ stats, loading = false, error = null }: Driver
 
   return (
     <section>
-      <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900">
+      <h2 className="font-brand text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
         Statistiques de la semaine
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">Missions par jour</p>
@@ -37,7 +37,7 @@ export function DriverStatsCard({ stats, loading = false, error = null }: Driver
         <>
           {/* Histogramme — barres posées sur un filet */}
           <div
-            className="mt-7 grid h-52 grid-cols-7 items-end gap-2 border-b-2 border-slate-900"
+            className="mt-7 grid h-52 grid-cols-7 items-end gap-2 border-b-2 border-slate-900 dark:border-slate-500"
             role="img"
             aria-label={`Missions par jour cette semaine : ${days.map((d, i) => `${weekly[i]} ${d}`).join(', ')}`}
           >
@@ -46,14 +46,14 @@ export function DriverStatsCard({ stats, loading = false, error = null }: Driver
               return (
                 <div key={days[i]} className="flex h-full flex-col items-center justify-end gap-1.5">
                   {count > 0 && (
-                    <b className={cn('font-brand text-lg leading-none', isToday ? 'text-primary' : 'text-slate-900')}>
+                    <b className={cn('font-brand text-lg leading-none', isToday ? 'text-primary' : 'text-slate-900 dark:text-slate-100')}>
                       {count}
                     </b>
                   )}
                   <div
                     className={cn(
                       'w-full rounded-t transition-all duration-500',
-                      isToday ? 'bg-primary' : 'bg-slate-200'
+                      isToday ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'
                     )}
                     style={{ height: count === 0 ? '6px' : `${(count / maxCount) * 100}%` }}
                   />

@@ -234,7 +234,7 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
                     {mission.child.name[0]}
                   </AvatarFallback>
                 </Avatar>
-                <h2 className="font-brand text-2xl font-bold leading-tight text-slate-900 sm:text-3xl">
+                <h2 className="font-brand text-2xl font-bold leading-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
                   {mission.child.name}
                   <span className="ml-2.5 inline-block rounded-full bg-brand-pink/15 px-3 py-0.5 align-middle text-sm font-bold text-brand-pink">
                     {typeLabel}
@@ -248,7 +248,7 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
                   'rounded-full px-4 py-1.5 text-sm',
                   !isEnRoute
                     ? 'bg-brand-yellow/25 font-bold text-amber-800 ring-1 ring-inset ring-brand-yellow'
-                    : 'bg-slate-100 text-muted-foreground'
+                    : 'bg-slate-100 dark:bg-slate-800 text-muted-foreground'
                 )}
                 aria-current={!isEnRoute ? 'step' : undefined}
               >
@@ -259,7 +259,7 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
                   'rounded-full px-4 py-1.5 text-sm',
                   isEnRoute
                     ? 'bg-brand-yellow/25 font-bold text-amber-800 ring-1 ring-inset ring-brand-yellow'
-                    : 'bg-slate-100 text-muted-foreground'
+                    : 'bg-slate-100 dark:bg-slate-800 text-muted-foreground'
                 )}
                 aria-current={isEnRoute ? 'step' : undefined}
               >
@@ -280,7 +280,7 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
                 style={{ width: `${progress}%` }}
               />
               <div
-                className="absolute right-0 top-[6px] h-0 border-t-4 border-dashed border-slate-300"
+                className="absolute right-0 top-[6px] h-0 border-t-4 border-dashed border-slate-300 dark:border-slate-700"
                 style={{ left: `${progress}%` }}
               />
               <span className="absolute left-0 top-0 h-4 w-4 rounded-full border-[3px] border-white bg-emerald-600 ring-1 ring-slate-300" />
@@ -297,11 +297,11 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
             </div>
             <div className="mt-4 flex justify-between gap-6">
               <div className="min-w-0">
-                <p className="truncate text-base font-bold text-slate-900">{mission.from.address}</p>
+                <p className="truncate text-base font-bold text-slate-900 dark:text-slate-100">{mission.from.address}</p>
                 <p className="text-sm text-muted-foreground">Départ à {mission.time}</p>
               </div>
               <div className="min-w-0 shrink-0 text-right">
-                <p className="truncate text-base font-bold text-slate-900">{mission.to.address}</p>
+                <p className="truncate text-base font-bold text-slate-900 dark:text-slate-100">{mission.to.address}</p>
                 <p className="text-sm text-muted-foreground">
                   Destination · {((mission.distance || 0) / 1000).toFixed(1).replace('.', ',')} km
                 </p>
@@ -310,9 +310,9 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
           </div>
 
           {/* Pied : parent + actions */}
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-5">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 dark:border-slate-700 pt-5">
             <p className="text-sm text-muted-foreground">
-              Parent : <span className="font-bold text-slate-900">{mission.parent.name}</span>
+              Parent : <span className="font-bold text-slate-900 dark:text-slate-100">{mission.parent.name}</span>
             </p>
             <div className="flex flex-wrap items-center gap-2.5">
               <button
@@ -324,7 +324,7 @@ function DriverMissionCard({ mission, onCompleted }: DriverMissionCardProps) {
               </button>
               <Button
                 variant="outline"
-                className="h-12 border-[1.5px] border-slate-900 px-5 font-bold text-slate-900 hover:bg-slate-100"
+                className="h-12 border-[1.5px] border-slate-900 dark:border-slate-500 px-5 font-bold text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
                 onClick={handleViewMap}
               >
                 Démarrer le GPS

@@ -789,7 +789,7 @@ export function ParentCalendar() {
                     <div className="flex items-start gap-3">
                       <div className="flex flex-col items-center pt-1.5">
                         <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                        <span className="my-1 h-8 w-0 border-l-2 border-dashed border-slate-300" />
+                        <span className="my-1 h-8 w-0 border-l-2 border-dashed border-slate-300 dark:border-slate-700" />
                         <span className="h-2.5 w-2.5 rounded-full bg-primary" />
                       </div>
                       <div className="min-w-0 flex-1 space-y-3.5">

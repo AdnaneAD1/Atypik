@@ -80,7 +80,7 @@ export function NextTransportCard({ trip, child, loading = false }: NextTranspor
                   {trip.from.address}
                 </p>
                 <p className="truncate text-sm text-white/80">
-                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-white/50 align-middle" />
+                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-white/50 dark:bg-slate-900/50 align-middle" />
                   {trip.to.address}
                 </p>
               </div>

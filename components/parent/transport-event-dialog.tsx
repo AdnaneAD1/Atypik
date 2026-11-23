@@ -317,7 +317,7 @@ export function TransportEventDialog({
             {/* Section : enfant & horaire */}
             <section>
               <h3 className="font-brand text-base font-bold">Enfant &amp; horaire</h3>
-              <div className="mt-4 space-y-4 border-t-2 border-slate-900 pt-4">
+              <div className="mt-4 space-y-4 border-t-2 border-slate-900 dark:border-slate-500 pt-4">
             {/* Enfant et type de transport */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -421,7 +421,7 @@ export function TransportEventDialog({
             {/* Section : itinéraire */}
             <section>
               <h3 className="font-brand text-base font-bold">Itinéraire</h3>
-              <div className="mt-4 space-y-4 border-t-2 border-slate-900 pt-4">
+              <div className="mt-4 space-y-4 border-t-2 border-slate-900 dark:border-slate-500 pt-4">
             {/* Adresses: responsive grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Champ Lieu de départ */}
@@ -486,7 +486,7 @@ export function TransportEventDialog({
             {/* Section : motif */}
             <section>
               <h3 className="font-brand text-base font-bold">Motif</h3>
-              <div className="mt-4 border-t-2 border-slate-900 pt-4">
+              <div className="mt-4 border-t-2 border-slate-900 dark:border-slate-500 pt-4">
                 <FormField
                   control={form.control}
                   name="motif"
