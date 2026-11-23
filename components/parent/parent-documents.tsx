@@ -14,7 +14,11 @@ import { CarLoader } from '@/components/ui/loader';
 import { useDocuments, Document } from '@/hooks/use-documents';
 import { AddDocumentDialog } from './add-document-dialog';
 import { ShareDocumentDialog } from './share-document-dialog';
-import { DocumentViewer } from '@/components/ui/document-viewer';
+import dynamic from 'next/dynamic';
+const DocumentViewer = dynamic(
+  () => import('@/components/ui/document-viewer').then((m) => m.DocumentViewer),
+  { ssr: false }
+);
 import { DriverMediaViewer } from '@/components/driver/driver-media-viewer';
 import { getFileKind } from '@/lib/files/file-kind';
 import { cn } from '@/lib/utils';

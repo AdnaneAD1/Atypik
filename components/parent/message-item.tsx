@@ -9,7 +9,11 @@ import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DriverMediaViewer } from '@/components/driver/driver-media-viewer';
-import { DocumentViewer } from '@/components/ui/document-viewer';
+import dynamic from 'next/dynamic';
+const DocumentViewer = dynamic(
+  () => import('@/components/ui/document-viewer').then((m) => m.DocumentViewer),
+  { ssr: false }
+);
 import { getFileKind } from '@/lib/files/file-kind';
 import { cn } from '@/lib/utils';
 import {
