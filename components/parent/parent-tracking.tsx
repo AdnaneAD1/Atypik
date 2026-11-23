@@ -10,6 +10,8 @@ import { useTransport } from '@/hooks/use-transport';
 import { useTracking } from '@/hooks/use-tracking';
 import { useChildren } from '@/hooks/use-children';
 import { cn } from '@/lib/utils';
+import { loadGoogleMaps } from '@/lib/maps/load-google-maps';
+import Image from 'next/image';
 
 export function ParentTracking() {
   const { user } = useAuth();
@@ -21,6 +23,7 @@ export function ParentTracking() {
   
   const [selectedTransportId, setSelectedTransportId] = useState<string>('');
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
@@ -201,20 +204,16 @@ export function ParentTracking() {
     }
   }, [selectedTransport, initializeMap]);
 
-  // Précharger Google Maps si pas encore fait
+  // Précharger Google Maps si pas encore fait (loader partagé, erreur -> fallback)
   useEffect(() => {
-    if (!window.google && !document.querySelector('script[src*="maps.googleapis.com"]')) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
+    if (window.google) return;
+    loadGoogleMaps()
+      .then(() => {
         if (selectedTransport) {
           setTimeout(initializeMap, 50);
         }
-      };
-      document.head.appendChild(script);
-    }
+      })
+      .catch(() => setMapError(true));
   }, [selectedTransport, initializeMap]);
 
   // Filtrer les transports d'aujourd'hui (exclure les transports annulés)
@@ -296,12 +295,11 @@ export function ParentTracking() {
                 )}
               >
                 <span className={cn(
-                  'flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold sm:h-11 sm:w-11 sm:text-sm',
+                  'relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold sm:h-11 sm:w-11 sm:text-sm',
                   !photo && AVATAR_TINTS[index % AVATAR_TINTS.length]
                 )}>
                   {photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={photo} alt="" className="h-full w-full object-cover" />
+                    <Image src={photo} alt="" fill sizes="44px" className="object-cover" />
                   ) : (
                     childInitials(transport.childName)
                   )}
@@ -325,12 +323,19 @@ export function ParentTracking() {
           {/* Carte — fond clair pendant le chargement */}
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[6px_28px_6px_28px] bg-slate-100 dark:bg-slate-800 sm:aspect-[800/560]">
             <div ref={mapRef} className="absolute inset-0" />
-            {!isMapLoaded && (
+            {!isMapLoaded && !mapError && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-2">
                   <LoaderDots large />
                   <p className="text-sm text-slate-500 dark:text-slate-400">Initialisation...</p>
                 </div>
+              </div>
+            )}
+            {mapError && (
+              <div className="absolute inset-0 flex items-center justify-center p-6">
+                <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                  Carte indisponible pour le moment — réessayez plus tard.
+                </p>
               </div>
             )}
             <span className={cn(
@@ -417,10 +422,9 @@ export function ParentTracking() {
               <div>
                 <dt className="text-sm text-muted-foreground">Enfant</dt>
                 <dd className="mt-0.5 flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-900 dark:text-slate-100">
+                  <span className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-900 dark:text-slate-100">
                     {childPhoto(selectedTransport.childName) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={childPhoto(selectedTransport.childName)} alt="" className="h-full w-full object-cover" />
+                      <Image src={childPhoto(selectedTransport.childName) as string} alt="" fill sizes="28px" className="object-cover" />
                     ) : (
                       childInitials(selectedTransport.childName)
                     )}
