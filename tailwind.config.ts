@@ -16,8 +16,8 @@ const config: Config = {
       },
     },
     fontFamily: {
-      sans: ['Poppins', 'sans-serif'],
-      brand: ['Fredoka', 'Poppins', 'sans-serif'],
+      sans: ['var(--font-poppins)', 'Poppins', 'sans-serif'],
+      brand: ['var(--font-fredoka)', 'var(--font-poppins)', 'sans-serif'],
     },
     extend: {
       colors: {

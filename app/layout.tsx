@@ -1,8 +1,23 @@
 import './globals.css';
 import '../styles/progress-bars.css';
 import type { Metadata, Viewport } from 'next';
+import { Poppins, Fredoka } from 'next/font/google';
 import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/toaster';
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-poppins',
+  display: 'swap',
+});
+
+const fredoka = Fredoka({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-fredoka',
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -35,12 +50,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         {/* Utilisation de la balise meta avec color-scheme pour une meilleure compatibilitu00e9 */}
         <meta name="color-scheme" content="light dark" />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Fredoka:wght@500;600;700&display=swap" 
-          rel="stylesheet"
-        />
       </head>
-      <body className="font-sans bg-background">
+      <body className={`font-sans bg-background ${poppins.variable} ${fredoka.variable}`}>
         <Providers>
           {children}
           <Toaster />
