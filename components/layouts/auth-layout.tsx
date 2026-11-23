@@ -39,30 +39,31 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
-          className="w-full md:w-1/2 lg:w-[48%] min-h-screen flex flex-col items-center justify-center relative px-4 sm:px-8 overflow-y-auto"
+          className="w-full md:w-1/2 lg:w-[48%] min-h-screen flex flex-col relative overflow-y-auto"
         >
-          <div className="absolute top-5 right-5">
+          <div className="absolute top-5 right-5 z-20 rounded-full bg-white/80 backdrop-blur-sm dark:bg-slate-900/70 md:bg-transparent md:backdrop-blur-0 md:dark:bg-transparent">
             <ModeToggle />
           </div>
-          <div className="w-full max-w-md pt-8 pb-10 md:py-10">
-            {/* Wordmark mobile : dans la colonne, aligné avec le contenu */}
-            <div className="mb-6 md:hidden">
-              <Logo />
+
+          {/* Illustration mobile : plein cadre, chevauchée par la carte formulaire */}
+          <div className="relative h-56 w-full shrink-0 overflow-hidden sm:h-64 md:hidden">
+            <Image
+              src="/auth-side.png"
+              alt=""
+              fill
+              className="object-cover object-[50%_30%]"
+              priority
+            />
+          </div>
+
+          <div className="relative z-10 -mt-7 flex w-full flex-1 flex-col rounded-t-[28px] bg-white dark:bg-slate-950 md:mt-0 md:rounded-none">
+            <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 pb-10 pt-8 sm:px-8 md:py-10">
+              {/* Wordmark mobile : dans la carte, aligné avec le contenu */}
+              <div className="mb-6 md:hidden">
+                <Logo />
+              </div>
+              {children}
             </div>
-            {/* Illustration mobile : image de marque en arc avant le titre */}
-            <div
-              className="relative -mx-4 mb-8 h-40 overflow-hidden sm:-mx-8 sm:h-48 md:hidden"
-              style={{ borderRadius: '0 0 50% 50% / 0 0 90% 90%' }}
-            >
-              <Image
-                src="/auth-side.png"
-                alt=""
-                fill
-                className="object-cover object-[50%_28%]"
-                priority
-              />
-            </div>
-            {children}
           </div>
         </motion.div>
       </div>
