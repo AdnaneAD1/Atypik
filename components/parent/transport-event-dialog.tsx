@@ -24,6 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { MapPin } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
+import { loadGoogleMaps } from '@/lib/maps/load-google-maps';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
@@ -80,27 +81,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Fonction utilitaire pour charger le script Google Maps si besoin
-function loadGoogleMapsScript(apiKey: string, callback: () => void) {
-  if (typeof window === 'undefined') return;
-  if (window.google && window.google.maps && window.google.maps.places) {
-    callback();
-    return;
-  }
-  const existingScript = document.getElementById('google-maps-script');
-  if (existingScript) {
-    existingScript.addEventListener('load', callback);
-    return;
-  }
-  const script = document.createElement('script');
-  script.id = 'google-maps-script';
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-  script.async = true;
-  script.onload = callback;
-  document.body.appendChild(script);
-}
-
-
 interface TransportEventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -140,7 +120,9 @@ export function TransportEventDialog({
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey) return;
-    loadGoogleMapsScript(apiKey, () => setMapsLoaded(true));
+    loadGoogleMaps()
+      .then(() => setMapsLoaded(true))
+      .catch(() => setMapsLoaded(false));
   }, []);
 
   const form = useForm<FormValues>({

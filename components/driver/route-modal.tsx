@@ -7,6 +7,7 @@ import { X, Navigation, MapPin, Clock, User, CarFront } from 'lucide-react';
 import { CarLoader } from '@/components/ui/loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTracking } from '@/hooks/use-tracking';
+import { loadGoogleMaps } from '@/lib/maps/load-google-maps';
 
 interface Mission {
   id: string;
@@ -192,49 +193,12 @@ export function RouteModal({ isOpen, onClose, mission }: RouteModalProps) {
   useEffect(() => {
     if (!isOpen || !mission) return;
 
-    const loadGoogleMaps = async () => {
-      if (window.google && window.google.maps) {
-        // Google Maps déjà chargé
-        setTimeout(initializeMap, 100);
-        return;
-      }
-
-      // Charger Google Maps
-      if (!document.querySelector('script[src*="maps.googleapis.com"]')) {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
-        script.async = true;
-        script.defer = true;
-        script.onload = () => {
-          setTimeout(initializeMap, 100);
-        };
-        script.onerror = () => {
-          console.error('Erreur lors du chargement de Google Maps');
-          setMapError(true);
-          setIsMapLoaded(true);
-        };
-        document.head.appendChild(script);
-      } else {
-        // Script déjà présent, attendre qu'il se charge
-        const checkGoogleMaps = setInterval(() => {
-          if (window.google && window.google.maps) {
-            clearInterval(checkGoogleMaps);
-            setTimeout(initializeMap, 100);
-          }
-        }, 100);
-
-        // Timeout après 10 secondes
-        setTimeout(() => {
-          clearInterval(checkGoogleMaps);
-          if (!window.google) {
-            setMapError(true);
-            setIsMapLoaded(true);
-          }
-        }, 10000);
-      }
-    };
-
-    loadGoogleMaps();
+    loadGoogleMaps()
+      .then(() => setTimeout(initializeMap, 100))
+      .catch(() => {
+        setMapError(true);
+        setIsMapLoaded(true);
+      });
   }, [isOpen, mission, initializeMap]);
 
   if (!isOpen || !mission) return null;
